@@ -1,0 +1,13 @@
+<nav class="bg-gray-800 text-center p-4">
+  <div class="container mx-auto">
+    <ul class="menu menu-horizontal p-0 space-x-4 flex justify-center">
+      {% for item in site.data.navigation.main %}
+        <li>
+          <a class="btn btn-ghost btn-wide text-white" href="{{ item.url | relative_url }}">
+            {{ item.title }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</nav>

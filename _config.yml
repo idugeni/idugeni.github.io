@@ -1,0 +1,31 @@
+title: Eliyanto Sarage
+description: Explore my personal website built with Jekyll, TailwindCSS, and DaisyUI, showcasing my projects and blog posts.
+baseurl: ""
+url: "http://idugeni.github.io"
+author:
+  name: Eliyanto Sarage
+  url: "http://idugeni.github.io"
+  email: officialelsa21@gmail.com
+twitter_username: eliyantosarage_
+github_username: eliyantosarage-dev
+linkedin_username: eliyantosarage_
+instagram_username: eliyantosarage_
+theme: null
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-redirect-from
+  # tambahkan plugin lain jika diperlukan
+
+markdown: kramdown
+kramdown:
+  input: GFM
+
+exclude:
+  - node_modules
+  - vendor
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  # tambahkan file atau direktori lain yang ingin di-exclude dari build

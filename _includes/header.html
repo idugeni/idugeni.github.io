@@ -1,0 +1,412 @@
+<div class="navbar bg-base-100 shadow-lg">
+  <div class="flex-1">
+    <a href="/" class="btn btn-ghost normal-case text-xl flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 0C5.372 0 0 5.372 0 12c0 5.302 3.438 9.8 8.205 11.387.6.111.82-.261.82-.577 0-.285-.01-1.041-.016-2.045-3.338.724-4.042-1.612-4.042-1.612-.546-1.387-1.332-1.756-1.332-1.756-1.089-.744.083-.729.083-.729 1.204.085 1.838 1.236 1.838 1.236 1.07 1.834 2.809 1.304 3.495.997.108-.774.418-1.305.762-1.605-2.665-.305-5.467-1.333-5.467-5.93 0-1.31.468-2.382 1.236-3.22-.124-.303-.536-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.956-.266 1.981-.399 3.003-.404 1.02.005 2.047.138 3.005.404 2.291-1.552 3.297-1.23 3.297-1.23.655 1.653.243 2.874.12 3.176.77.838 1.234 1.91 1.234 3.22 0 4.61-2.806 5.623-5.476 5.921.43.372.823 1.102.823 2.222 0 1.605-.015 2.897-.015 3.292 0 .319.216.694.825.576C20.565 21.796 24 17.3 24 12c0-6.628-5.372-12-12-12z" />
+      </svg>
+      {{ site.title }}
+    </a>
+  </div>
+  <div class="flex-none flex items-center space-x-4">
+    <div class="dropdown dropdown-end">
+      <label tabindex="0" class="btn btn-ghost lg:hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M3 5a1 1 0 010-2h14a1 1 0 010 2H3zm0 5a1 1 0 010-2h14a1 1 0 010 2H3zm0 5a1 1 0 010-2h14a1 1 0 010 2H3z" clip-rule="evenodd" />
+        </svg>
+      </label>
+      <ul tabindex="0" class="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
+        <li>
+          <a href="/blog/">Blog</a>
+        </li>
+        <li>
+          <a href="/docs/">Documentation</a>
+        </li>
+        <li>
+          <a href="/projects/">Projects</a>
+        </li>
+        <li class="relative">
+          <details class="dropdown">
+            <summary>Dropdown</summary>
+            <ul>
+              <li>
+                <a>Submenu 1</a>
+              </li>
+              <li>
+                <a>Submenu 2</a>
+              </li>
+              <li>
+                <details>
+                  <summary>Parent</summary>
+                  <ul>
+                    <li>
+                      <a>Submenu 1</a>
+                    </li>
+                    <li>
+                      <a>Submenu 2</a>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+            </ul>
+          </details>
+        </li>
+      </ul>
+    </div>
+    <div class="hidden lg:flex dropdown dropdown-end">
+      <ul class="menu menu-horizontal p-0">
+        <li>
+          <a href="/blog/">Blog</a>
+        </li>
+        <li>
+          <a href="/docs/">Documentation</a>
+        </li>
+        <li>
+          <a href="/projects/">Projects</a>
+        </li>
+        <li class="relative">
+          <details class="dropdown">
+            <summary>Dropdown</summary>
+            <ul class="menu dropdown-content shadow-lg w-52">
+              <li>
+                <a>Submenu 1</a>
+              </li>
+              <li>
+                <a>Submenu 2</a>
+              </li>
+              <li>
+                <details>
+                  <summary>Parent</summary>
+                  <ul>
+                    <li>
+                      <a>Submenu 1</a>
+                    </li>
+                    <li>
+                      <a>Submenu 2</a>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+            </ul>
+          </details>
+        </li>
+      </ul>
+    </div>
+    <div class="dropdown dropdown-bottom dropdown-end">
+      <div title="Themes" role="button" tabindex="0" class="btn btn-ghost btn-sm">
+        <i class="fa-solid fa-palette"></i>
+        <i class="fa-solid fa-angle-down"></i>
+      </div>
+      <div class="flex flex-col dropdown-content gap-2 mt-2 z-10 p-4 shadow-2xl bg-base-200 rounded-box w-64 h-72 overflow-y-scroll">
+        <button data-theme="light" data-set-theme="light" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>light</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="dark" data-set-theme="dark" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>dark</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="cupcake" data-set-theme="cupcake" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>cupcake</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="bumblebee" data-set-theme="bumblebee" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>bumblebee</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="emerald" data-set-theme="emerald" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>emerald</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="corporate" data-set-theme="corporate" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>corporate</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="synthwave" data-set-theme="synthwave" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>synthwave</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="retro" data-set-theme="retro" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>retro</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="cyberpunk" data-set-theme="cyberpunk" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>cyberpunk</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="valentine" data-set-theme="valentine" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>valentine</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="halloween" data-set-theme="halloween" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>halloween</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="garden" data-set-theme="garden" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>garden</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="forest" data-set-theme="forest" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>forest</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="aqua" data-set-theme="aqua" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>aqua</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="lofi" data-set-theme="lofi" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>lofi</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="pastel" data-set-theme="pastel" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>pastel</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="fantasy" data-set-theme="fantasy" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>fantasy</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="wireframe" data-set-theme="wireframe" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>wireframe</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="black" data-set-theme="black" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>black</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="luxury" data-set-theme="luxury" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>luxury</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="dracula" data-set-theme="dracula" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>dracula</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="cmyk" data-set-theme="cmyk" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>cmyk</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="autumn" data-set-theme="autumn" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>autumn</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="business" data-set-theme="business" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>business</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="acid" data-set-theme="acid" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>acid</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="lemonade" data-set-theme="lemonade" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>lemonade</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="night" data-set-theme="night" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>night</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="coffee" data-set-theme="coffee" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>coffee</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="winter" data-set-theme="winter" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>winter</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="dim" data-set-theme="dim" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>dim</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="nord" data-set-theme="nord" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>nord</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+        <button data-theme="sunset" data-set-theme="sunset" class="btn btn-sm bg-base-100 flex justify-between">
+          <span>sunset</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-primary h-4 w-2 rounded-box"></span>
+            <span class="bg-secondary h-4 w-2 rounded-box"></span>
+            <span class="bg-accent h-4 w-2 rounded-box"></span>
+            <span class="bg-neutral h-4 w-2 rounded-box"></span>
+          </div>
+        </button>
+      </div>
+    </div>
+    <div class="dropdown dropdown-end">
+      <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+        <div class="w-10 rounded-full overflow-hidden">
+          <img alt="Eliyanto Sarage" src="https://avatars.githubusercontent.com/u/169628874?v=4" />
+        </div>
+      </div>
+      <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow-lg">
+        <li>
+          <a href="https://github.com/eliyantosarage-dev" target="_blank" rel="noopener noreferrer" class="justify-between flex items-center">
+            <span>Profile</span>
+            <span class="badge">New</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://github.com/settings/profile" target="_blank" rel="noopener noreferrer">Settings</a>
+        </li>
+        <li>
+          <a href="https://github.com/logout" target="_blank" rel="noopener noreferrer">Logout</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

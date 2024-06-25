@@ -1,0 +1,5 @@
+  {% for item in site.data.navigation.secondary %}
+  <a href="{{ item.url | relative_url }}" class="link link-hover">
+    {{ item.title }}
+  </a>
+{% endfor %}

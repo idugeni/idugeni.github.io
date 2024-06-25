@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="night">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> {% if page.title %} <title>{{ page.title }} | {{ site.title }}</title> {% elsif page.url == "/" %} <title>{{ site.title }}</title> {% else %} <title>{{ site.title }}</title> {% endif %}
+    <link rel="icon" type="image/x-icon" href="{{ '/assets/favicon.ico' | relative_url }}">
+    <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
+    <link rel="stylesheet" href="{{ '/assets/css/font-awesome.min.css' | relative_url }}">
+  </head>
+  <body class="font-sans antialiased p-0 m-0"> {% include header.html %} <main>
+      {{ content }}
+    </main> {% include footer.html %} <script src="{{ '/assets/js/main.js' | relative_url }}" defer></script>
+    <script src="{{ '/assets/js/font-awesome.min.js' | relative_url }}"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Mendapatkan semua elemen dengan atribut data-set-theme
+        const buttons = document.querySelectorAll('[data-set-theme]');
+        // Menambahkan event listener untuk setiap tombol
+        buttons.forEach(button => {
+          button.addEventListener('click', () => {
+            // Mendapatkan nilai tema dari atribut data-set-theme
+            const theme = button.getAttribute('data-set-theme');
+            // Mengubah atribut data-theme pada elemen html
+            document.documentElement.setAttribute('data-theme', theme);
+            // Log untuk memastikan tema telah diubah
+            console.log(`Theme changed to: ${theme}`);
+          });
+        });
+        // Log untuk memastikan event listener telah dipasang
+        console.log(`${buttons.length} buttons found and event listeners attached.`);
+      });
+    </script>
+  </body>
+</html>
