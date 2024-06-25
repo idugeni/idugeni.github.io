@@ -1,5 +1,11 @@
-_site
-.sass-cache
-.jekyll-cache
+# Ignore Node.js dependencies
+node_modules/
+
+# Ignore Jekyll build output
+_site/
+.sass-cache/
+.jekyll-cache/
 .jekyll-metadata
-vendor
+
+# Ignore vendor folder
+vendor/
