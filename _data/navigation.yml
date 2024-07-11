@@ -1,0 +1,21 @@
+main:
+  - title: Home
+    url: /
+  - title: Blog
+    url: /blog/
+  - title: Docs
+    url: /docs/
+  - title: Projects
+    url: /projects/
+
+secondary:
+  - title: About
+    url: /pages/about.html
+  - title: Contact
+    url: /pages/contact.html
+  - title: Disclaimer
+    url: /pages/disclaimer.html
+  - title: Privacy Policy
+    url: /pages/privacy-policy.html
+  - title: Terms and Conditions
+    url: /pages/terms-and-conditions.html

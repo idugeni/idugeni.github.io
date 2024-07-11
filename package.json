@@ -1,0 +1,16 @@
+{
+  "name": "idugeni.github.io",
+  "version": "1.1.0",
+  "description": "A Jekyll project with Tailwind CSS and Daisy UI",
+  "scripts": {
+    "build:css": "tailwindcss build assets/css/tailwind.css -o assets/css/main.css",
+    "build": "jekyll build",
+    "serve": "jekyll serve"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.4",
+    "daisyui": "^4.12.10"
+  }
+}

@@ -1,0 +1,22 @@
+# Jekyll specific
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+# Bundle specific
+.bundle/
+vendor/
+
+# Node specific
+node_modules/
+package-lock.json
+
+# Logs and databases
+*.log
+*.sqlite3
+*.env
+
+# OS generated files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,15 @@
+<!-- Footer -->
+<footer class="footer footer-center bg-base-100 text-base-content px-6 pb-4 shadow-lg">
+  <div class="container mx-auto">
+    <div class="flex flex-col sm:flex-row sm:justify-center sm:items-center text-center space-y-4 sm:space-y-0">
+      <p class="text-sm sm:text-base"> &copy; <span id="currentYear"></span>
+        <a href="/" class="link link-hover font-bold text-primary"> {{ site.title }} </a>
+        <span class="hidden sm:inline"> - </span>
+        <br class="sm:hidden"> All Rights Reserved by <a href="https://github.com/" class="link link-hover font-bold text-primary" target="_blank" rel="noopener noreferrer">GitHub, Inc.</a>
+      </p>
+    </div>
+  </div>
+</footer>
+<script>
+  document.getElementById('currentYear').textContent = new Date().getFullYear();
+</script>

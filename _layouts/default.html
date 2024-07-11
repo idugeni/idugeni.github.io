@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% if page.title %}
+  <title>{{ page.title }} | {{ site.title }}</title>
+  {% elsif page.url == "/" %}
+  <title>{{ site.title }}</title>
+  {% else %}
+  <title>{{ site.title }}</title>
+  {% endif %}
+  <link rel="icon" type="image/x-icon" href="{{ '/assets/favicon.ico' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/tailwind.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/font-awesome.min.css' | relative_url }}">
+  <style>
+    /* Custom styles can be added here */
+  </style>
+</head>
+
+<body class="font-sans antialiased p-0 m-0">
+  {% include header.html %}
+  <main>
+    {{ content }}
+  </main>
+  {% include footer.html %}
+  <script src="{{ '/assets/js/main.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/font-awesome.min.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/idugeni.min.js' | relative_url }}"></script>
+</body>
+
+</html>

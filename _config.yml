@@ -1,0 +1,133 @@
+# Site settings
+title: IduGeni SabdoDadi
+description: >
+  Explore our website built with Jekyll, TailwindCSS, and DaisyUI. The site showcases a variety of projects, blog posts, documentation, and other engaging pages that are both inspiring and informative.
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://idugeni.github.io" # the base hostname & protocol for your site
+
+# Build settings
+markdown: kramdown
+# theme: minima
+
+# Exclude from build
+exclude:
+  - node_modules
+  - .gitignore
+  - Gemfile
+  - Gemfile.lock
+  - package.json
+  - package-lock.json
+  - tailwind.config.js
+  - postcss.config.js
+
+# Include in build
+include:
+  - assets/css/main.css
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+  - jekyll-paginate
+  - jekyll-archives
+  - eventmachine
+  - csv
+  - base64
+  - wdm
+
+# Sass configuration
+sass:
+  sass_dir: assets/css
+
+# Konfigurasi tambahan untuk plugin
+feed:
+  path: feed.xml
+
+seo:
+  title: "IduGeni SabdoDadi"
+  description: "Explore our website built with Jekyll, TailwindCSS, and DaisyUI. The site showcases a variety of projects, blog posts, documentation, and other engaging pages that are both inspiring and informative."
+  url: "http://idugeni.github.io/"
+  twitter:
+    username: idugeni
+
+sitemap:
+  filename: sitemap.xml
+
+redirect_from:
+  # Contoh pengaturan redirect
+  # old-page.html: /new-page.html
+
+# Pengaturan default untuk halaman dan postingan
+defaults:
+  - scope:
+      path: "blog"
+      type: "posts"
+    values:
+      layout: "post"
+      author: "Jagad Brahma Wiraatmaja"
+  - scope:
+      path: "docs"
+      type: "pages"
+    values:
+      layout: "docs"
+      author: "Jagad Brahma Wiraatmaja"
+  - scope:
+      path: "pages"
+      type: "pages"
+    values:
+      layout: "page"
+      author: "Jagad Brahma Wiraatmaja"
+  - scope:
+      path: "projects"
+      type: "pages"
+    values:
+      layout: "project"
+      author: "Jagad Brahma Wiraatmaja"
+
+# Konfigurasi permalink
+permalink: /:categories/:year/:month/:day/:title/
+
+# Pengaturan pagination (jika menggunakan pagination)
+pagination:
+  enabled: true
+  per_page: 10
+  permalink: /page/:num/
+
+# Konfigurasi koleksi (collections)
+collections:
+  blog:
+    output: true
+    permalink: /blog/:title/
+  docs:
+    output: true
+    permalink: /docs/:title/
+  pages:
+    output: true
+    permalink: /pages/:title/
+  projects:
+    output: true
+    permalink: /projects/:title/
+
+# Pengaturan navigasi
+navigation:
+  - name: Home
+    url: /
+  - name: Blog
+    url: /blog/
+  - name: Docs
+    url: /docs/
+  - name: Pages
+    url: /pages/
+  - name: Projects
+    url: /projects/
+
+# Konfigurasi untuk Disqus (jika menggunakan Disqus untuk komentar)
+disqus:
+  shortname: idugeni
+
+# Konfigurasi untuk Google Analytics (jika menggunakan Google Analytics)
+google_analytics: "UA-XXXXX-Y"
+
+disable:
+  - cache

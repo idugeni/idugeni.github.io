@@ -1,0 +1,7 @@
+<div class="flex justify-center space-x-4">
+  {% for item in site.data.navigation.secondary %}
+  <a href="{{ item.url | relative_url }}" class="btn btn-outline btn-primary">
+    {{ item.title }}
+  </a>
+  {% endfor %}
+</div>
