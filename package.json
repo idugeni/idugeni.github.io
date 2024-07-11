@@ -1,16 +1,22 @@
 {
   "name": "idugeni.github.io",
   "version": "1.1.0",
-  "description": "A Jekyll project with Tailwind CSS and Daisy UI",
+  "description": "Explore our website built with Jekyll, TailwindCSS, and DaisyUI. The site showcases a variety of projects, blog posts, documentation, and other engaging pages that are both inspiring and informative.",
   "scripts": {
-    "build:css": "tailwindcss build assets/css/tailwind.css -o assets/css/main.css",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:css": "tailwindcss build -i .assets/css/tailwind.css -o .assets/css/main.css --watch",
     "build": "jekyll build",
     "serve": "jekyll serve"
   },
+  "keywords": [
+    "Idu Geni, Sabdo Dadi"
+  ],
+  "author": "Jagad Brahma Wiraatmaja",
+  "license": "MIT",
   "devDependencies": {
     "autoprefixer": "^10.4.19",
+    "daisyui": "^4.12.10",
     "postcss": "^8.4.39",
-    "tailwindcss": "^3.4.4",
-    "daisyui": "^4.12.10"
+    "tailwindcss": "^3.4.4"
   }
 }

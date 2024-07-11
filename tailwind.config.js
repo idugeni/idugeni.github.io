@@ -1,13 +1,14 @@
 module.exports = {
   content: [
-    './_layouts/**/*.html',
-    './_includes/**/*.html',
-    './_posts/**/*.md',
-    './_docs/**/*.md',
-    './_projects/**/*.md',
-    './_pages/**/*.md',
-    './index.html',
-    './404.html',
+    './_includes/**/*.{html,js}',
+    './_layouts/**/*.{html,js}',
+    './_posts/**/*.{html,js}',
+    './*.html',
+    './src/**/*.{html,js}',
+    './pages/**/*.{html,md}',
+    './blog/**/*.{html,md}',
+    './docs/**/*.{html,md}',
+    './projects/**/*.{html,md}'
   ],
   theme: {
     extend: {
