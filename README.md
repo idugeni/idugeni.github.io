@@ -1,6 +1,6 @@
 # idugeni.github.io
 
-Explore our website built with Jekyll, TailwindCSS, and DaisyUI. The site showcases a variety of projects, blog posts, documentation, and other engaging pages that are both inspiring and informative.
+Explore our website built with **Jekyll**, **TailwindCSS**, and **DaisyUI**. The site showcases a variety of projects, blog posts, documentation, and other engaging pages that are both inspiring and informative.
 
 ## Features
 
@@ -61,8 +61,8 @@ Make sure you have the following installed on your machine:
 
 ### License
 
-This project is licensed under the MIT License - see the [LICENSE]([LICENSE](https://github.com/idugeni/idugeni.github.io/blob/main/LICENSE)) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/idugeni/idugeni.github.io/blob/main/LICENSE) file for details.
 
 ### Author
 
-Created by Jagad Brahma Wiraatmaja.
+Created by **Jagad Brahma Wiraatmaja**.
