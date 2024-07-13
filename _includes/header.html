@@ -20,46 +20,59 @@
   </div>
   <div class="navbar-center hidden lg:flex lg:w-2/4 justify-center items-center">
     <ul class="menu menu-horizontal px-1 z-10">
-      <li>
-        <a href="/blog/">Blog</a>
+      <li class="relative">
+        <a href="/blog/" class="menu-link">Blog</a>
       </li>
-      <li>
-        <a href="/docs/">Docs</a>
+      <li class="relative">
+        <a href="/docs/" class="menu-link">Docs</a>
       </li>
-      <li>
-        <a href="/pages/">Pages</a>
+      <li class="relative">
+        <a href="/pages/" class="menu-link">Pages</a>
       </li>
-      <li>
-        <a href="/projects/">Projects</a>
+      <li class="relative">
+        <a href="/projects/" class="menu-link">Projects</a>
       </li>
-      <li>
+      <li class="relative">
         <details class="dropdown dropdown-end">
-          <summary tabindex="0">Dropdown</summary>
+          <summary tabindex="0" class="menu-link">Dropdown</summary>
           <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 w-56 p-2 shadow-lg">
             <li>
-              <a>Item 1</a>
+              <a class="dropdown-link">Item 1</a>
             </li>
             <li>
               <details class="dropdown dropdown-end">
-                <summary>Item 2</summary>
+                <summary class="dropdown-link">Item 2</summary>
                 <ul class="p-2 rounded-box w-48">
                   <li>
-                    <a>Subitem 1</a>
+                    <a class="dropdown-sublink">Subitem 1</a>
                   </li>
                   <li>
-                    <a>Subitem 2</a>
+                    <details class="dropdown dropdown-end">
+                      <summary class="dropdown-sublink">Subitem 2</summary>
+                      <ul class="p-2 rounded-box w-40">
+                        <li>
+                          <a class="dropdown-sub-sublink">Sub-subitem 1</a>
+                        </li>
+                        <li>
+                          <a class="dropdown-sub-sublink">Sub-subitem 2</a>
+                        </li>
+                      </ul>
+                    </details>
+                  </li>
+                  <li>
+                    <a class="dropdown-sublink">Subitem 3</a>
                   </li>
                 </ul>
               </details>
             </li>
             <li>
-              <a>Item 3</a>
+              <a class="dropdown-link">Item 3</a>
             </li>
           </ul>
         </details>
       </li>
     </ul>
-  </div>
+  </div>  
   <div class="navbar-end lg:w-1/4 lg:flex justify-end">
     <div class="dropdown dropdown-bottom dropdown-end">
       <div title="Themes" role="button" tabindex="0" class="btn btn-ghost btn-circle">
@@ -354,6 +367,15 @@
             <span class="bg-neutral h-4 w-2 rounded-box"></span>
           </div>
         </button>
+      </div>
+    </div>
+    <div class="dropdown dropdown-bottom dropdown-end relative ms-2">
+      <div class="hidden md:flex gap-2 items-center">
+        <a href="https://github.com/join" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-ghost border border-gray-300 py-2 px-4 rounded-lg">Create Account</a>
+        <a href="https://github.com/login" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary py-2 px-4 rounded-lg flex items-center">
+          Log in
+          <i class="far fa-sign-in-alt ml-1"></i>
+        </a>
       </div>
     </div>
   </div>
