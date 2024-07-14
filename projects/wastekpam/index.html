@@ -103,10 +103,10 @@
                 class="input input-bordered w-full py-2 px-3 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300"
                 inputmode="numeric">
               <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                <button type="button" class="btn btn-outline btn-square btn-xs hover:bg-blue-100"
-                  onclick="incrementValue('tahananL')">+</button>
-                <button type="button" class="btn btn-outline btn-square btn-xs ml-1 hover:bg-blue-100"
+                <button type="button" class="btn btn-outline btn-square btn-sm me-2 hover:bg-blue-100"
                   onclick="decrementValue('tahananL')">-</button>
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100"
+                  onclick="incrementValue('tahananL')">+</button>
               </div>
             </div>
           </div>
@@ -119,10 +119,10 @@
                 class="input input-bordered w-full py-2 px-3 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300"
                 inputmode="numeric">
               <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                <button type="button" class="btn btn-outline btn-square btn-xs hover:bg-blue-100"
-                  onclick="incrementValue('tahananP')">+</button>
-                <button type="button" class="btn btn-outline btn-square btn-xs ml-1 hover:bg-blue-100"
+                <button type="button" class="btn btn-outline btn-square btn-sm me-2 hover:bg-blue-100"
                   onclick="decrementValue('tahananP')">-</button>
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100"
+                  onclick="incrementValue('tahananP')">+</button>
               </div>
             </div>
           </div>
@@ -135,10 +135,10 @@
                 class="input input-bordered w-full py-2 px-3 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300"
                 inputmode="numeric">
               <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                <button type="button" class="btn btn-outline btn-square btn-xs hover:bg-blue-100"
-                  onclick="incrementValue('narapidanaL')">+</button>
-                <button type="button" class="btn btn-outline btn-square btn-xs ml-1 hover:bg-blue-100"
+                <button type="button" class="btn btn-outline btn-square btn-sm me-2 hover:bg-blue-100"
                   onclick="decrementValue('narapidanaL')">-</button>
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100"
+                  onclick="incrementValue('narapidanaL')">+</button>
               </div>
             </div>
           </div>
@@ -151,10 +151,10 @@
                 class="input input-bordered w-full py-2 px-3 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300"
                 inputmode="numeric">
               <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                <button type="button" class="btn btn-outline btn-square btn-xs hover:bg-blue-100"
-                  onclick="incrementValue('narapidanaP')">+</button>
-                <button type="button" class="btn btn-outline btn-square btn-xs ml-1 hover:bg-blue-100"
+                <button type="button" class="btn btn-outline btn-square btn-sm me-2 hover:bg-blue-100"
                   onclick="decrementValue('narapidanaP')">-</button>
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100"
+                  onclick="incrementValue('narapidanaP')">+</button>
               </div>
             </div>
           </div>
@@ -167,10 +167,10 @@
                 class="input input-bordered w-full py-2 px-3 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300"
                 inputmode="numeric">
               <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                <button type="button" class="btn btn-outline btn-square btn-xs hover:bg-blue-100"
-                  onclick="incrementValue('jumlahWBPdalam')">+</button>
-                <button type="button" class="btn btn-outline btn-square btn-xs ml-1 hover:bg-blue-100"
+                <button type="button" class="btn btn-outline btn-square btn-sm me-2 hover:bg-blue-100"
                   onclick="decrementValue('jumlahWBPdalam')">-</button>
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100"
+                  onclick="incrementValue('jumlahWBPdalam')">+</button>
               </div>
             </div>
           </div>
@@ -183,10 +183,10 @@
                 class="input input-bordered w-full py-2 px-3 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300"
                 inputmode="numeric">
               <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                <button type="button" class="btn btn-outline btn-square btn-xs hover:bg-blue-100"
-                  onclick="incrementValue('jumlahWBPluar')">+</button>
-                <button type="button" class="btn btn-outline btn-square btn-xs ml-1 hover:bg-blue-100"
+                <button type="button" class="btn btn-outline btn-square btn-sm me-2 hover:bg-blue-100"
                   onclick="decrementValue('jumlahWBPluar')">-</button>
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100"
+                  onclick="incrementValue('jumlahWBPluar')">+</button>
               </div>
             </div>
           </div>
@@ -201,7 +201,7 @@
         <div class="divider my-4"></div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
-            <h3 class="text-lg text-center uppercase font-bold">Personil Sekarang</h3>
+            <h3 class="text-lg text-center uppercase font-bold">Personil Sebelumnya</h3>
             <div class="divider h-2"></div>
             <div class="form-control">
               <label for="reguSekarang" class="label">
@@ -352,12 +352,14 @@
         </div>
       </div>
     </div>
-    <div id="notification"
-      class="hidden bg-green-50 border border-green-300 text-green-700 px-6 py-4 mt-4 rounded-md shadow-lg items-center justify-center"
-      role="alert">
-      <span class="block sm:inline font-bold">Laporan telah disalin!</span>
+    <div class="grid place-items-center">
+      <div id="notification"
+        class="hidden bg-green-50 border border-green-300 text-green-700 px-6 py-4 rounded-md shadow-lg w-full text-center"
+        role="alert">
+        <span class="block sm:inline font-bold">Laporan telah disalin!</span>
+      </div>
     </div>
-    <div class="flex justify-between mt-6">
+    <div class="flex justify-between">
       <button id="generateButton"
         class="btn btn-primary flex-1 mx-2 py-3 px-6 rounded-lg text-white font-semibold shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Generate
         Laporan</button>
