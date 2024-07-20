@@ -7,16 +7,14 @@
   <title>WASTEKPAM</title>
   <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/idugeni/wastekpam@main/assets/logo.png">
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
-  <link href="https://cdn.jsdelivr.net/gh/idugeni/wastekpam@main/assets/css/style.css" rel="stylesheet"
-    type="text/css" />
-  <link href="https://cdn.jsdelivr.net/gh/idugeni/idugeni.github.io@main/assets/css/font-awesome.min.css"
-    rel="stylesheet" type="text/css" />
+  <link href="https://cdn.jsdelivr.net/gh/idugeni/wastekpam@main/assets/css/style.css" rel="stylesheet"type="text/css" />
+  <link href="https://cdn.jsdelivr.net/gh/idugeni/idugeni.github.io@main/assets/css/font-awesome.min.css"rel="stylesheet" type="text/css" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
 
-<body class="bg-base-300 p-4">
+<body class="bg-base-300 p-4 min-h-screen text-gray-900 font-sans">
   <!-- Loading Spinner Overlay -->
   <div id="loading"
     class="fixed inset-0 flex flex-col items-center justify-center z-50 transition-opacity duration-1000 bg-gradient-to-br from-indigo-800 to-cyan-900 p-4">
@@ -29,26 +27,23 @@
       <div class="loading loading-ring loading-lg text-white"></div>
       <div class="loading loading-infinity loading-lg text-white"></div>
     </div>
-    <p class="font-sans text-center text-white mx-6 mb-4 whitespace-normal break-words"> Aplikasi otomatisasi laporan
-      ASTEKPAM untuk menghasilkan laporan siap kirim via WhatsApp, format konsisten dan mudah dibaca. </p>
+    <p class="font-sans text-center text-white mx-6 mb-4 whitespace-normal break-words">Aplikasi otomatisasi laporan ASTEKPAM untuk menghasilkan laporan siap kirim via WhatsApp, format konsisten dan mudah dibaca.</p>
     <div class="absolute bottom-4">
-      <p class="text-center text-white mx-6 mb-2 text-sm italic whitespace-normal break-words"> Copyright © 2024
-        Eliyanto Sarage </p>
+      <p class="text-center text-white mx-6 mb-2 text-sm italic whitespace-normal break-words">Copyright © 2024 Eliyanto Sarage</p>
     </div>
   </div>
-  <div data-theme="night" class="bg-white p-4 rounded-box shadow-lg">
+  <div data-theme="night" class="bg-gray-800 text-white p-6 rounded-lg shadow-lg">
     <div class="text-center my-6">
-      <h1
-        class="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-extrabold text-transparent bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text drop-shadow-lg max-w-full whitespace-normal">
-        WASTEKPAM</h1>
-      <p class="text-base md:text-lg font-sans font-semibold text-gray-700/75 my-4">Aplikasi otomatisasi laporan
-        ASTEKPAM untuk menghasilkan laporan siap kirim via WhatsApp, format konsisten dan mudah dibaca.</p>
-      <a href="https://github.com/idugeni/wastekpam" target="_blank"
-        class="btn btn-outline btn-accent btn-wide rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 hover:from-purple-600 hover:to-indigo-600 transition-colors duration-300 sm:w-auto md:w-auto lg:w-auto">
+      <h1 class="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-extrabold text-transparent bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text drop-shadow-lg max-w-full whitespace-normal">WASTEKPAM</h1>
+      <p class="text-base text-center leading-relaxed md:text-lg font-sans font-semibold text-primary-content my-4">
+        Aplikasi otomatisasi laporan ASTEKPAM menghasilkan laporan yang siap kirim via WhatsApp, dengan format yang konsisten dan mudah dibaca.
+      </p>      
+      <a href="https://github.com/idugeni/wastekpam" target="_blank" class="btn btn-outline btn-accent btn-wide rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 hover:from-purple-600 hover:to-indigo-600 transition-colors duration-300 sm:w-auto md:w-auto lg:w-auto">
         <i class="fab fa-github-alt fa-lg mr-1"></i>
         <span class="whitespace-pre-wrap font-mono font-semibold">Source Code on GitHub</span>
       </a>
     </div>
+    
     <div class="card bg-base-100 shadow-lg mb-6 rounded-lg">
       <div class="card-body">
         <div class="flex justify-center items-center relative">
@@ -81,12 +76,11 @@
             <span class="label-text font-semibold">Jam</span>
             <span class="label-text-alt font-semibold italic">(07.00/13.00/19.00)</span>
           </div>
-          <input type="text" id="jam"
-            class="input input-bordered w-full cursor-auto whitespace-pre-wrap placeholder-italic placeholder-gray-500 placeholder-sm"
-            placeholder="otomatis terisi setelah memilih shift" readonly>
+          <input type="text" id="jam" class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 placeholder-sm" placeholder="otomatis terisi setelah memilih shift" readonly>
         </div>
       </div>
     </div>
+    
     <div class="card bg-base-100 shadow-xl mb-6 rounded-lg">
       <div class="card-body">
         <div class="flex justify-center items-center relative">
@@ -99,14 +93,10 @@
               <span class="label-text font-semibold">Tahanan Laki-Laki</span>
             </label>
             <div class="relative">
-              <input type="number" id="tahananL"
-                class="input input-bordered w-full py-2 px-3 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                inputmode="numeric">
-              <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                <button type="button" class="btn btn-outline btn-square btn-sm me-2 hover:bg-blue-100"
-                  onclick="decrementValue('tahananL')">-</button>
-                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100"
-                  onclick="incrementValue('tahananL')">+</button>
+              <input type="number" id="tahananL" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-2">
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="decrementValue('tahananL')">-</button>
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="incrementValue('tahananL')">+</button>
               </div>
             </div>
           </div>
@@ -115,14 +105,10 @@
               <span class="label-text font-semibold">Tahanan Perempuan</span>
             </label>
             <div class="relative">
-              <input type="number" id="tahananP"
-                class="input input-bordered w-full py-2 px-3 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                inputmode="numeric">
-              <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                <button type="button" class="btn btn-outline btn-square btn-sm me-2 hover:bg-blue-100"
-                  onclick="decrementValue('tahananP')">-</button>
-                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100"
-                  onclick="incrementValue('tahananP')">+</button>
+              <input type="number" id="tahananP" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-2">
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="decrementValue('tahananP')">-</button>
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="incrementValue('tahananP')">+</button>
               </div>
             </div>
           </div>
@@ -131,14 +117,10 @@
               <span class="label-text font-semibold">Narapidana Laki-Laki</span>
             </label>
             <div class="relative">
-              <input type="number" id="narapidanaL"
-                class="input input-bordered w-full py-2 px-3 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                inputmode="numeric">
-              <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                <button type="button" class="btn btn-outline btn-square btn-sm me-2 hover:bg-blue-100"
-                  onclick="decrementValue('narapidanaL')">-</button>
-                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100"
-                  onclick="incrementValue('narapidanaL')">+</button>
+              <input type="number" id="narapidanaL" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-2">
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="decrementValue('narapidanaL')">-</button>
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="incrementValue('narapidanaL')">+</button>
               </div>
             </div>
           </div>
@@ -147,14 +129,10 @@
               <span class="label-text font-semibold">Narapidana Perempuan</span>
             </label>
             <div class="relative">
-              <input type="number" id="narapidanaP"
-                class="input input-bordered w-full py-2 px-3 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                inputmode="numeric">
-              <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                <button type="button" class="btn btn-outline btn-square btn-sm me-2 hover:bg-blue-100"
-                  onclick="decrementValue('narapidanaP')">-</button>
-                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100"
-                  onclick="incrementValue('narapidanaP')">+</button>
+              <input type="number" id="narapidanaP" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-2">
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="decrementValue('narapidanaP')">-</button>
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="incrementValue('narapidanaP')">+</button>
               </div>
             </div>
           </div>
@@ -163,14 +141,10 @@
               <span class="label-text font-semibold">Jumlah WBP di Dalam</span>
             </label>
             <div class="relative">
-              <input type="number" id="jumlahWBPdalam"
-                class="input input-bordered w-full py-2 px-3 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                inputmode="numeric">
-              <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                <button type="button" class="btn btn-outline btn-square btn-sm me-2 hover:bg-blue-100"
-                  onclick="decrementValue('jumlahWBPdalam')">-</button>
-                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100"
-                  onclick="incrementValue('jumlahWBPdalam')">+</button>
+              <input type="number" id="jumlahWBPdalam" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-2">
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="decrementValue('jumlahWBPdalam')">-</button>
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="incrementValue('jumlahWBPdalam')">+</button>
               </div>
             </div>
           </div>
@@ -179,20 +153,17 @@
               <span class="label-text font-semibold">Jumlah WBP di Luar</span>
             </label>
             <div class="relative">
-              <input type="number" id="jumlahWBPluar"
-                class="input input-bordered w-full py-2 px-3 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                inputmode="numeric">
-              <div class="absolute inset-y-0 right-0 flex items-center px-2">
-                <button type="button" class="btn btn-outline btn-square btn-sm me-2 hover:bg-blue-100"
-                  onclick="decrementValue('jumlahWBPluar')">-</button>
-                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100"
-                  onclick="incrementValue('jumlahWBPluar')">+</button>
+              <input type="number" id="jumlahWBPluar" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-2">
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="decrementValue('jumlahWBPluar')">-</button>
+                <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="incrementValue('jumlahWBPluar')">+</button>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    
     <div class="card bg-base-100 shadow-xl mb-6 rounded-lg">
       <div class="card-body">
         <div class="flex justify-center items-center relative">
@@ -217,39 +188,29 @@
               <label for="kaRupamSekarang" class="label">
                 <span class="label-text font-semibold">Ka. Rupam</span>
               </label>
-              <input type="text" id="kaRupamSekarang" placeholder="Nama Ka. Rupam"
-                class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 placeholder-sm mb-4"
-                readonly>
+              <input type="text" id="kaRupamSekarang" placeholder="Nama Ka. Rupam"class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 mb-4"readonly>
             </div>
             <div class="form-control">
               <label for="anggota1Sekarang" class="label">
                 <span class="label-text font-semibold">Anggota 1</span>
               </label>
-              <input type="text" id="anggota1Sekarang" placeholder="Nama Anggota 1"
-                class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 placeholder-sm mb-4"
-                readonly>
+              <input type="text" id="anggota1Sekarang" placeholder="Nama Anggota 1"class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 mb-4"readonly>
             </div>
             <div class="form-control">
               <label for="anggota2Sekarang" class="label">
                 <span class="label-text font-semibold">Anggota 2</span>
               </label>
-              <input type="text" id="anggota2Sekarang" placeholder="Nama Anggota 2"
-                class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 placeholder-sm mb-4"
-                readonly>
+              <input type="text" id="anggota2Sekarang" placeholder="Nama Anggota 2"class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 mb-4"readonly>
             </div>
             <div class="form-control">
               <label for="p2uSekarang" class="label">
                 <span class="label-text font-semibold">P2U</span>
               </label>
-              <input type="text" id="p2uSekarang" placeholder="Nama P2U"
-                class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 placeholder-sm mb-4"
-                readonly>
+              <input type="text" id="p2uSekarang" placeholder="Nama P2U" class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 mb-4" readonly>
             </div>
           </div>
           <div>
-            <div class="flex justify-center items-center">
-              <h3 class="text-lg text-center uppercase font-bold">Personil Selanjutnya</h3>
-            </div>
+            <h3 class="text-lg text-center uppercase font-bold">Personil Selanjutnya</h3>
             <div class="divider h-2"></div>
             <div class="form-control">
               <label for="reguSelanjutnya" class="label">
@@ -266,37 +227,32 @@
                 <span class="label-text font-semibold">Ka. Rupam</span>
               </label>
               <input type="text" id="kaRupamSelanjutnya" placeholder="Nama Ka. Rupam"
-                class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 placeholder-sm mb-4"
+                class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 mb-4"
                 readonly>
             </div>
             <div class="form-control">
               <label for="anggota1Selanjutnya" class="label">
                 <span class="label-text font-semibold">Anggota 1</span>
               </label>
-              <input type="text" id="anggota1Selanjutnya" placeholder="Nama Anggota 1"
-                class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 placeholder-sm mb-4"
-                readonly>
+              <input type="text" id="anggota1Selanjutnya" placeholder="Nama Anggota 1" class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 mb-4"readonly>
             </div>
             <div class="form-control">
               <label for="anggota2Selanjutnya" class="label">
                 <span class="label-text font-semibold">Anggota 2</span>
               </label>
-              <input type="text" id="anggota2Selanjutnya" placeholder="Nama Anggota 2"
-                class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 placeholder-sm mb-4"
-                readonly>
+              <input type="text" id="anggota2Selanjutnya" placeholder="Nama Anggota 2" class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 mb-4" readonly>
             </div>
             <div class="form-control">
               <label for="p2uSelanjutnya" class="label">
                 <span class="label-text font-semibold">P2U</span>
               </label>
-              <input type="text" id="p2uSelanjutnya" placeholder="Nama P2U"
-                class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 placeholder-sm mb-4"
-                readonly>
+              <input type="text" id="p2uSelanjutnya" placeholder="Nama P2U" class="input input-bordered w-full cursor-auto placeholder-italic placeholder-gray-500 mb-4" readonly>
             </div>
           </div>
         </div>
       </div>
     </div>
+    
     <div class="card bg-base-100 shadow-xl mb-6 rounded-lg">
       <div class="card-body">
         <div class="flex justify-center items-center relative">
@@ -352,26 +308,74 @@
         </div>
       </div>
     </div>
-    <div class="grid place-items-center mb-4">
-      <div id="notification"
-        class="hidden bg-green-50 border border-green-300 text-green-700 px-6 py-4 rounded-md shadow-lg w-full text-center"
-        role="alert">
-        <span class="block sm:inline font-bold">Laporan telah disalin!</span>
-      </div>
-    </div>
+    
     <div class="flex justify-between">
-      <button id="generateButton"
-        class="btn btn-primary flex-1 mx-2 py-3 px-6 rounded-lg text-white font-semibold shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Generate
-        Laporan</button>
-      <button id="copyButton"
-        class="btn btn-primary hidden flex-1 mx-2 py-3 px-6 rounded-lg text-white font-semibold shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Copy
-        Laporan</button>
+      <button id="generateButton"class="btn btn-primary flex-1 mx-2 py-3 px-6 rounded-lg text-white font-semibold shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Generate Laporan</button>
+      <button id="copyButton" class="btn btn-primary hidden flex-1 mx-2 py-3 px-6 rounded-lg text-white font-semibold shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Copy Laporan</button>
     </div>
-    <textarea id="laporan"
-      class="textarea textarea-bordered w-full mt-4 h-64 resize-none rounded-lg p-4 placeholder-gray-400 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-      readonly placeholder="Hasil laporan di sini..." spellcheck="false"></textarea>
-  </div>
-  <script src="https://cdn.jsdelivr.net/gh/idugeni/wastekpam@main/assets/js/main.js"></script>
+    <textarea id="laporan" class="textarea textarea-bordered w-full mt-4 h-64 resize-none rounded-lg p-4 placeholder-gray-400 border-gray-300 focus:border-blue-500 focus:ring-blue-500" readonly placeholder="Hasil laporan di sini..." spellcheck="false"></textarea>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/gh/idugeni/wastekpam@main/assets/js/main.js"></script>    
+    <script>
+      document.getElementById('laporan').value = "Ini adalah hasil laporan yang telah digenerate.";
+      document.getElementById('generateButton').addEventListener('click', function () {
+        // Logika untuk mengenerate laporan
+        document.getElementById('copyButton').classList.remove('hidden');
+        Swal.fire({
+          icon: 'success',
+          title: 'Laporan telah digenerate!',
+          showConfirmButton: false,
+          timer: 1500,
+          toast: true,
+          position: 'top-end',
+          background: '#e7f5ef',
+          color: '#38a169',
+          iconColor: '#38a169',
+          customClass: {
+            popup: 'shadow-lg'
+          }
+        });
+      });
+
+      document.getElementById('copyButton').addEventListener('click', function () {
+        const laporan = document.getElementById('laporan');
+        laporan.select();
+        laporan.setSelectionRange(0, 99999); // Untuk perangkat mobile
+
+        navigator.clipboard.writeText(laporan.value).then(function () {
+          Swal.fire({
+            icon: 'success',
+            title: 'Laporan telah disalin!',
+            showConfirmButton: false,
+            timer: 1500,
+            toast: true,
+            position: 'top-end',
+            background: '#e7f5ef',
+            color: '#38a169',
+            iconColor: '#38a169',
+            customClass: {
+              popup: 'shadow-lg'
+            }
+          });
+        }, function () {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal menyalin laporan!',
+            showConfirmButton: false,
+            timer: 1500,
+            toast: true,
+            position: 'top-end',
+            background: '#fdeaea',
+            color: '#e53e3e',
+            iconColor: '#e53e3e',
+            customClass: {
+              popup: 'shadow-lg'
+            }
+          });
+        });
+      });
+    </script>
 </body>
 
 </html>
