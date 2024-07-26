@@ -1,5 +1,9 @@
 # idugeni.github.io
 
+<div align="center">
+<img src="https://opengraph.githubassets.com/ace80d7ea74a097864db6eebdb69561f/idugeni/idugeni.github.io" alt="idugeni.github.io">
+</div>
+
 Explore our website built with **Jekyll**, **TailwindCSS**, and **DaisyUI**. The site showcases a variety of projects, blog posts, documentation, and other engaging pages that are both inspiring and informative.
 
 ## Features
