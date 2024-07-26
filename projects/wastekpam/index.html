@@ -35,7 +35,7 @@
   <div data-theme="night" class="bg-gray-800 text-white p-6 rounded-lg shadow-lg">
     <div class="text-center my-6">
       <h1 class="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-extrabold text-transparent bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text drop-shadow-lg max-w-full whitespace-normal">WASTEKPAM</h1>
-      <p class="text-base text-center leading-relaxed md:text-lg font-sans font-semibold text-primary-content my-4">
+      <p class="text-white text-center leading-relaxed md:text-lg font-sans font-semibold my-4">
         Aplikasi otomatisasi laporan ASTEKPAM menghasilkan laporan yang siap kirim via WhatsApp, dengan format yang konsisten dan mudah dibaca.
       </p>      
       <a href="https://github.com/idugeni/wastekpam" target="_blank" class="btn btn-outline btn-accent btn-wide rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 hover:from-purple-600 hover:to-indigo-600 transition-colors duration-300 sm:w-auto md:w-auto lg:w-auto">
@@ -93,7 +93,7 @@
               <span class="label-text font-semibold">Tahanan Laki-Laki</span>
             </label>
             <div class="relative">
-              <input type="number" id="tahananL" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
+              <input type="text" inputmode="numeric" id="tahananL" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
               <div class="absolute inset-y-0 right-0 flex items-center pr-2">
                 <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="decrementValue('tahananL')">-</button>
                 <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="incrementValue('tahananL')">+</button>
@@ -105,7 +105,7 @@
               <span class="label-text font-semibold">Tahanan Perempuan</span>
             </label>
             <div class="relative">
-              <input type="number" id="tahananP" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
+              <input type="text" inputmode="numeric" id="tahananP" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
               <div class="absolute inset-y-0 right-0 flex items-center pr-2">
                 <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="decrementValue('tahananP')">-</button>
                 <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="incrementValue('tahananP')">+</button>
@@ -117,7 +117,7 @@
               <span class="label-text font-semibold">Narapidana Laki-Laki</span>
             </label>
             <div class="relative">
-              <input type="number" id="narapidanaL" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
+              <input type="text" inputmode="numeric" id="narapidanaL" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
               <div class="absolute inset-y-0 right-0 flex items-center pr-2">
                 <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="decrementValue('narapidanaL')">-</button>
                 <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="incrementValue('narapidanaL')">+</button>
@@ -129,7 +129,7 @@
               <span class="label-text font-semibold">Narapidana Perempuan</span>
             </label>
             <div class="relative">
-              <input type="number" id="narapidanaP" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
+              <input type="text" inputmode="numeric" id="narapidanaP" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
               <div class="absolute inset-y-0 right-0 flex items-center pr-2">
                 <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="decrementValue('narapidanaP')">-</button>
                 <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="incrementValue('narapidanaP')">+</button>
@@ -141,7 +141,7 @@
               <span class="label-text font-semibold">Jumlah WBP di Dalam</span>
             </label>
             <div class="relative">
-              <input type="number" id="jumlahWBPdalam" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
+              <input type="text" inputmode="numeric" id="jumlahWBPdalam" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
               <div class="absolute inset-y-0 right-0 flex items-center pr-2">
                 <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="decrementValue('jumlahWBPdalam')">-</button>
                 <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="incrementValue('jumlahWBPdalam')">+</button>
@@ -153,7 +153,7 @@
               <span class="label-text font-semibold">Jumlah WBP di Luar</span>
             </label>
             <div class="relative">
-              <input type="number" id="jumlahWBPluar" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
+              <input type="text" inputmode="numeric" id="jumlahWBPluar" class="input input-bordered w-full pl-3 pr-16 py-2 mt-1 rounded-md focus:outline-none focus:ring focus:border-blue-300" inputmode="numeric">
               <div class="absolute inset-y-0 right-0 flex items-center pr-2">
                 <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="decrementValue('jumlahWBPluar')">-</button>
                 <button type="button" class="btn btn-outline btn-square btn-sm hover:bg-blue-100" onclick="incrementValue('jumlahWBPluar')">+</button>
@@ -316,7 +316,7 @@
     <textarea id="laporan" class="textarea textarea-bordered w-full mt-4 h-64 resize-none rounded-lg p-4 placeholder-gray-400 border-gray-300 focus:border-blue-500 focus:ring-blue-500" readonly placeholder="Hasil laporan di sini..." spellcheck="false"></textarea>
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/gh/idugeni/wastekpam@main/assets/js/main.js"></script>    
+    <script src="https://cdn.jsdelivr.net/gh/idugeni/wastekpam@78bd0982fff39a7b452c5c42db3b1a0f05f75b1a/assets/js/main.js"></script>    
     <script>
       document.getElementById('laporan').value = "Ini adalah hasil laporan yang telah digenerate.";
       document.getElementById('generateButton').addEventListener('click', function () {
