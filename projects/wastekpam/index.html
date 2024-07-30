@@ -27,7 +27,9 @@
       <div class="loading loading-ring loading-lg text-white"></div>
       <div class="loading loading-infinity loading-lg text-white"></div>
     </div>
-    <p class="font-sans text-center text-white mx-6 mb-4 whitespace-normal break-words">Aplikasi otomatisasi laporan ASTEKPAM untuk menghasilkan laporan siap kirim via WhatsApp, format konsisten dan mudah dibaca.</p>
+    <p id="quote" class="quote bg-gray-100 border-l-4 border-green-500 p-6 my-4 mx-auto rounded-lg text-lg font-serif text-gray-800 max-w-4xl text-center shadow-lg leading-relaxed">
+        <!-- Quote akan muncul di sini -->
+    </p>
     <div class="absolute bottom-4">
       <p class="text-center text-white mx-6 mb-2 text-sm italic whitespace-normal break-words">Copyright © 2024 Eliyanto Sarage</p>
     </div>
@@ -316,7 +318,8 @@
     <textarea id="laporan" class="textarea textarea-bordered w-full mt-4 h-64 resize-none rounded-lg p-4 placeholder-gray-400 border-gray-300 focus:border-blue-500 focus:ring-blue-500" readonly placeholder="Hasil laporan di sini..." spellcheck="false"></textarea>
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/gh/idugeni/wastekpam@78bd0982fff39a7b452c5c42db3b1a0f05f75b1a/assets/js/main.js"></script>    
+    <script src="https://cdn.jsdelivr.net/gh/idugeni/wastekpam@22fc1a5ac657dd629c2bdf204676b84b3a33f1ba/assets/js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/idugeni/wastekpam@1eb429ea667d66abcf06413d0081496dbb3d05bf/assets/js/quote.js"></script>
     <script>
       document.getElementById('laporan').value = "Ini adalah hasil laporan yang telah digenerate.";
       document.getElementById('generateButton').addEventListener('click', function () {
