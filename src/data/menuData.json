@@ -1,0 +1,35 @@
+{
+  "items": [
+    {
+      "text": "About",
+      "href": "/about"
+    },
+    {
+      "text": "Team",
+      "href": "/team"
+    },
+    {
+      "text": "Features",
+      "href": "/features",
+      "submenu": [
+        {
+          "text": "Tech tools",
+          "href": "/features/tech-tools"
+        },
+        {
+          "text": "Podcast",
+          "href": "/features/podcast"
+        },
+        {
+          "text": "Community",
+          "href": "/features/community"
+        }
+      ]
+    },
+    {
+      "text": "Access",
+      "href": "/access",
+      "btn": true
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "socialMedia": [
+    {
+      "platform": "Facebook",
+      "icon": "FaFacebookF",
+      "url": "https://facebook.com/idugeni"
+    },
+    {
+      "platform": "Twitter",
+      "icon": "FaTwitter",
+      "url": "https://twitter.com/idugeni"
+    },
+    {
+      "platform": "Instagram",
+      "icon": "FaInstagram",
+      "url": "https://instagram.com/idugeni"
+    },
+    {
+      "platform": "Github",
+      "icon": "FaGithub",
+      "url": "https://github.com/idugeni"
+    },
+    {
+      "platform": "LinkedIn",
+      "icon": "FaLinkedinIn",
+      "url": "https://linkedin.com/company/idugeni"
+    },
+    {
+      "platform": "YouTube",
+      "icon": "FaYoutube",
+      "url": "https://youtube.com/idugeni"
+    },
+    {
+      "platform": "Pinterest",
+      "icon": "FaPinterestP",
+      "url": "https://pinterest.com/idugeni"
+    },
+    {
+      "platform": "TikTok",
+      "icon": "FaTiktok",
+      "url": "https://tiktok.com/@idugeni"
+    }
+  ]
+}

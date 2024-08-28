@@ -1,0 +1,52 @@
+[
+  {
+    "id": "1",
+    "question": "What is IduGeni?",
+    "answer": "We are a leading provider of innovative solutions for personal and professional projects."
+  },
+  {
+    "id": "2",
+    "question": "How can I get in touch?",
+    "answer": "You can contact us through the contact form on our website or reach out via email."
+  },
+  {
+    "id": "3",
+    "question": "What services do you offer?",
+    "answer": "We offer a range of services including web development, digital marketing, and more."
+  },
+  {
+    "id": "4",
+    "question": "What is your refund policy?",
+    "answer": "We offer a 30-day money-back guarantee on all our services. Please refer to our refund policy for more details."
+  },
+  {
+    "id": "5",
+    "question": "Do you offer support?",
+    "answer": "Yes, we offer 24/7 support through our helpdesk. You can also reach us via email or phone."
+  },
+  {
+    "id": "6",
+    "question": "Can I customize your services?",
+    "answer": "Absolutely! We provide custom solutions tailored to your specific needs. Contact us to discuss your requirements."
+  },
+  {
+    "id": "7",
+    "question": "What payment methods do you accept?",
+    "answer": "We accept various payment methods including credit cards, PayPal, and bank transfers."
+  },
+  {
+    "id": "8",
+    "question": "How long does it take to complete a project?",
+    "answer": "The timeline for project completion varies depending on the complexity of the project. We will provide an estimated timeline during the consultation."
+  },
+  {
+    "id": "9",
+    "question": "Do you have any case studies?",
+    "answer": "Yes, we have several case studies showcasing our work. Please visit our website to view them."
+  },
+  {
+    "id": "10",
+    "question": "How can I request a quote?",
+    "answer": "You can request a quote by filling out the contact form on our website or reaching out to us directly via email."
+  }
+]

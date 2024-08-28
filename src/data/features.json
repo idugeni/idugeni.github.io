@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "title": "Enhanced Security",
+    "description": "Protect your data with our state-of-the-art security features.",
+    "icon": "FaShieldCat"
+  },
+  {
+    "id": "2",
+    "title": "Mobile Access",
+    "description": "Access your account from any device, anywhere, anytime.",
+    "icon": "FaMobile"
+  },
+  {
+    "id": "3",
+    "title": "24/7 Support",
+    "description": "Our support team is available around the clock.",
+    "icon": "FaCommentDots"
+  }
+]

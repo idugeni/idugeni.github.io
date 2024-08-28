@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Basic Plan",
+    "price": "$19 / month",
+    "features": [
+      "Up to 5 Projects",
+      "Basic Analytics",
+      "Email Support",
+      "1 GB Storage",
+      "Basic Security Features",
+      "Monthly Reports"
+    ],
+    "link": "/basic-plan"
+  },
+  {
+    "name": "Pro Plan",
+    "price": "$49 / month",
+    "features": [
+      "Up to 20 Projects",
+      "Advanced Analytics",
+      "Priority Email Support",
+      "Phone Support",
+      "10 GB Storage",
+      "Enhanced Security Features",
+      "Weekly Reports",
+      "API Access"
+    ],
+    "link": "/pro-plan"
+  },
+  {
+    "name": "Enterprise Plan",
+    "price": "$99 / month",
+    "features": [
+      "Unlimited Projects",
+      "Comprehensive Analytics",
+      "Dedicated Account Manager",
+      "24/7 Support",
+      "50 GB Storage",
+      "Advanced Security Features",
+      "Custom Reports",
+      "API Access",
+      "Dedicated Cloud Hosting",
+      "Custom Integrations"
+    ],
+    "link": "/enterprise-plan"
+  }
+]

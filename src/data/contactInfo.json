@@ -1,0 +1,19 @@
+{
+  "contactInfo": [
+    {
+      "type": "Email",
+      "icon": "FaEnvelope",
+      "value": "isabdodadi@gmail.com"
+    },
+    {
+      "type": "Phone",
+      "icon": "FaPhone",
+      "value": "+123-456-7890"
+    },
+    {
+      "type": "Address",
+      "icon": "FaMap",
+      "value": "123 Your Street, Your City, Your Country"
+    }
+  ]
+}

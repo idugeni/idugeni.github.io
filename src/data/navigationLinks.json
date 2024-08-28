@@ -1,0 +1,16 @@
+{
+  "links": [
+    {
+      "label": "About Us",
+      "url": "/about"
+    },
+    {
+      "label": "Blog",
+      "url": "/blog"
+    },
+    {
+      "label": "Contact Us",
+      "url": "/contact"
+    }
+  ]
+}

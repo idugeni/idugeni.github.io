@@ -1,0 +1,35 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://idugeni.vercel.app/sitemap.xml
+
+User-agent: BadBot
+Disallow: /
+
+User-agent: *
+Disallow: /api/
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /tmp/
+Disallow: /node_modules/
+
+User-agent: Googlebot
+Allow: /public/
+
+User-agent: *
+Crawl-delay: 10
+
+User-agent: *
+Disallow: /*.pdf$
+Disallow: /*.zip$
+
+User-agent: *
+Noindex: /private/
+
+User-agent: *
+Allow: /styles/
+Allow: /scripts/
+Allow: /api/og/*
+
+User-agent: Bingbot
+Disallow: /no-bing/

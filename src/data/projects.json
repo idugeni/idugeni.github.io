@@ -1,0 +1,86 @@
+[
+  {
+    "id": 1,
+    "title": "Project One",
+    "description": "A groundbreaking project in tech innovation.",
+    "url": "/project-one",
+    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+  },
+  {
+    "id": 2,
+    "title": "Project Two",
+    "description": "An innovative solution for modern problems.",
+    "url": "/project-two",
+    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+  },
+  {
+    "id": 3,
+    "title": "Project Three",
+    "description": "Revolutionizing the industry with new technology.",
+    "url": "/project-three",
+    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+  },
+  {
+    "id": 4,
+    "title": "Project Four",
+    "description": "A next-gen project with cutting-edge features.",
+    "url": "/project-four",
+    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+  },
+  {
+    "id": 5,
+    "title": "Project Five",
+    "description": "Creating impactful solutions for various industries.",
+    "url": "/project-five",
+    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+  },
+  {
+    "id": 6,
+    "title": "Project Six",
+    "description": "Pioneering new ways to solve common issues.",
+    "url": "/project-six",
+    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+  },
+  {
+    "id": 7,
+    "title": "Project Seven",
+    "description": "A comprehensive approach to technology challenges.",
+    "url": "/project-seven",
+    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+  },
+  {
+    "id": 8,
+    "title": "Project Eight",
+    "description": "Innovative design and functionality at its best.",
+    "url": "/project-eight",
+    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+  },
+  {
+    "id": 9,
+    "title": "Project Nine",
+    "description": "Elevating standards with exceptional solutions.",
+    "url": "/project-nine",
+    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+  },
+  {
+    "id": 10,
+    "title": "Project Ten",
+    "description": "New perspectives on technological advancement.",
+    "url": "/project-ten",
+    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+  },
+  {
+    "id": 11,
+    "title": "Project Eleven",
+    "description": "Leading the way with creative tech solutions.",
+    "url": "/project-eleven",
+    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+  },
+  {
+    "id": 12,
+    "title": "Project Twelve",
+    "description": "Transforming ideas into impactful projects.",
+    "url": "/project-twelve",
+    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+  }
+]
