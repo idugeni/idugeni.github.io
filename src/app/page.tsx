@@ -12,7 +12,7 @@ import ContactForm from '@/components/ContactForm'
 
 export default function Page () {
   return (
-    <div data-theme='night' className='bg-base-200 text-base-content'>
+    <div data-theme='night'>
       <HeroSection />
       <div className='mx-auto'>
         <AboutSection />

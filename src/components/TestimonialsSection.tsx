@@ -64,7 +64,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = memo(
         <h4 className='font-semibold text-lg md:text-xl mb-1'>
           {testimonial.name}
         </h4>
-        <p className='text-gray-600 mb-0'>{testimonial.position}</p>
+        <p className='text-neutral-600 mb-0'>{testimonial.position}</p>
       </div>
     )
   }
@@ -98,7 +98,7 @@ export default function TestimonialsSection () {
   }
 
   return (
-    <section className='py-8 md:py-12 lg:py-16 bg-base-200'>
+    <section className='py-8 md:py-12 lg:py-16 bg-base-200 text-base-content'>
       <div className='container mx-auto px-4 md:px-6 lg:px-8'>
         <h2 className='text-xl md:text-2xl lg:text-3xl font-bold mb-8 text-center text-primary'>
           Testimonials

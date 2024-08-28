@@ -30,7 +30,7 @@ const PlanCard = memo(({ plan }: { plan: Plan }) => (
             className='flex items-center justify-center space-x-3'
           >
             <FaCheck className='w-5 h-5 text-primary' />
-            <span className='text-gray-400'>{feature}</span>
+            <span className='text-neutral-400'>{feature}</span>
           </li>
         ))}
       </ul>
@@ -38,7 +38,7 @@ const PlanCard = memo(({ plan }: { plan: Plan }) => (
     <div className='p-8 w-full'>
       <Link
         href={plan.link}
-        className='bg-gradient-to-r from-blue-500 to-teal-500 text-white rounded-full py-3 px-6 flex items-center justify-center shadow-md transition-colors duration-300 hover:from-blue-600 hover:to-teal-600'
+        className='bg-gradient-to-r from-blue-500 to-teal-500 text-white rounded-full py-3 px-6 flex items-center justify-center shadow-md transition-all duration-300 ease-in-out hover:from-blue-600 hover:to-teal-600 hover:text-neutral-300 hover:shadow-lg focus:outline-none'
       >
         Get Started
       </Link>
@@ -46,9 +46,9 @@ const PlanCard = memo(({ plan }: { plan: Plan }) => (
   </div>
 ))
 
-export default function PricingSection () {
+export default function PricingSection() {
   return (
-    <section className='py-8 md:py-12 lg:py-16 bg-base-200 border-b border-gray-700'>
+    <section className='py-8 md:py-12 lg:py-16 bg-base-200 text-base-content border-b border-gray-700'>
       <div className='container mx-auto px-4 md:px-6 lg:px-8'>
         <h2 className='text-2xl md:text-3xl lg:text-4xl font-bold mb-8 text-center text-primary'>
           Pricing Plans

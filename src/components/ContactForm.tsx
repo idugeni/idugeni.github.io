@@ -16,7 +16,7 @@ const iconMap: Record<IconName, React.ComponentType<{ className?: string }>> = {
   FaMap: FaMap,
 }
 
-export default function ContactForm () {
+export default function ContactForm() {
   const contactInfo = useMemo(() => contactData.contactInfo, [])
 
   return (
@@ -44,7 +44,7 @@ export default function ContactForm () {
                     className='input input-bordered w-full pl-12'
                   />
                   <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
-                    <FaUser className='w-5 h-5 text-gray-500' />
+                    <FaUser className='w-5 h-5' />
                   </div>
                 </div>
               </div>
@@ -64,7 +64,7 @@ export default function ContactForm () {
                     className='input input-bordered w-full pl-12'
                   />
                   <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
-                    <FaEnvelope className='w-5 h-5 text-gray-500' />
+                    <FaEnvelope className='w-5 h-5' />
                   </div>
                 </div>
               </div>
@@ -84,7 +84,7 @@ export default function ContactForm () {
                     className='input input-bordered w-full pl-12'
                   />
                   <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
-                    <FaPhone className='w-5 h-5 text-gray-500' />
+                    <FaPhone className='w-5 h-5' />
                   </div>
                 </div>
               </div>
@@ -107,17 +107,17 @@ export default function ContactForm () {
               {/* Submit Button */}
               <button
                 type='submit'
-                className='w-full bg-primary text-base-100 py-3 rounded-full flex items-center justify-center gap-2 shadow-md hover:bg-primary-dark hover:text-white focus:outline-none'
+                className='w-full bg-primary text-base-100 py-3 rounded-full flex items-center justify-center gap-2 shadow-md transition-colors duration-300 ease-in-out hover:bg-primary-dark hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-dark focus:ring-opacity-50'
               >
-                <FaPaperPlane className='w-5 h-5' />
-                <span>Send Message</span>
+                <FaPaperPlane className='w-5 h-5 transition-transform duration-300 ease-in-out group-hover:translate-x-1' />
+                <span className='transition-transform duration-300 ease-in-out group-hover:translate-x-1'>Send Message</span>
               </button>
             </form>
           </div>
 
           {/* Contact Information */}
           <div className='bg-base-300 p-8 rounded-lg shadow-lg'>
-            <h3 className='text-center text-xl font-semibold text-gray-100 mb-4'>
+            <h3 className='text-center text-xl font-semibold mb-4'>
               Our Contact Information
             </h3>
             <ul className='space-y-4'>
@@ -126,9 +126,9 @@ export default function ContactForm () {
                 return (
                   <li key={index} className='flex items-center space-x-4'>
                     <div className='w-12 h-12 bg-neutral rounded-full flex items-center justify-center'>
-                      <IconComponent className='w-6 h-6 text-gray-400' />
+                      <IconComponent className='w-6 h-6' />
                     </div>
-                    <span className='text-gray-300'>{info.value}</span>
+                    <span>{info.value}</span>
                   </li>
                 )
               })}

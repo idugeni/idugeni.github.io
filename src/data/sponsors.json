@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1,
+    "name": "Next.js",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/8/8e/Nextjs-logo.svg"
+  },
+  {
+    "id": 2,
+    "name": "TypeScript",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/29/TypeScript_Logo_%28Blue%29.svg"
+  },
+  {
+    "id": 3,
+    "name": "GitHub",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/8/8a/GitHub_Copilot_logo.svg"
+  },
+  {
+    "id": 4,
+    "name": "Vercel",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Vercel_logo_black.svg"
+  },
+  {
+    "id": 5,
+    "name": "Node.js",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Node.js_logo_2015.svg"
+  }
+]

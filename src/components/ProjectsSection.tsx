@@ -27,12 +27,12 @@ const ProjectCard = memo(({ project }: { project: Project }) => (
     />
     <div className='flex-1 p-6'>
       <h3 className='text-xl font-semibold mb-2'>{project.title}</h3>
-      <p className='text-gray-300 mb-4'>{project.description}</p>
+      <p className='text-neutral-300 mb-4'>{project.description}</p>
     </div>
     <div className='p-6'>
       <Link
         href={project.url}
-        className='inline-block bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-2 px-4 rounded'
+        className='inline-block bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-2 px-4 rounded transition-colors duration-300 ease-in-out hover:from-blue-600 hover:to-purple-600 hover:text-neutral-300 focus:outline-none'
       >
         Learn More
       </Link>
@@ -40,7 +40,7 @@ const ProjectCard = memo(({ project }: { project: Project }) => (
   </div>
 ))
 
-export default function ProjectsSection () {
+export default function ProjectsSection() {
   const [visibleCount, setVisibleCount] = useState(6)
 
   const handleLoadMore = () => {
@@ -48,7 +48,7 @@ export default function ProjectsSection () {
   }
 
   return (
-    <section className='py-8 md:py-12 lg:py-16 bg-base-200 border-b border-gray-700'>
+    <section className='py-8 md:py-12 lg:py-16 bg-base-200 text-base-content border-b border-gray-700'>
       <div className='container mx-auto px-4 md:px-6 lg:px-8'>
         <div className='text-center mb-8'>
           <h2 className='text-xl md:text-2xl lg:text-3xl font-bold mb-4 text-primary'>
@@ -71,7 +71,7 @@ export default function ProjectsSection () {
           <div className='text-center mt-8'>
             <button
               onClick={handleLoadMore}
-              className='inline-block bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-2 px-4 rounded'
+              className='inline-block bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-2 px-4 rounded transition-all duration-300 ease-in-out hover:from-blue-600 hover:to-purple-600 hover:text-neutral-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400'
             >
               Load More
             </button>

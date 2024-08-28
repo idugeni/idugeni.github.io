@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { FaRocket, FaBook } from 'react-icons/fa6'
 import Link from 'next/link'
 
-export default function HeroSection () {
+export default function HeroSection() {
   return (
     <section className='relative w-full h-screen overflow-hidden'>
       <div className='absolute inset-0'>
@@ -16,6 +16,17 @@ export default function HeroSection () {
       </div>
       <div className='relative flex items-center justify-center w-full h-full bg-black bg-opacity-60 text-white'>
         <div className='text-center max-w-4xl px-4'>
+          <div className='mb-4 flex justify-center gap-4'>
+            <span className='badge badge-outline px-4 py-2 transition-all duration-300 hover:bg-primary hover:text-base-100'>
+              Next.js
+            </span>
+            <span className='badge badge-outline px-4 py-2 transition-all duration-300 hover:bg-secondary hover:text-base-100'>
+              GitHub Pages
+            </span>
+            <span className='badge badge-outline px-4 py-2 transition-all duration-300 hover:bg-accent hover:text-base-100'>
+              Vercel
+            </span>
+          </div>
           <h1 className='text-4xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 drop-shadow-lg'>
             Welcome to{' '}
             <span className='text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500'>
@@ -36,7 +47,7 @@ export default function HeroSection () {
             </Link>
             <Link
               href='/documentation'
-              className='relative flex items-center justify-center bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-full px-8 py-3 transition duration-300 ease-in-out hover:bg-gradient-to-r hover:from-teal-600 hover:to-green-600'
+              className='relative flex items-center justify-center bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full px-8 py-3 transition duration-300 ease-in-out hover:bg-gradient-to-r hover:from-pink-600 hover:to-purple-600'
             >
               <FaBook className='h-5 w-5 mr-2' />
               <span>Documentation</span>

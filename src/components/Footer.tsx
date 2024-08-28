@@ -1,6 +1,5 @@
 'use client'
 
-import { FC } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -22,34 +21,36 @@ import navigationLinks from '@/data/navigationLinks.json'
 import socialMedia from '@/data/socialMedia.json'
 import contactInfo from '@/data/contactInfo.json'
 
-type IconName =
-  | 'FaFacebookF'
-  | 'FaTwitter'
-  | 'FaInstagram'
-  | 'FaGithub'
-  | 'FaLinkedinIn'
-  | 'FaYoutube'
-  | 'FaPinterestP'
-  | 'FaTiktok'
-  | 'FaEnvelope'
-  | 'FaPhone'
-  | 'FaMap'
-
-const iconMap: { [key in IconName]: React.ElementType } = {
-  FaFacebookF,
-  FaTwitter,
-  FaInstagram,
-  FaGithub,
-  FaLinkedinIn,
-  FaYoutube,
-  FaPinterestP,
-  FaTiktok,
-  FaEnvelope,
-  FaPhone,
-  FaMap,
+// Define an enum for icon names
+enum IconName {
+  FaFacebookF = 'FaFacebookF',
+  FaTwitter = 'FaTwitter',
+  FaInstagram = 'FaInstagram',
+  FaGithub = 'FaGithub',
+  FaLinkedinIn = 'FaLinkedinIn',
+  FaYoutube = 'FaYoutube',
+  FaPinterestP = 'FaPinterestP',
+  FaTiktok = 'FaTiktok',
+  FaEnvelope = 'FaEnvelope',
+  FaPhone = 'FaPhone',
+  FaMap = 'FaMap',
 }
 
-const Footer: FC = () => {
+const iconMap: { [key in IconName]: React.ElementType } = {
+  [IconName.FaFacebookF]: FaFacebookF,
+  [IconName.FaTwitter]: FaTwitter,
+  [IconName.FaInstagram]: FaInstagram,
+  [IconName.FaGithub]: FaGithub,
+  [IconName.FaLinkedinIn]: FaLinkedinIn,
+  [IconName.FaYoutube]: FaYoutube,
+  [IconName.FaPinterestP]: FaPinterestP,
+  [IconName.FaTiktok]: FaTiktok,
+  [IconName.FaEnvelope]: FaEnvelope,
+  [IconName.FaPhone]: FaPhone,
+  [IconName.FaMap]: FaMap,
+}
+
+const Footer = () => {
   const currentYear = new Date().getFullYear()
 
   return (
@@ -93,11 +94,11 @@ const Footer: FC = () => {
             <hr className='border-t-2 border-primary w-full mb-4' />
             <div className='grid grid-cols-2 gap-4'>
               {socialMedia.socialMedia.map((media) => {
-                const IconComponent = iconMap[media.icon as IconName]
+                const IconComponent = iconMap[media.icon as keyof typeof iconMap]
                 return (
                   <Link key={media.url} href={media.url} className='block'>
                     <div className='flex flex-col items-center bg-base-100 p-4 rounded-lg shadow'>
-                      <IconComponent className='text-primary text-3xl mb-2' />
+                      <IconComponent className='text-primary text-3xl mb-2 transition-colors duration-300 hover:text-neutral-300' />
                       <p className='text-sm text-center'>{media.platform}</p>
                     </div>
                   </Link>
@@ -114,13 +115,13 @@ const Footer: FC = () => {
             <hr className='border-t-2 border-primary w-full mb-4' />
             <div className='space-y-4'>
               {contactInfo.contactInfo.map((contact) => {
-                const IconComponent = iconMap[contact.icon as IconName]
+                const IconComponent = iconMap[contact.icon as keyof typeof iconMap]
                 return (
                   <div
                     key={contact.value}
                     className='flex items-center bg-base-100 p-4 rounded-lg shadow'
                   >
-                    <IconComponent className='text-primary text-3xl mr-4' />
+                    <IconComponent className='text-primary text-3xl mr-4 transition-colors duration-300 hover:text-neutral-300' />
                     <div>
                       <p className='font-semibold'>{contact.type}</p>
                       {contact.type === 'Email' ? (

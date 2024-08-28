@@ -5,31 +5,42 @@
       "href": "/about"
     },
     {
-      "text": "Team",
-      "href": "/team"
+      "text": "Contact",
+      "href": "/contact"
     },
     {
-      "text": "Features",
-      "href": "/features",
+      "text": "Projects",
+      "href": "/projects"
+    },
+    {
+      "text": "Projects",
+      "href": "/projects",
       "submenu": [
         {
-          "text": "Tech tools",
-          "href": "/features/tech-tools"
+          "text": "Enhanced Security",
+          "href": "/features/enhanced-security"
         },
         {
-          "text": "Podcast",
-          "href": "/features/podcast"
+          "text": "Mobile Access",
+          "href": "/features/mobile-access"
         },
         {
-          "text": "Community",
-          "href": "/features/community"
+          "text": "Support",
+          "href": "/features/support"
         }
       ]
     },
     {
-      "text": "Access",
-      "href": "/access",
+      "text": "Terms",
+      "href": "/terms",
       "btn": true
+    },
+    {
+      "text": "GitHub",
+      "href": "https://github.com/your-repo",
+      "icon": "github",
+      "description": "Explore our GitHub repository for more details.",
+      "external": true
     }
   ]
 }

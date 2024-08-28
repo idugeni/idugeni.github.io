@@ -1,13 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { FaUsers, FaUserPlus } from 'react-icons/fa6'
+import { FaUserPlus } from 'react-icons/fa6'
 import Link from 'next/link'
 import Image from 'next/image'
 
-export default function CallToAction () {
-  const [isHovered, setIsHovered] = useState(false)
-
+export default function CallToAction() {
   return (
     <section className='relative py-8 md:py-12 lg:py-16 bg-cover bg-center'>
       <Image
@@ -29,16 +26,10 @@ export default function CallToAction () {
           <div className='flex justify-center'>
             <Link
               href='/join'
-              className='relative flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-blue-500 to-teal-500 text-white py-2 px-8 md:py-3 md:px-12 font-semibold text-base md:text-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-teal-500 hover:to-blue-500 hover:text-white hover:shadow-lg'
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
+              className='relative flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-blue-500 to-teal-500 text-white py-2 px-8 md:py-3 md:px-12 font-semibold text-base md:text-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-teal-500 hover:to-blue-500 hover:text-neutral-300 hover:shadow-lg'
             >
               <span className='relative flex items-center z-10'>
-                {isHovered ? (
-                  <FaUserPlus className='h-5 w-5 md:h-6 md:w-6 mr-2 transition-colors duration-300' />
-                ) : (
-                  <FaUsers className='h-5 w-5 md:h-6 md:w-6 mr-2 transition-colors duration-300' />
-                )}
+                <FaUserPlus className='h-5 w-5 md:h-6 md:w-6 mr-2 transition-colors duration-300' />
                 <span className='transition-colors duration-300'>Join Us</span>
               </span>
               <span className='absolute inset-0 border-2 border-transparent rounded-full opacity-40 transition-opacity duration-300 hover:opacity-60'></span>

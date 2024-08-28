@@ -40,7 +40,7 @@ const Blog = () => {
                 <h2 className='card-title text-lg font-semibold'>
                   {blog.title}
                 </h2>
-                <p className='text-sm text-gray-500 mb-4'>{blog.date}</p>
+                <p className='text-sm mb-4'>{blog.date}</p>
                 <p className='text-base mb-4'>{blog.excerpt}</p>
                 <div className='card-actions mt-4'>
                   <Link

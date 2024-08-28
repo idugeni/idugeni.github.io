@@ -1,16 +1,32 @@
 {
   "links": [
     {
+      "label": "Projects",
+      "url": "/projects"
+    },
+    {
+      "label": "Blogs",
+      "url": "/blog"
+    },
+    {
       "label": "About Us",
       "url": "/about"
     },
     {
-      "label": "Blog",
-      "url": "/blog"
-    },
-    {
       "label": "Contact Us",
       "url": "/contact"
+    },
+    {
+      "label": "Privacy Policy",
+      "url": "/privacy-policy"
+    },
+    {
+      "label": "Terms and Conditions",
+      "url": "/terms-and-conditions"
+    },
+    {
+      "label": "Disclaimer",
+      "url": "/disclaimer"
     }
   ]
 }
