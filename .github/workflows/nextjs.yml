@@ -1,88 +1,62 @@
 name: Deploy Next.js site to Pages
-# Nama workflow ini yang digunakan untuk mengatur proses deployment Next.js ke GitHub Pages.
 
 on:
   push:
     branches: ['main']
-    # Workflow ini akan dipicu setiap kali ada perubahan pada branch 'main'.
   workflow_dispatch:
-    # Workflow ini juga dapat dipicu secara manual melalui antarmuka GitHub.
 
 permissions:
   contents: read
   pages: write
   id-token: write
-  # Mengatur izin akses yang diperlukan untuk workflow:
-  # - contents: read: Membaca konten repositori.
-  # - pages: write: Menulis ke GitHub Pages.
-  # - id-token: write: Menulis ID token, yang mungkin diperlukan untuk autentikasi.
 
 concurrency:
   group: 'pages'
   cancel-in-progress: false
-  # Mengatur eksekusi bersamaan:
-  # - group: Menetapkan grup eksekusi bernama 'pages'.
-  # - cancel-in-progress: false: Tidak membatalkan pekerjaan yang sedang berjalan dalam grup jika ada yang baru.
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Menentukan runner yang akan digunakan untuk pekerjaan ini, di sini adalah 'ubuntu-latest'.
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        # Langkah untuk memeriksa kode dari repositori.
-        # Menggunakan aksi 'checkout' versi 4 untuk mengambil kode.
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-        # Langkah untuk mengatur versi Node.js dan caching npm.
-        # Menggunakan aksi 'setup-node' versi 4 dengan Node.js versi 20 dan mengaktifkan cache untuk npm.
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
           static_site_generator: next
-        # Langkah untuk mengonfigurasi GitHub Pages untuk digunakan dengan generator situs statis Next.js.
-        # Menggunakan aksi 'configure-pages' versi 5 dan menentukan generator 'next'.
 
       - name: Restore cache
         uses: actions/cache@v4
         with:
           path: |
+            ~/.npm
             .next/cache
-            node_modules
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/package.json') }}
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
-        # Langkah untuk memulihkan cache dependensi untuk mempercepat instalasi.
-        # Menggunakan aksi 'cache' versi 4 dengan path ke cache dan kunci yang ditentukan untuk cache npm dan build.
 
       - name: Install dependencies
         run: npm ci --force
-        # Langkah untuk menginstal dependensi proyek dengan 'npm ci' untuk instalasi yang bersih dan konsisten.
-        # 'npm ci --force' digunakan untuk memaksa pembaruan cache yang ada.
 
       - name: Build with Next.js
         run: npm run build
         env:
           NODE_ENV: production
-        # Langkah untuk membangun aplikasi Next.js.
-        # Menjalankan perintah 'npm run build' dengan variabel lingkungan 'NODE_ENV' diset ke 'production'.
 
       - name: Verify build
         run: ls -la ./out
-        # Langkah tambahan untuk memverifikasi bahwa direktori build ('./out') ada setelah build selesai.
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
-        # Langkah untuk mengunggah artefak build ke GitHub Pages.
-        # Menggunakan aksi 'upload-pages-artifact' versi 3 dengan path ke direktori build.
 
   deploy:
     environment:
@@ -90,11 +64,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
-    # Menetapkan pekerjaan 'deploy' yang tergantung pada pekerjaan 'build'.
-    # Menentukan runner yang digunakan adalah 'ubuntu-latest'.
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        # Langkah untuk mendeploy aplikasi ke GitHub Pages.
-        # Menggunakan aksi 'deploy-pages' versi 4.
