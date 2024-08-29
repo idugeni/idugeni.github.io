@@ -20,6 +20,7 @@ const nextConfig = {
     ],
   },
   reactStrictMode: true,
+  output: 'export',
   productionBrowserSourceMaps: false,
   eslint: {
     ignoreDuringBuilds: true,
