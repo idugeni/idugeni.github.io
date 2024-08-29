@@ -1,3 +1,5 @@
+export const dynamic = 'auto'
+
 import { ImageResponse } from 'next/og'
 
 export async function GET () {
