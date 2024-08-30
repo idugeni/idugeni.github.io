@@ -1,4 +1,12 @@
-name: Deploy Next.js RC
+# GitHub Actions Workflow
+# Name: Deploy Next.js site to GitHub Pages
+# Description: This workflow deploys a Next.js site to GitHub Pages. It builds the site and deploys it using GitHub Actions.
+# Created by: Jagad Brahma Wiraatmaja
+# Date: 31-08-2024
+# Version: 1.0
+# License: MIT
+
+name: Deploy Next.js site to GitHub Pages
 
 on:
   push:
@@ -12,7 +20,7 @@ permissions:
 
 concurrency:
   group: 'pages'
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -20,51 +28,40 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Cache Node modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            ~/.cache
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
+        # Checkout the repository to the GitHub Actions runner
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci --force
-
-      - name: Build with Next.js
-        run: npm run build
-        env:
-          NODE_ENV: production
-
-      - name: Export Next.js site
-        run: npm run export
-
-      - name: Cache Next.js build output
+          cache: 'npm'
+        # Set up Node.js environment and cache npm modules
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          static_site_generator: next
+        # Configure the GitHub Pages action for deploying a Next.js static site
+      - name: Restore cache
         uses: actions/cache@v4
         with:
           path: |
             .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
           restore-keys: |
-            ${{ runner.os }}-nextjs-
-
-      - name: Log directory contents
-        run: |
-          echo "Contents of the build output:"
-          ls -la ./out
-
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+        # Restore cached Node.js modules to speed up the build
+      - name: Install dependencies
+        run: npm ci --force
+        # Install Node.js dependencies using npm ci with --force to ensure a clean state
+      - name: Build with Next.js
+        run: npm run build
+        env:
+          NODE_ENV: production
+        # Build the Next.js project for production
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
+        # Upload the build output for GitHub Pages deployment
 
   deploy:
     environment:
@@ -76,3 +73,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        # Deploy the built Next.js site to GitHub Pages
