@@ -1,6 +1,6 @@
 export default function AboutSection () {
   return (
-    <section className='py-8 md:py-12 lg:py-16 bg-base-200 text-base-content border-b border-gray-700'>
+    <section className='py-8 md:py-12 lg:py-16 bg-base-200 text-base-content border-b border-neutral'>
       <div className='container mx-auto px-4 md:px-6 lg:px-8'>
         <h2 className='text-xl md:text-2xl lg:text-3xl font-bold mb-8 text-center text-primary'>
           About Us

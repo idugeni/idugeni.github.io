@@ -3,44 +3,46 @@
 import { useState, memo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import projectData from '@/data/projects.json'
+import blogData from '@/data/blogs.json'
 
-interface Project {
+interface Blog {
   id: number
   title: string
-  description: string
-  image: string
+  date: string
+  excerpt: string
   url: string
+  image: string
 }
 
-const ProjectCard = memo(({ project }: { project: Project }) => (
+const BlogCard = memo(({ blog }: { blog: Blog }) => (
   <div
-    key={project.id}
+    key={blog.id}
     className='bg-base-100 rounded-lg shadow-lg overflow-hidden flex flex-col'
   >
     <Image
-      src={project.image}
-      alt={project.title}
+      src={blog.image}
+      alt={blog.title}
       width={600}
       height={400}
       className='w-full h-48 object-cover'
     />
     <div className='flex-1 p-6'>
-      <h3 className='text-xl font-semibold mb-2'>{project.title}</h3>
-      <p className='text-neutral-300 mb-4'>{project.description}</p>
+      <h3 className='text-xl font-semibold mb-2'>{blog.title}</h3>
+      <p className='text-sm text-neutral-500 mb-4'>{blog.date}</p>
+      <p className='text-neutral-300 mb-4'>{blog.excerpt}</p>
     </div>
     <div className='p-6'>
       <Link
-        href={project.url}
+        href={blog.url}
         className='inline-block bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-2 px-4 rounded transition-colors duration-300 ease-in-out hover:from-blue-600 hover:to-purple-600 hover:text-neutral-300 focus:outline-none'
       >
-        Learn More
+        Read More
       </Link>
     </div>
   </div>
 ))
 
-export default function ProjectsSection () {
+export default function BlogsSection () {
   const [visibleCount, setVisibleCount] = useState(6)
 
   const handleLoadMore = () => {
@@ -52,22 +54,22 @@ export default function ProjectsSection () {
       <div className='container mx-auto px-4 md:px-6 lg:px-8'>
         <div className='text-center mb-8'>
           <h2 className='text-xl md:text-2xl lg:text-3xl font-bold mb-4 text-primary'>
-            Our Projects
+            Our Blogs
           </h2>
           <p className='text-lg mb-8 max-w-7xl mx-auto'>
-            Explore some of our standout projects that showcase our innovation
-            and expertise across various domains. Each project reflects our
-            commitment to excellence and cutting-edge technology.
+            Discover our latest blog posts where we share insights, tips, and
+            updates about our industry. Stay informed with our expert opinions
+            and analyses.
           </p>
         </div>
 
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'>
-          {projectData.slice(0, visibleCount).map((project) => (
-            <ProjectCard key={project.id} project={project} />
+          {blogData.slice(0, visibleCount).map((blog) => (
+            <BlogCard key={blog.id} blog={blog} />
           ))}
         </div>
 
-        {visibleCount < projectData.length && (
+        {visibleCount < blogData.length && (
           <div className='text-center mt-8'>
             <button
               onClick={handleLoadMore}

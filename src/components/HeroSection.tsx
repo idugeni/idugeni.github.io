@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { FaRocket, FaBook } from 'react-icons/fa6'
 import Link from 'next/link'
 
-export default function HeroSection() {
+export default function HeroSection () {
   return (
     <section className='relative w-full h-screen overflow-hidden'>
       <div className='absolute inset-0'>

@@ -1,10 +1,10 @@
 [
   {
     "id": 1,
-    "title": "Project One",
-    "description": "A groundbreaking project in tech innovation.",
-    "url": "/project-one",
-    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+    "title": "Github Folder Structure",
+    "description": "View the folder structure of a GitHub repository in a neat layout.",
+    "url": "/projects/github-folder-structure",
+    "image": "https://placehold.co/1200x630/000000/ffffff/png?&text=Github+Folder+Structure"
   },
   {
     "id": 2,

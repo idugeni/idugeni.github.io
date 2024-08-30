@@ -6,7 +6,7 @@ import {
   FaPaperPlane,
   FaMessage,
 } from 'react-icons/fa6'
-import contactData from '@/data/contactInfo.json'
+import contactData from '@/data/contact.json'
 
 export const metadata = {
   title: 'Contact Us',
@@ -37,7 +37,7 @@ const ContactPage = () => {
             How to Reach Us
           </h2>
           <div className='flex flex-col md:flex-row justify-center items-center gap-8'>
-            {contactData.contactInfo.map((info, index) => (
+            {contactData.contact.map((info, index) => (
               <div
                 key={index}
                 className='bg-base-100 p-6 rounded-lg shadow-md w-full md:w-1/3 text-center'

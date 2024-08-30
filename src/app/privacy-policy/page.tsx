@@ -1,5 +1,5 @@
 import { FaEnvelope, FaPhone, FaMap } from 'react-icons/fa6'
-import contactData from '@/data/contactInfo.json'
+import contactData from '@/data/contact.json'
 
 export const metadata = {
   title: 'Privacy Policy',
@@ -16,7 +16,7 @@ const iconMap: Record<IconName, React.ComponentType<{ className?: string }>> = {
 }
 
 const PrivacyPolicy = () => {
-  const contactInfo = contactData.contactInfo
+  const contact = contactData.contact
 
   return (
     <section className='py-8 md:py-12 lg:py-16 bg-base-200 text-base-content'>
@@ -76,7 +76,7 @@ const PrivacyPolicy = () => {
             Contact Us
           </h2>
           <div className='flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0'>
-            {contactInfo.map((info, index) => {
+            {contact.map((info, index) => {
               const IconComponent = iconMap[info.icon as IconName]
               return (
                 <div

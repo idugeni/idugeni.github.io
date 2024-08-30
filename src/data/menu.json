@@ -13,8 +13,8 @@
       "href": "/projects"
     },
     {
-      "text": "Projects",
-      "href": "/projects",
+      "text": "Features",
+      "href": "/Features",
       "submenu": [
         {
           "text": "Enhanced Security",
@@ -32,12 +32,12 @@
     },
     {
       "text": "Terms",
-      "href": "/terms",
+      "href": "/terms-and-conditions",
       "btn": true
     },
     {
       "text": "GitHub",
-      "href": "https://github.com/your-repo",
+      "href": "https://github.com/idugeni",
       "icon": "github",
       "description": "Explore our GitHub repository for more details.",
       "external": true

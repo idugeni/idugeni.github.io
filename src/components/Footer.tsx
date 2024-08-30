@@ -17,9 +17,9 @@ import {
 } from 'react-icons/fa6'
 
 import brand from '@/data/brand.json'
-import navigationLinks from '@/data/navigationLinks.json'
+import navigationLinks from '@/data/navigation.json'
 import socialMedia from '@/data/socialMedia.json'
-import contactInfo from '@/data/contactInfo.json'
+import contact from '@/data/contact.json'
 
 // Define an enum for icon names
 enum IconName {
@@ -54,7 +54,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className='bg-base-300 text-base-content border-t border-gray-700'>
+    <footer className='bg-base-300 text-base-content border-t border-neutral'>
       <div className='container mx-auto py-10 px-4 sm:px-6 lg:px-8'>
         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-12'>
           {/* Logo and Description */}
@@ -94,7 +94,8 @@ const Footer = () => {
             <hr className='border-t-2 border-primary w-full mb-4' />
             <div className='grid grid-cols-2 gap-4'>
               {socialMedia.socialMedia.map((media) => {
-                const IconComponent = iconMap[media.icon as keyof typeof iconMap]
+                const IconComponent =
+                  iconMap[media.icon as keyof typeof iconMap]
                 return (
                   <Link key={media.url} href={media.url} className='block'>
                     <div className='flex flex-col items-center bg-base-100 p-4 rounded-lg shadow'>
@@ -114,8 +115,9 @@ const Footer = () => {
             </h3>
             <hr className='border-t-2 border-primary w-full mb-4' />
             <div className='space-y-4'>
-              {contactInfo.contactInfo.map((contact) => {
-                const IconComponent = iconMap[contact.icon as keyof typeof iconMap]
+              {contact.contact.map((contact) => {
+                const IconComponent =
+                  iconMap[contact.icon as keyof typeof iconMap]
                 return (
                   <div
                     key={contact.value}
@@ -142,7 +144,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className='border-t border-gray-700 mt-8 pt-4 text-center'>
+        <div className='border-t border-neutral mt-8 pt-4 text-center'>
           <p>
             &copy; {currentYear}{' '}
             <Link href={brand.url} className='link link-hover'>

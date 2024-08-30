@@ -4,6 +4,8 @@ import '@/styles/globals.css'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import Loading from '@/app/loading'
+import { Suspense } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -25,7 +27,7 @@ export default function RootLayout ({
     <html data-theme='night' lang='id'>
       <body className={inter.className}>
         <Navbar />
-        {children}
+        <Suspense fallback={<Loading />}>{children}</Suspense>
         <Footer />
         <SpeedInsights />
       </body>

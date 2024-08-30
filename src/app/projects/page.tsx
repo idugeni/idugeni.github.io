@@ -13,10 +13,10 @@ const Projects = () => {
   return (
     <section className='py-8 md:py-12 lg:py-16 bg-base-200 text-base-content'>
       <div className='container mx-auto px-4 md:px-6 lg:px-8'>
-        <h1 className='text-2xl md:text-3xl lg:text-4xl font-bold mb-2 text-center text-primary'>
+        <h1 className='text-2xl md:text-3xl lg:text-4xl font-bold mb-8 text-center text-primary'>
           Our Projects
         </h1>
-        <p className='text-center text-base md:text-lg lg:text-xl mb-8'>
+        <p className='text-center mb-12'>
           Explore the innovative projects by IduGeni SabdoDadi, showcasing
           groundbreaking ideas and cutting-edge solutions across various
           industries.

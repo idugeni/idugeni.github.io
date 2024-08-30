@@ -6,7 +6,7 @@ import {
   FaMap,
   FaPaperPlane,
 } from 'react-icons/fa6'
-import contactData from '@/data/contactInfo.json'
+import contactData from '@/data/contact.json'
 
 type IconName = 'FaEnvelope' | 'FaPhone' | 'FaMap'
 
@@ -16,8 +16,8 @@ const iconMap: Record<IconName, React.ComponentType<{ className?: string }>> = {
   FaMap: FaMap,
 }
 
-export default function ContactForm() {
-  const contactInfo = useMemo(() => contactData.contactInfo, [])
+export default function ContactForm () {
+  const contact = useMemo(() => contactData.contact, [])
 
   return (
     <section className='py-8 md:py-12 lg:py-16 bg-base-200'>
@@ -110,7 +110,9 @@ export default function ContactForm() {
                 className='w-full bg-primary text-base-100 py-3 rounded-full flex items-center justify-center gap-2 shadow-md transition-colors duration-300 ease-in-out hover:bg-primary-dark hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-dark focus:ring-opacity-50'
               >
                 <FaPaperPlane className='w-5 h-5 transition-transform duration-300 ease-in-out group-hover:translate-x-1' />
-                <span className='transition-transform duration-300 ease-in-out group-hover:translate-x-1'>Send Message</span>
+                <span className='transition-transform duration-300 ease-in-out group-hover:translate-x-1'>
+                  Send Message
+                </span>
               </button>
             </form>
           </div>
@@ -121,7 +123,7 @@ export default function ContactForm() {
               Our Contact Information
             </h3>
             <ul className='space-y-4'>
-              {contactInfo.map((info, index) => {
+              {contact.map((info, index) => {
                 const IconComponent = iconMap[info.icon as IconName]
                 return (
                   <li key={index} className='flex items-center space-x-4'>

@@ -4,7 +4,7 @@ import { FaUserPlus } from 'react-icons/fa6'
 import Link from 'next/link'
 import Image from 'next/image'
 
-export default function CallToAction() {
+export default function CallToAction () {
   return (
     <section className='relative py-8 md:py-12 lg:py-16 bg-cover bg-center'>
       <Image

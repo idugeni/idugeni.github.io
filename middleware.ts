@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://idugeni.vercel.app';
-
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
-  const hostname = request.headers.get('host') || '';
 
   response.headers.set('Access-Control-Allow-Origin', '*');
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -18,12 +15,6 @@ export function middleware(request: NextRequest) {
   response.headers.set('Permissions-Policy', 'geolocation=(self), microphone=()');
   response.headers.set('X-Permitted-Cross-Domain-Policies', 'none');
   response.headers.set('Cache-Control', 'no-store');
-
-  if (hostname.includes('github.io')) {
-    const newUrl = new URL(request.url);
-    newUrl.hostname = new URL(siteUrl).hostname;
-    return NextResponse.redirect(newUrl);
-  }
 
   if (request.method === 'OPTIONS') {
     return new NextResponse(null, { status: 204 });
