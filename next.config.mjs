@@ -43,6 +43,7 @@ const nextConfig = {
     },
     after: true,
   },
+  output: 'standalone',
 }
 
 export default nextConfig
