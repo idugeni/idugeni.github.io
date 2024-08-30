@@ -43,6 +43,7 @@ const nextConfig = {
       ],
     },
     after: true,
+    outputFileTracing: true,
   },
 }
 
