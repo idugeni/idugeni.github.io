@@ -2,7 +2,7 @@ export const dynamic = 'force-static'
 
 import { ImageResponse } from 'next/og'
 
-export async function GET () {
+export const GET = async () => {
   return new ImageResponse(
     (
       <div
