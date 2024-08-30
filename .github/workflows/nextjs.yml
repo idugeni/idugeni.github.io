@@ -1,4 +1,4 @@
-name: Deploy Next.js site to Pages
+name: Deploy Next.js site to GitHub Pages
 
 on:
   push:
@@ -25,12 +25,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-        with:
-          static_site_generator: next
 
       - name: Restore cache
         uses: actions/cache@v4
@@ -51,12 +45,12 @@ jobs:
           NODE_ENV: production
 
       - name: Verify build
-        run: ls -la ./out
+        run: ls -la .next
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out
+          path: .next
 
   deploy:
     environment:
