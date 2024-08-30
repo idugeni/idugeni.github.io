@@ -1,5 +1,7 @@
-import '@/styles/globals.css'
-
 export default function Loading () {
-  return <span className='loading loading-infinity loading-lg'></span>
+  return (
+    <div className='flex items-center justify-center'>
+      <div className='loading loading-infinity loading-lg'></div>
+    </div>
+  )
 }
