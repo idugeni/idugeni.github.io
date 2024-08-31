@@ -10,7 +10,7 @@ export default function HeroSection() {
           src='/images/hero-background.jpeg'
           alt='Background Image'
           fill
-          className='object-cover object-center'
+          className='object-cover object-center h-full w-full'
           priority
         />
       </div>
