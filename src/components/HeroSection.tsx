@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 export default function HeroSection() {
   return (
-    <section className='relative w-full min-h-screen md:h-screen overflow-hidden'>
+    <section className='relative w-full min-h-screen overflow-hidden flex items-center justify-center'>
       <div className='absolute inset-0'>
         <Image
           src='/images/hero-background.jpeg'
@@ -14,8 +14,8 @@ export default function HeroSection() {
           priority
         />
       </div>
-      <div className='relative flex items-center justify-center w-full h-full bg-black bg-opacity-60 text-white'>
-        <div className='flex flex-col items-center justify-center w-full h-full px-4 text-center max-w-4xl'>
+      <div className='relative flex flex-col items-center justify-center w-full h-full bg-black bg-opacity-60 text-white'>
+        <div className='flex flex-col items-center justify-center w-full px-4 text-center max-w-4xl'>
           <div className='mb-4 flex flex-wrap justify-center gap-4'>
             <span className='badge badge-outline px-4 py-2 transition-all duration-300 hover:bg-primary hover:text-base-100'>
               Next.js
