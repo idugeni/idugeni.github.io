@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { FaRocket, FaBook } from 'react-icons/fa6'
+import { FaRocket, FaBook } from 'react-icons/fa'
 import Link from 'next/link'
 
 export default function HeroSection() {
@@ -7,10 +7,10 @@ export default function HeroSection() {
     <section className='relative w-full min-h-screen overflow-hidden flex items-center justify-center'>
       <div className='absolute inset-0'>
         <Image
-          src='/images/hero-background.jpeg'
+          src='/images/bg-hero.webp'
           alt='Background Image'
           fill
-          className='object-cover object-center h-full w-full'
+          className='object-cover'
           priority
         />
       </div>
