@@ -22,8 +22,19 @@ export default function Navbar () {
     }
 
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
   }, [])
+
+  const closeDrawer = () => {
+    const drawerToggle = document.getElementById(
+      'drawer-toggle'
+    ) as HTMLInputElement | null
+    if (drawerToggle) {
+      drawerToggle.checked = false
+    }
+  }
 
   return (
     <div className='drawer drawer-mobile'>
@@ -44,7 +55,7 @@ export default function Navbar () {
           </div>
           <Link
             href={logo.url}
-            className='btn btn-ghost flex items-center gap-2 text-lg text-primary hover:text-primary-focus z-30'
+            className='btn btn-ghost flex items-center gap-2 text-lg text-primary hover:text-primary-focus'
           >
             <Image
               alt={logo.alt}
@@ -53,7 +64,9 @@ export default function Navbar () {
               height={32}
               className='w-10 h-10'
             />
-            <span className='hidden lg:inline font-bold'>{logo.name}</span>
+            <span className='font-bold absolute left-1/2 transform -translate-x-1/2 lg:static lg:transform-none'>
+              {logo.name}
+            </span>
           </Link>
           <div className='hidden lg:flex flex-1 items-center justify-end ml-auto'>
             <ul className='menu menu-horizontal px-1 flex items-center space-x-4'>
@@ -74,12 +87,13 @@ export default function Navbar () {
                       <summary className='cursor-pointer flex items-center gap-1 text-primary hover:text-primary-focus'>
                         {item.text}
                       </summary>
-                      <ul className='dropdown-content menu bg-base-200 p-4 rounded-box shadow-lg w-56 mt-2 absolute right-0 top-full z-50 space-y-2'>
+                      <ul className='dropdown-content menu bg-base-100 p-4 rounded-box shadow-lg w-56 mt-2 absolute right-0 top-full z-50 space-y-2'>
                         {item.submenu.map((subitem, subindex) => (
                           <li key={subindex}>
                             <Link
                               href={subitem.href}
                               className='text-primary hover:text-primary-focus'
+                              onClick={closeDrawer}
                             >
                               {subitem.text}
                             </Link>
@@ -91,6 +105,7 @@ export default function Navbar () {
                     <Link
                       href={item.href}
                       className='py-2 px-4 rounded hover:bg-primary-focus text-primary hover:text-white transition-colors duration-300'
+                      onClick={closeDrawer}
                     >
                       {item.text}
                     </Link>
@@ -118,6 +133,7 @@ export default function Navbar () {
                   className='flex items-center p-4 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors duration-300'
                   target='_blank'
                   rel='noopener noreferrer'
+                  onClick={closeDrawer}
                 >
                   <FaGithub className='text-3xl mr-4' />
                   <div className='flex flex-col'>
@@ -136,6 +152,7 @@ export default function Navbar () {
                         <Link
                           href={subitem.href}
                           className='text-primary hover:text-primary-focus'
+                          onClick={closeDrawer}
                         >
                           {subitem.text}
                         </Link>
@@ -147,6 +164,7 @@ export default function Navbar () {
                 <Link
                   href={item.href}
                   className='block py-2 px-4 rounded hover:bg-primary-focus text-primary hover:text-white transition-colors duration-300'
+                  onClick={closeDrawer}
                 >
                   {item.text}
                 </Link>

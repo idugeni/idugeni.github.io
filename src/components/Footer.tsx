@@ -74,7 +74,7 @@ const Footer = () => {
             <h3 className='text-lg font-semibold mb-2 text-center lg:text-left'>
               Navigation
             </h3>
-            <hr className='border-t-2 border-primary w-full mb-4' />
+            <hr className='border-t-2 border-neutral w-full mb-4' />
             <ul className='list-disc list-inside space-y-2'>
               {navigationLinks.links.map((link) => (
                 <li key={link.url}>
@@ -91,7 +91,7 @@ const Footer = () => {
             <h3 className='text-lg font-semibold mb-2 text-center lg:text-left'>
               Social Media
             </h3>
-            <hr className='border-t-2 border-primary w-full mb-4' />
+            <hr className='border-t-2 border-neutral w-full mb-4' />
             <div className='grid grid-cols-2 gap-4'>
               {socialMedia.socialMedia.map((media) => {
                 const IconComponent =
@@ -113,7 +113,7 @@ const Footer = () => {
             <h3 className='text-lg font-semibold mb-2 text-center lg:text-left'>
               Contact Us
             </h3>
-            <hr className='border-t-2 border-primary w-full mb-4' />
+            <hr className='border-t-2 border-neutral w-full mb-4' />
             <div className='space-y-4'>
               {contact.contact.map((contact) => {
                 const IconComponent =

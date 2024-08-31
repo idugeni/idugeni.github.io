@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { FaRocket, FaBook } from 'react-icons/fa'
 import Link from 'next/link'
 
-export default function HeroSection() {
+export default function HeroSection () {
   return (
     <section className='relative w-full min-h-screen overflow-hidden flex items-center justify-center'>
       <div className='absolute inset-0'>
@@ -17,13 +17,13 @@ export default function HeroSection() {
       <div className='relative flex flex-col items-center justify-center w-full h-full text-white'>
         <div className='flex flex-col items-center justify-center w-full px-4 text-center max-w-4xl'>
           <div className='mb-4 flex flex-wrap justify-center gap-4'>
-            <span className='badge badge-outline px-4 py-2 transition-all duration-300 hover:bg-primary hover:text-base-100'>
+            <span className='badge badge-outline px-4 py-2 transition-all duration-300 ease-in-out bg-primary text-white border-primary hover:bg-base-100 hover:text-primary hover:shadow-md'>
               Next.js
             </span>
-            <span className='badge badge-outline px-4 py-2 transition-all duration-300 hover:bg-secondary hover:text-base-100'>
+            <span className='badge badge-outline px-4 py-2 transition-all duration-300 ease-in-out bg-secondary text-white border-secondary hover:bg-base-100 hover:text-secondary hover:shadow-md'>
               GitHub Pages
             </span>
-            <span className='badge badge-outline px-4 py-2 transition-all duration-300 hover:bg-accent hover:text-base-100'>
+            <span className='badge badge-outline px-4 py-2 transition-all duration-300 ease-in-out bg-accent text-white border-accent hover:bg-base-100 hover:text-accent hover:shadow-md'>
               Vercel
             </span>
           </div>

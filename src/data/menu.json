@@ -1,6 +1,10 @@
 {
   "items": [
     {
+      "text": "Home",
+      "href": "/"
+    },
+    {
       "text": "About",
       "href": "/about"
     },
@@ -14,25 +18,25 @@
     },
     {
       "text": "Features",
-      "href": "/Features",
+      "href": "/features",
       "submenu": [
         {
-          "text": "Enhanced Security",
-          "href": "/features/enhanced-security"
+          "text": "Privacy Policy",
+          "href": "/privacy-policy"
         },
         {
-          "text": "Mobile Access",
-          "href": "/features/mobile-access"
+          "text": "Terms and Conditions",
+          "href": "/terms-and-conditions"
         },
         {
-          "text": "Support",
-          "href": "/features/support"
+          "text": "Disclaimer",
+          "href": "/disclaimer"
         }
       ]
     },
     {
-      "text": "Terms",
-      "href": "/terms-and-conditions",
+      "text": "Blogs",
+      "href": "/blog",
       "btn": true
     },
     {
