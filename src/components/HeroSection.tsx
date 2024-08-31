@@ -14,7 +14,7 @@ export default function HeroSection() {
           priority
         />
       </div>
-      <div className='relative flex flex-col items-center justify-center w-full h-full bg-black bg-opacity-60 text-white'>
+      <div className='relative flex flex-col items-center justify-center w-full h-full text-white'>
         <div className='flex flex-col items-center justify-center w-full px-4 text-center max-w-4xl'>
           <div className='mb-4 flex flex-wrap justify-center gap-4'>
             <span className='badge badge-outline px-4 py-2 transition-all duration-300 hover:bg-primary hover:text-base-100'>
