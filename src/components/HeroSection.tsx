@@ -2,15 +2,15 @@ import Image from 'next/image'
 import { FaRocket, FaBook } from 'react-icons/fa6'
 import Link from 'next/link'
 
-export default function HeroSection () {
+export default function HeroSection() {
   return (
-    <section className='relative w-full h-screen overflow-hidden'>
+    <section className='relative w-full min-h-screen md:h-screen overflow-hidden'>
       <div className='absolute inset-0'>
         <Image
           src='/images/hero-background.jpeg'
           alt='Background Image'
           fill
-          className='object-cover'
+          className='object-cover object-center'
           priority
         />
       </div>
@@ -37,17 +37,17 @@ export default function HeroSection () {
             Showcasing innovation and excellence in personal and professional
             projects.
           </p>
-          <div className='flex justify-center gap-4'>
+          <div className='flex flex-col md:flex-row justify-center gap-4 w-full'>
             <Link
               href='/get-started'
-              className='relative flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full px-8 py-3 transition duration-300 ease-in-out hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-600'
+              className='relative flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full px-8 py-3 w-full md:w-auto transition duration-300 ease-in-out hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-600'
             >
               <FaRocket className='h-5 w-5 mr-2' />
               <span>Get Started</span>
             </Link>
             <Link
               href='/documentation'
-              className='relative flex items-center justify-center bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full px-8 py-3 transition duration-300 ease-in-out hover:bg-gradient-to-r hover:from-pink-600 hover:to-purple-600'
+              className='relative flex items-center justify-center bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full px-8 py-3 w-full md:w-auto transition duration-300 ease-in-out hover:bg-gradient-to-r hover:from-pink-600 hover:to-purple-600'
             >
               <FaBook className='h-5 w-5 mr-2' />
               <span>Documentation</span>
