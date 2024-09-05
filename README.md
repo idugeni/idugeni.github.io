@@ -1,6 +1,6 @@
 # IduGeni SabdoDadi
 
-![IduGeni SabdoDadi](https://opengraph.githubassets.com/88c7bb9179dd2f9f905e829065d2dac83fae36b8/idugeni/idugeni.github.io)
+![IduGeni SabdoDadi](https://idugeni.vercel.app/og.png)
 
 Welcome to **idugeni.github.io**, a project dedicated to showcasing innovation and excellence in both personal and professional web development. This site demonstrates advanced solutions and high standards, leveraging the latest technologies to create a seamless user experience and maintain a modern web presence.
 
@@ -72,13 +72,13 @@ This project utilizes several key technologies to build a modern web application
 The following scripts are available in the `package.json` of this project:
 
 ```json
-"dev": "next dev --experimental-http--turbo"
+"dev": "next dev --experimental-http --turbo"
 
-"build": "next build"
+"build": "next build --no-lint"
 
 "start": "next start"
 
-"lint": "next lint --no-cache"
+"lint": "next lint --fix --strict --no-cache"
 
 "postinstall": "next telemetry disable"
 ```
