@@ -50,7 +50,7 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
         # Restore cached Node.js modules to speed up the build
       - name: Install dependencies
-        run: npm ci --force
+        run: npm ci --force --loglevel=error
         # Install Node.js dependencies using npm ci with --force to ensure a clean state
       - name: Build with Next.js
         run: npm run build
