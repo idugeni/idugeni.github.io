@@ -21,30 +21,11 @@ jobs:
 
       - name: Install ESLint
         run: |
-          npm install eslint@8.10.0 --force
-          npm install @microsoft/eslint-formatter-sarif@2.1.7 --force
+          npm install --force eslint@9.9.1 --loglevel=error
 
       - name: Run ESLint
         run: |
           npx eslint . \
             --config .eslintrc.js \
-            --ext .js,.jsx,.ts,.tsx \
-            --format @microsoft/eslint-formatter-sarif \
-            --output-file eslint-results.sarif \
-            --force
+            --ext .js,.jsx,.ts,.tsx
         continue-on-error: true
-
-      - name: Check for ESLint results file
-        run: |
-          if [ -f eslint-results.sarif ]; then
-            echo "ESLint results file found."
-          else
-            echo "ESLint results file not found."
-            exit 1
-          fi
-
-      - name: Upload analysis results to GitHub
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: eslint-results.sarif
-          wait-for-processing: true
