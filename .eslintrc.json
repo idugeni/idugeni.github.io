@@ -52,7 +52,10 @@
     ],
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
-    "react/jsx-boolean-value": ["warn", "never"],
+    "react/jsx-boolean-value": [
+      "warn",
+      "never"
+    ],
     "react/jsx-key": "error",
     "react/jsx-no-target-blank": "error",
     "jsx-a11y/anchor-is-valid": "off",
@@ -61,7 +64,15 @@
     "import/order": [
       "error",
       {
-        "groups": ["builtin", "external", "internal", "parent", "sibling", "index", "object"],
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index",
+          "object"
+        ],
         "pathGroups": [
           {
             "pattern": "react",
@@ -96,7 +107,12 @@
     },
     "import/resolver": {
       "node": {
-        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+        "extensions": [
+          ".js",
+          ".jsx",
+          ".ts",
+          ".tsx"
+        ]
       },
       "typescript": {}
     }
