@@ -34,6 +34,15 @@ jobs:
             --force
         continue-on-error: true
 
+      - name: Check for ESLint results file
+        run: |
+          if [ -f eslint-results.sarif ]; then
+            echo "ESLint results file found."
+          else
+            echo "ESLint results file not found."
+            exit 1
+          fi
+
       - name: Upload analysis results to GitHub
         uses: github/codeql-action/upload-sarif@v3
         with:
