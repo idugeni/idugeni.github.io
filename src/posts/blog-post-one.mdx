@@ -9,22 +9,19 @@ tags: ["Next.js", "React", "Server Components", "Web Performance"]
 readers: 388259
 ---
 
-<p class="text-lg">
-  Next.js remains a leading framework for React development, and with the release of <strong>Next.js 15 RC (Release Candidate)</strong>, it introduces a host of new features and improvements. This article delves into the key updates in Next.js 15 RC and how they enhance performance, developer experience, and scalability.
-</p>
+<p class="text-lg mb-4">Next.js remains a leading framework for React development, and with the release of <strong>Next.js 15 RC (Release Candidate)</strong>, it introduces a host of new features and improvements. This article delves into the key updates in Next.js 15 RC and how they enhance performance, developer experience, and scalability.</p>
 
-<h2 class="text-2xl font-bold">1. Optimized Server Actions</h2>
-<p>
-  One of the standout features of Next.js 15 RC is the optimization of <strong>Server Actions</strong>. Server Actions streamline the execution of server-side logic without the need for manual API routes, simplifying data management between the front-end and back-end.
-</p>
-<p>
-  The latest version enhances the performance of Server Actions, enabling faster request handling with minimal latency. This also reduces the amount of JavaScript sent to the client, leading to leaner client-side code.
-</p>
-<div class="bg-base-200 rounded-lg">
-  <h3 class="text-xl font-semibold">Example of Server Actions:</h3>
-  <pre class="overflow-x-auto">
-    <code class="language-javascript">
-{`
+<h2 class="text-2xl font-semibold mb-4">1. Optimized Server Actions</h2>
+
+<p class="mb-4">One of the standout features of Next.js 15 RC is the optimization of <strong>Server Actions</strong>. Server Actions streamline the execution of server-side logic without the need for manual API routes, simplifying data management between the front-end and back-end.</p>
+
+<p class="mb-4">The latest version enhances the performance of Server Actions, enabling faster request handling with minimal latency. This also reduces the amount of JavaScript sent to the client, leading to leaner client-side code.</p>
+
+<h3 class="text-xl font-semibold mb-2">Example of Server Actions:</h3>
+
+<pre class="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-md overflow-x-auto">
+<code>
+{'`'}
 'use server'
 
 import { db } from '@/lib/db'
@@ -33,31 +30,29 @@ export async function updateData(id, data) {
   const result = await db.update(id, data)
   return result
 }
-`}
-    </code>
-  </pre>
-</div>
+{'`'}
+</code>
+</pre>
 
-<h2 class="text-2xl font-bold">2. Parallel Rendering for More Responsive Components</h2>
-<p>
-  Another significant update in Next.js 15 RC is <strong>parallel rendering</strong>. This feature allows components to be rendered concurrently rather than sequentially, resulting in faster rendering and more responsive pages, particularly for complex applications with numerous components.
-</p>
-<p>
-  Parallel rendering addresses the issue of "render blocking," where slower components could delay the rendering of other components. With this update, independent components can be rendered simultaneously, enhancing overall user experience.
-</p>
+<p class="mb-4">Server Actions now facilitate server-side data management with ease, eliminating the need for additional API routes and streamlining large-scale application development.</p>
 
-<h2 class="text-2xl font-bold">3. Enhanced Edge Middleware</h2>
-<p>
-  Next.js 15 RC brings substantial improvements to <strong>Edge Middleware</strong>. Middleware enables the execution of logic at the edge server before requests reach the main server, which is useful for tasks like authentication, rerouting, or request validation.
-</p>
-<p>
-  The new version makes middleware faster and supports additional use cases, such as modifying API responses directly at the edge and real-time content personalization without slowing down the application.
-</p>
-<div class="bg-base-200 rounded-lg">
-  <h3 class="text-xl font-semibold">Example of Middleware:</h3>
-  <pre class="overflow-x-auto">
-    <code class="language-javascript">
-{`
+<h2 class="text-2xl font-semibold mb-4">2. Parallel Rendering for More Responsive Components</h2>
+
+<p class="mb-4">Another significant update in Next.js 15 RC is <strong>parallel rendering</strong>. This feature allows components to be rendered concurrently rather than sequentially, resulting in faster rendering and more responsive pages, particularly for complex applications with numerous components.</p>
+
+<p class="mb-4">Parallel rendering addresses the issue of "render blocking," where slower components could delay the rendering of other components. With this update, independent components can be rendered simultaneously, enhancing overall user experience.</p>
+
+<h2 class="text-2xl font-semibold mb-4">3. Enhanced Edge Middleware</h2>
+
+<p class="mb-4">Next.js 15 RC brings substantial improvements to <strong>Edge Middleware</strong>. Middleware enables the execution of logic at the edge server before requests reach the main server, which is useful for tasks like authentication, rerouting, or request validation.</p>
+
+<p class="mb-4">The new version makes middleware faster and supports additional use cases, such as modifying API responses directly at the edge and real-time content personalization without slowing down the application.</p>
+
+<h3 class="text-xl font-semibold mb-2">Example of Middleware:</h3>
+
+<pre class="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-md overflow-x-auto">
+<code>
+{'`'}
 import { NextResponse } from 'next/server'
 
 export function middleware(request) {
@@ -67,44 +62,48 @@ export function middleware(request) {
   }
   return NextResponse.next()
 }
-`}
-    </code>
-  </pre>
-</div>
+{'`'}
+</code>
+</pre>
 
-<h2 class="text-2xl font-bold">4. Built-in Optimization for Turbolinks and Prefetching</h2>
-<p>
-  In Next.js 15 RC, prefetching and caching are further optimized with built-in support for <strong>Turbolinks</strong>. This feature aggressively caches pages and loads them in the background, making navigation between pages feel instantaneous. This results in a smoother user experience, especially for applications reliant on multi-page navigation.
-</p>
+<p class="mb-4">The enhanced middleware allows developers to manage more complex workflows with high performance.</p>
 
-<h2 class="text-2xl font-bold">5. Improved Developer Experience</h2>
-<ul class="list-disc list-inside">
+<h2 class="text-2xl font-semibold mb-4">4. Built-in Optimization for Turbolinks and Prefetching</h2>
+
+<p class="mb-4">In Next.js 15 RC, prefetching and caching are further optimized with built-in support for <strong>Turbolinks</strong>. This feature aggressively caches pages and loads them in the background, making navigation between pages feel instantaneous. This results in a smoother user experience, especially for applications reliant on multi-page navigation.</p>
+
+<p class="mb-4">The optimizations make applications feel faster, even on slower networks or lower-spec devices.</p>
+
+<h2 class="text-2xl font-semibold mb-4">5. Improved Developer Experience</h2>
+
+<p class="mb-4">In addition to performance improvements, Next.js 15 RC enhances <strong>developer experience</strong> with several key updates:</p>
+
+<ul class="list-disc pl-5 mb-4">
   <li><strong>Faster refresh during development:</strong> Hot reloading is quicker in Next.js 15 RC, reducing the wait time for developers when making code changes.</li>
   <li><strong>Better TypeScript integration:</strong> TypeScript is more seamlessly integrated into the Next.js build system, providing quicker feedback on type errors.</li>
   <li><strong>Streamlined debugging process:</strong> Build and runtime errors are more informative, making it easier for developers to identify and fix issues.</li>
 </ul>
 
-<h2 class="text-2xl font-bold">6. Default Support for React Server Components</h2>
-<p>
-  Next.js 15 RC includes <strong>React Server Components</strong> support by default, allowing React components to be rendered on the server without sending additional JavaScript to the client. This contributes to faster application performance and significantly reduces bundle size.
-</p>
-<div class="bg-base-200 rounded-lg">
-  <h3 class="text-xl font-semibold">Example of React Server Components:</h3>
-  <pre class="overflow-x-auto">
-    <code class="language-javascript">
-{`
+<h2 class="text-2xl font-semibold mb-4">6. Default Support for React Server Components</h2>
+
+<p class="mb-4">Next.js 15 RC includes <strong>React Server Components</strong> support by default, allowing React components to be rendered on the server without sending additional JavaScript to the client. This contributes to faster application performance and significantly reduces bundle size.</p>
+
+<h3 class="text-xl font-semibold mb-2">Example of React Server Components:</h3>
+
+<pre class="bg-gray-800 text-gray-100 p-4 rounded-lg shadow-md overflow-x-auto">
+<code>
+{'`'}
 export default function ServerComponent() {
   return This component is rendered on the server
 }
-`}
-    </code>
-  </pre>
-</div>
+{'`'}
+</code>
+</pre>
 
-<h2 class="text-2xl font-bold">Conclusion</h2>
-<p>
-  Next.js 15 RC introduces a range of features designed to boost performance, user experience, and developer productivity. With parallel rendering, optimized server actions, and built-in support for React Server Components, Next.js continues to be a leading framework for modern web application development.
-</p>
-<p>
-  Developers looking to optimize their applications for large-scale and high-performance environments should consider trying this RC version before the stable release.
-</p>
+<p class="mb-4">Using Server Components allows developers to leverage server-side rendering benefits without worrying about additional client-side code.</p>
+
+<h2 class="text-2xl font-semibold mb-4">Conclusion</h2>
+
+<p class="mb-4">Next.js 15 RC introduces a range of features designed to boost performance, user experience, and developer productivity. With parallel rendering, optimized server actions, and built-in support for React Server Components, Next.js continues to be a leading framework for modern web application development.</p>
+
+<p class="mb-4">Developers looking to optimize their applications for large-scale and high-performance environments should consider trying this RC version before the stable release.</p>
