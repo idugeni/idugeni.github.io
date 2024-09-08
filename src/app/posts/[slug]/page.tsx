@@ -1,4 +1,4 @@
-import { getPostBySlug } from '@/lib/posts'
+import { getPostBySlug, getPostSlugs } from '@/lib/posts'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
@@ -43,6 +43,13 @@ export async function generateMetadata({
       image: post.metadata.image,
     },
   }
+}
+
+export async function generateStaticParams() {
+  const slugs = await getPostSlugs();
+  return slugs.map(slug => ({
+    slug,
+  }));
 }
 
 const BlogPost = async ({ params }: PostProps) => {
