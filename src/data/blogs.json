@@ -1,10 +1,10 @@
 [
   {
     "id": 1,
-    "title": "Blog Post One",
+    "title": "Next.js 15 RC: Key Features and Enhancements",
     "date": "2024-08-01",
-    "excerpt": "A brief introduction to the first blog post.",
-    "slug": "blog-post-one",
+    "excerpt": "Explore the latest Next.js 15 RC with features like Server Actions, Parallel Rendering, and enhanced Edge Middleware for improved performance.",
+    "slug": "nextjs-15-rc-features-enhancements",
     "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
   },
   {

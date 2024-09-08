@@ -10,12 +10,12 @@ interface PostProps {
   }
 }
 
-export async function generateMetadata({
+export async function generateMetadata ({
   params,
 }: {
   params: { slug: string }
 }) {
-  const post = await getPostBySlug(params.slug)
+  const post = getPostBySlug(params.slug)
 
   if (!post) {
     return { title: 'Not Found', description: 'Article not found' }
@@ -45,15 +45,15 @@ export async function generateMetadata({
   }
 }
 
-export async function generateStaticParams() {
-  const slugs = await getPostSlugs();
-  return slugs.map(slug => ({
+export async function generateStaticParams () {
+  const slugs = getPostSlugs()
+  return slugs.map((slug) => ({
     slug,
-  }));
+  }))
 }
 
 const BlogPost = async ({ params }: PostProps) => {
-  const post = await getPostBySlug(params.slug)
+  const post = getPostBySlug(params.slug)
 
   if (!post) {
     notFound()
