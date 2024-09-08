@@ -32,25 +32,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    turbo: {
-      resolveExtensions: [
-        '.mdx',
-        '.tsx',
-        '.ts',
-        '.jsx',
-        '.js',
-        '.mjs',
-        '.json',
-      ],
-    },
-    after: true,
-  },
   transpilePackages: ['next-mdx-remote'],
   output: 'standalone',
 }
 
-// Mengonfigurasi MDX dengan ESM
 const withMDX = createMDX({
   extension: /\.mdx?$/,
 })
