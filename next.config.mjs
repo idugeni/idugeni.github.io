@@ -1,6 +1,6 @@
-/** @type {import('next').NextConfig} */
 import createMDX from '@next/mdx'
 
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   images: {
@@ -50,6 +50,7 @@ const nextConfig = {
   output: 'standalone',
 }
 
+// Mengonfigurasi MDX dengan ESM
 const withMDX = createMDX({
   extension: /\.mdx?$/,
 })
