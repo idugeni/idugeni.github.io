@@ -9,7 +9,9 @@ export const metadata = {
 }
 
 const Blog = () => {
-  const blogs = blogsData
+  const blogs = [...blogsData].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  )
 
   return (
     <section className='py-8 md:py-12 lg:py-16 bg-base-200 text-base-content'>
@@ -44,7 +46,7 @@ const Blog = () => {
                 <p className='text-base mb-4'>{blog.excerpt}</p>
                 <div className='card-actions mt-4'>
                   <Link
-                    href={blog.url}
+                    href={`/posts/${blog.slug}`}
                     className='inline-block w-full text-center py-2 px-4 rounded-lg bg-gradient-to-r from-primary to-secondary text-white transition-all duration-300 hover:from-secondary hover:to-primary hover:text-black'
                   >
                     Read More

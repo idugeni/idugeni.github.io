@@ -10,7 +10,7 @@ interface Blog {
   title: string
   date: string
   excerpt: string
-  url: string
+  slug: string
   image: string
 }
 
@@ -33,7 +33,7 @@ const BlogCard = memo(({ blog }: { blog: Blog }) => (
     </div>
     <div className='p-6'>
       <Link
-        href={blog.url}
+        href={blog.slug}
         className='inline-block bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-2 px-4 rounded transition-colors duration-300 ease-in-out hover:from-blue-600 hover:to-purple-600 hover:text-neutral-300 focus:outline-none'
       >
         Read More

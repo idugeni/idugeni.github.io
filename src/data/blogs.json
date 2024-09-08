@@ -4,7 +4,7 @@
     "title": "Blog Post One",
     "date": "2024-08-01",
     "excerpt": "A brief introduction to the first blog post.",
-    "url": "/blog-post-one",
+    "slug": "blog-post-one",
     "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
   },
   {
@@ -12,7 +12,7 @@
     "title": "Blog Post Two",
     "date": "2024-08-15",
     "excerpt": "An overview of the second blog post.",
-    "url": "/blog-post-two",
+    "slug": "blog-post-two",
     "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
   }
 ]
