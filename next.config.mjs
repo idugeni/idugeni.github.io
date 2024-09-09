@@ -1,8 +1,7 @@
-import createMDX from '@next/mdx'
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+
   images: {
     remotePatterns: [
       {
@@ -27,11 +26,14 @@ const nextConfig = {
       },
     ],
   },
+
   reactStrictMode: true,
   productionBrowserSourceMaps: false,
   eslint: {
     ignoreDuringBuilds: true,
   },
+  output: 'standalone',
+
   experimental: {
     turbo: {
       resolveExtensions: [
@@ -46,12 +48,6 @@ const nextConfig = {
     },
     after: true,
   },
-  transpilePackages: ['next-mdx-remote'],
-  output: 'standalone',
 }
 
-const withMDX = createMDX({
-  extension: /\.mdx?$/,
-})
-
-export default withMDX(nextConfig)
+export default nextConfig
