@@ -1,8 +1,4 @@
 import remarkGfm from 'remark-gfm'
-import remarkFrontmatter from 'remark-frontmatter'
-import rehypeHighlight from 'rehype-highlight'
-import rehypeFormat from 'rehype-format'
-import remarkRehype from 'remark-rehype'
 import createMDX from '@next/mdx'
 
 const nextConfig = {
@@ -39,8 +35,8 @@ const nextConfig = {
 
 const withMDX = createMDX({
   options: {
-    remarkPlugins: [remarkGfm, remarkFrontmatter, remarkRehype],
-    rehypePlugins: [rehypeHighlight, rehypeFormat],
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [],
   },
 })
 
