@@ -41,30 +41,30 @@ Next.js 15 provides improved TypeScript support with better type inference and e
 
 Here is an example of using the new `getStaticProps` function in a Next.js page:
 
-```
-    import { GetStaticProps } from 'next';
+```typescript
+import { GetStaticProps } from 'next';
 
-    export const getStaticProps: GetStaticProps = async () => {
-      const data = await fetch('https://api.example.com/data');
-      const json = await data.json();
+export const getStaticProps: GetStaticProps = async () => {
+  const data = await fetch('https://api.example.com/data');
+  const json = await data.json();
 
-      return {
-        props: {
-          data: json,
-        },
-      };
-    };
+  return {
+    props: {
+      data: json,
+    },
+  };
+};
 
-    const Page = ({ data }) => {
-      return (
-        <div>
-          <h1>Data from API</h1>
-          <pre><code>{JSON.stringify(data, null, 2)}</code></pre>
-        </div>
-      );
-    };
+const Page = ({ data }) => {
+  return (
+    <div>
+      <h1>Data from API</h1>
+      <pre><code>{JSON.stringify(data, null, 2)}</code></pre>
+    </div>
+  );
+};
 
-    export default Page;
+export default Page;
 ```
 
 ## Blockquote
@@ -93,35 +93,35 @@ You can use `getStaticProps` to fetch data at build time.
 
 Here’s how you might configure a Next.js page to use TypeScript:
 
-```
-    import { GetStaticProps } from 'next';
+```typescript
+import { GetStaticProps } from 'next';
 
-    interface Props {
-      data: any;
-    }
+interface Props {
+  data: any;
+}
 
-    const Page: React.FC<Props> = ({ data }) => {
-      return (
-        <div>
-          <h1>Page Title</h1>
-        </div>
-      );
-    };
+const Page: React.FC<Props> = ({ data }) => {
+  return (
+    <div>
+      <h1>Page Title</h1>
+    </div>
+  );
+};
 
-    export const getStaticProps: GetStaticProps<Props> = async () => {
-      const data = await fetch('https://api.example.com/data');
-      const json = await data.json();
+export const getStaticProps: GetStaticProps<Props> = async () => {
+  const data = await fetch('https://api.example.com/data');
+  const json = await data.json();
 
-      return {
-        props: {
-          data: json,
-        },
-      };
-    };
+  return {
+    props: {
+      data: json,
+    },
+  };
+};
 
-    export default Page;
+export default Page;
 ```
 
 ## Images
 
-![Next.js Logo](https://nextjs.org/static/blog/next-15-rc/twitter-card.png)
+![Markdown Mark](https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Markdown-mark.svg/1280px-Markdown-mark.svg.png)
