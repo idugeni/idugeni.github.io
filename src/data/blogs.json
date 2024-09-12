@@ -2,17 +2,17 @@
   {
     "id": 1,
     "title": "Next.js 15 RC: Key Features and Enhancements",
-    "date": "2024-08-01",
+    "date": "2024-09-08",
     "excerpt": "Explore the latest Next.js 15 RC with features like Server Actions, Parallel Rendering, and enhanced Edge Middleware for improved performance.",
     "slug": "nextjs-15-rc-features-enhancements",
     "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
   },
   {
     "id": 2,
-    "title": "Blog Post Two",
-    "date": "2024-08-15",
-    "excerpt": "An overview of the second blog post.",
-    "slug": "blog-post-two",
-    "image": "https://nextjs.org/static/blog/next-15-rc/twitter-card.png"
+    "title": "Introduction to Next.js: A Modern Framework for React Development",
+    "date": "2024-09-12",
+    "excerpt": "Discover Next.js, a powerful framework for building fast, SEO-friendly web applications with features like server-side rendering, static site generation, and easy routing.",
+    "slug": "introduction-to-nextjs",
+    "image": "https://lh5.googleusercontent.com/d/1vIhDCjk7PMmLAOKy4ERAAfpHySkLblO4=w1200"
   }
 ]
