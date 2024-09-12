@@ -63,7 +63,7 @@ const BlogPost = async ({ params }: PostProps) => {
     <section className='py-8 md:py-12 lg:py-16 bg-base-200 text-base-content'>
       <article className='container mx-auto px-4 md:px-6 lg:px-8'>
         {/* Breadcrumb */}
-        <nav className='text-sm breadcrumbs mb-6'>
+        <nav className='text-sm breadcrumbs mb-8'>
           <ul>
             <li>
               <Link href='/' className='text-primary'>
@@ -81,10 +81,10 @@ const BlogPost = async ({ params }: PostProps) => {
 
         {/* Title and Date */}
         <header className='mb-6'>
-          <h1 className='text-3xl md:text-4xl lg:text-5xl font-extrabold mb-4 text-center text-white drop-shadow-lg'>
+          <h1 className='text-3xl md:text-4xl lg:text-5xl font-extrabold mb-12 text-center text-white drop-shadow-lg'>
             {post.metadata.title}
           </h1>
-          <div className='flex flex-col md:flex-row justify-between items-center mb-4'>
+          <div className='flex flex-col md:flex-row justify-between items-center mb-8'>
             <p className='text-sm sm:text-base mb-2 md:mb-0'>
               Author:{' '}
               <span className='badge badge-primary'>
