@@ -6,6 +6,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'lh5.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'cdn.jsdelivr.net',
         pathname: '/**',
       },
@@ -48,6 +53,7 @@ const nextConfig = {
     },
     after: true,
   },
+  transpilePackages: ['next-mdx-remote'],
 }
 
 export default nextConfig
