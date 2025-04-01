@@ -1,0 +1,69 @@
+{
+  "intro": "Tertarik untuk bekerja sama? Silakan hubungi saya melalui formulir di bawah ini atau melalui informasi Contact yang tersedia.",
+  "form": {
+    "title": "Kirim Pesan",
+    "description": "Isi formulir di bawah ini untuk mengirim pesan kepada saya.",
+    "fields": [
+      {
+        "id": "name",
+        "label": "Nama",
+        "type": "text",
+        "placeholder": "Nama Anda"
+      },
+      {
+        "id": "email",
+        "label": "Email",
+        "type": "email",
+        "placeholder": "email@example.com"
+      },
+      {
+        "id": "message",
+        "label": "Pesan",
+        "type": "textarea",
+        "placeholder": "Tulis pesan Anda di sini...",
+        "rows": 5
+      }
+    ],
+    "submitButton": "Kirim Pesan"
+  },
+  "contactInfo": {
+    "title": "Informasi Contact",
+    "description": "Anda juga dapat menghubungi saya melalui informasi berikut.",
+    "items": [
+      {
+        "type": "Email",
+        "value": "officialelsa21@gmail.com"
+      },
+      {
+        "type": "Telepon",
+        "value": "+62 856 4115 9405"
+      },
+      {
+        "type": "Lokasi",
+        "value": "Wonosobo, Jawa Tengah, Indonesia"
+      }
+    ],
+    "socialMedia": [
+      {
+        "name": "GitHub",
+        "url": "https://github.com",
+        "icon": "github"
+      },
+      {
+        "name": "LinkedIn",
+        "url": "https://linkedin.com",
+        "icon": "linkedin"
+      },
+      {
+        "name": "Twitter",
+        "url": "https://twitter.com",
+        "icon": "twitter"
+      },
+      {
+        "name": "Instagram",
+        "url": "https://instagram.com",
+        "icon": "instagram"
+      }
+    ]
+  }
+}

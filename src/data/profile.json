@@ -1,0 +1,47 @@
+{
+  "name": "Eliyanto Sarage",
+  "title": "Web Developer & UI/UX Designer",
+  "bio": "Saya adalah seorang pengembang web yang berfokus pada pembuatan aplikasi web modern dengan pengalaman pengguna yang optimal.",
+  "photo": {
+    "initials": "ES"
+  },
+  "contact": {
+    "email": "officialelsa21@gmail.com",
+    "phone": "+62 856 4115 9405",
+    "location": "Wonosobo, Jawa Tengah, Indonesia"
+  },
+  "socialMedia": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com",
+      "icon": "github"
+    },
+    {
+      "name": "LinkedIn",
+      "url": "https://linkedin.com",
+      "icon": "linkedin"
+    },
+    {
+      "name": "Twitter",
+      "url": "https://twitter.com",
+      "icon": "twitter"
+    },
+    {
+      "name": "Instagram",
+      "url": "https://instagram.com",
+      "icon": "instagram"
+    }
+  ],
+  "actions": [
+    {
+      "label": "Hubungi Saya",
+      "href": "contact",
+      "primary": true
+    },
+    {
+      "label": "Lihat Resume",
+      "href": "resume",
+      "primary": false
+    }
+  ]
+}

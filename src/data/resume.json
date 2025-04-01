@@ -1,0 +1,118 @@
+{
+  "downloadButton": "Unduh Resume",
+  "header": {
+    "name": "Eliyanto Sarage",
+    "title": "Web Developer & UI/UX Designer",
+    "photo": "/favicon.png",
+    "contact": [
+      "officialelsa21@gmail.com",
+      "+62 856 4115 9405",
+      "Wonosobo, Jawa Tengah, Indonesia"
+    ]
+  },
+  "summary": "Pengembang web berpengalaman dengan keahlian dalam React, Next.js, dan TypeScript. Memiliki lebih dari 5 tahun pengalaman dalam membangun aplikasi web yang responsif dan berkinerja tinggi. Berfokus pada pengalaman pengguna dan praktik pengembangan terbaik.",
+  "experience": [
+    {
+      "position": "Senior Full Stack Developer",
+      "company": "PT Teknologi Maju",
+      "period": "2021-Sekarang",
+      "technologies": ["React", "Next.js", "TypeScript", "Node.js", "GraphQL", "AWS"],
+      "responsibilities": [
+        "Memimpin tim pengembangan dalam proyek e-commerce skala enterprise dengan 1M+ pengguna aktif bulanan",
+        "Mengimplementasikan arsitektur mikrofrontend menggunakan Module Federation, meningkatkan efisiensi deployment sebesar 40%",
+        "Mengoptimalkan performa aplikasi dengan teknik code-splitting dan lazy loading, meningkatkan Lighthouse score dari 65 ke 95",
+        "Menerapkan CI/CD pipeline dengan GitHub Actions dan Docker, mengurangi waktu deployment sebesar 60%",
+        "Mengembangkan backend services dengan Node.js dan GraphQL, menangani 500K+ request per hari",
+        "Melakukan mentoring untuk 5 developer junior dan memimpin code review mingguan"
+      ],
+      "achievements": [
+        "Berhasil mengurangi waktu loading aplikasi sebesar 45%",
+        "Mengimplementasikan sistem monitoring yang mengurangi downtime sebesar 75%",
+        "Mendapatkan penghargaan 'Best Technical Lead' tahun 2022"
+      ]
+    },
+    {
+      "position": "Full Stack Developer",
+      "company": "Startup Digital",
+      "period": "2019-2021",
+      "technologies": ["React", "Redux", "Node.js", "Express", "MongoDB", "Docker"],
+      "responsibilities": [
+        "Mengembangkan aplikasi SaaS untuk manajemen proyek dengan 50K+ pengguna aktif",
+        "Merancang dan mengimplementasikan REST API dengan Node.js dan Express, mencapai 99.9% uptime",
+        "Mengoptimalkan performa database MongoDB, mengurangi waktu query sebesar 60%",
+        "Mengimplementasikan sistem autentikasi OAuth dan JWT dengan fitur keamanan tingkat lanjut",
+        "Mengembangkan dashboard analytics real-time dengan WebSocket, menangani 100K+ koneksi simultan"
+      ],
+      "achievements": [
+        "Meningkatkan konversi pengguna sebesar 35% melalui optimasi UX",
+        "Mengurangi biaya infrastruktur sebesar 40% melalui optimasi arsitektur",
+        "Mendapatkan pendanaan Series A berdasarkan kualitas produk"
+      ]
+    },
+    {
+      "position": "Frontend Developer",
+      "company": "Digital Agency",
+      "period": "2018-2019",
+      "technologies": ["React", "JavaScript", "SASS", "Webpack", "Jest"],
+      "responsibilities": [
+        "Mengembangkan website responsif untuk 10+ klien enterprise menggunakan React dan modern JavaScript",
+        "Mengimplementasikan animasi kompleks dan interaksi UI yang menarik dengan GSAP dan CSS3",
+        "Mengoptimalkan performa website dengan teknik lazy loading dan caching",
+        "Melakukan unit testing dengan Jest dan React Testing Library, mencapai 90% code coverage"
+      ],
+      "achievements": [
+        "Mendapatkan rating 4.9/5 dari kepuasan klien",
+        "Mengurangi bounce rate rata-rata sebesar 40%",
+        "Memenangkan penghargaan desain web terbaik 2019"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Sarjana Teknik Informatika",
+      "institution": "Universitas Teknologi Indonesia",
+      "period": "2015-2019",
+      "achievements": [
+        "Lulus dengan predikat cumlaude",
+        "Skripsi: Pengembangan Aplikasi Web Responsif dengan React dan Node.js",
+        "Asisten laboratorium untuk mata kuliah Pemrograman Web"
+      ]
+    }
+  ],
+  "skills": {
+    "technical": {
+      "Frontend": ["React & Next.js", "TypeScript & JavaScript", "HTML5 & CSS3", "Tailwind CSS & Styled Components", "Redux & Context API"],
+      "Backend": ["Node.js & Express", "RESTful API & GraphQL", "MongoDB & PostgreSQL"],
+      "DevOps": ["Git & GitHub", "Docker & CI/CD"]
+    },
+    "soft": [
+      "Komunikasi",
+      "Kerja Tim",
+      "Manajemen Waktu",
+      "Problem Solving",
+      "Adaptasi"
+    ]
+  },
+  "languages": [
+    {
+      "name": "Bahasa Indonesia",
+      "level": "Native"
+    },
+    {
+      "name": "English",
+      "level": "Fluent"
+    }
+  ],
+  "certifications": [
+    {
+      "name": "AWS Certified Developer",
+      "issuer": "Amazon Web Services",
+      "year": "2022"
+    },
+    {
+      "name": "Professional Frontend Developer",
+      "issuer": "Meta",
+      "year": "2021"
+    }
+  ]
+}

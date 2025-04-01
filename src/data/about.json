@@ -1,0 +1,25 @@
+{
+  "intro": "Seorang pengembang web berpengalaman dengan fokus pada teknologi frontend modern. Saya memiliki passion dalam menciptakan pengalaman digital yang menarik dan fungsional, didukung oleh latar belakang pendidikan yang kuat dan pengalaman industri yang relevan.",
+  "paragraphs": [
+    {
+      "title": "Latar Belakang Pendidikan",
+      "content": "Perjalanan saya di dunia pengembangan web dimulai saat menempuh pendidikan Sarjana Teknik Informatika di Universitas Teknologi Indonesia. Selama masa kuliah, saya menemukan passion dalam menciptakan pengalaman digital yang menarik dan fungsional, yang kemudian mengantarkan saya lulus dengan predikat cumlaude pada tahun 2019 dengan skripsi tentang pengembangan aplikasi web responsif menggunakan React dan Node.js."
+    },
+    {
+      "title": "Awal Karir",
+      "content": "Setelah lulus, saya bergabung dengan Startup Digital sebagai Web Developer, di mana saya berkesempatan untuk mengasah kemampuan dalam pengembangan aplikasi web modern. Selama dua tahun bekerja di sana, saya belajar banyak tentang kolaborasi dengan tim desain dan pentingnya menciptakan antarmuka pengguna yang intuitif."
+    },
+    {
+      "title": "Posisi Saat Ini",
+      "content": "Saat ini, saya berperan sebagai Senior Frontend Developer di PT Teknologi Maju, di mana saya memimpin tim frontend dalam mengembangkan aplikasi web enterprise. Dengan pengalaman lebih dari 5 tahun, saya telah menguasai berbagai teknologi modern seperti React, Next.js, dan TypeScript, serta memiliki pemahaman mendalam tentang arsitektur mikrofrontend dan optimasi performa aplikasi."
+    },
+    {
+      "title": "Keahlian Teknis",
+      "content": "Sebagai seorang pengembang, saya selalu bersemangat untuk belajar dan mengadopsi teknologi baru. Keahlian teknis saya meliputi pengembangan frontend dengan React & Next.js, TypeScript, dan Tailwind CSS, serta pengalaman dengan teknologi backend seperti Node.js dan berbagai database. Namun, yang membuat saya berkembang tidak hanya kemampuan teknis, tetapi juga soft skills seperti komunikasi efektif, kerja tim yang solid, dan kemampuan memecahkan masalah yang kompleks."
+    },
+    {
+      "title": "Filosofi Pengembangan",
+      "content": "Saya percaya bahwa teknologi harus memberikan nilai tambah bagi penggunanya, dan itulah yang selalu menjadi fokus saya dalam setiap proyek yang saya kerjakan. Dengan kombinasi keahlian teknis dan pemahaman tentang kebutuhan pengguna, saya berkomitmen untuk terus menciptakan solusi digital yang tidak hanya fungsional, tetapi juga memberikan pengalaman yang menyenangkan bagi penggunanya."
+    }
+  ]
+}
