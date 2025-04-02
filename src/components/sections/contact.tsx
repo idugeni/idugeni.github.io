@@ -95,7 +95,7 @@ const renderSocialIcon = (iconName: string) => {
               ))}
               <Button 
                 type="submit" 
-                className="w-full transition-all duration-300 hover:scale-[1.02]" 
+                className="w-full transition-all duration-300 hover:opacity-90"
                 disabled={isLoading}
               >
                 {isLoading ? (

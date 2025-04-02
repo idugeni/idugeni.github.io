@@ -6,8 +6,9 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import { metadata as siteMetadata } from "./metadata";
-import Footer from "@/components/ui/footer";
+import { metadata as siteMetadata } from "@/lib/metadata";
+import Footer from "@/components/layout/footer";
+import { BackToTop } from "@/components/ui/back-to-top";
 
 /**
  * @constant {Object} geistSans
@@ -55,6 +56,7 @@ export default function RootLayout({
           <div className="flex min-h-screen flex-col">
             <main className="flex-1">{children}</main>
             <Footer />
+            <BackToTop />
           </div>
         </ThemeProvider>
       </body>

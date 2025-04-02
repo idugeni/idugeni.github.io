@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { useViewportAnimation } from "@/hooks/use-viewport-animation";
 

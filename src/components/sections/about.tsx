@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * @module AboutSection
  * @description Modul yang menampilkan bagian tentang dengan informasi personal dan profesional
