@@ -1,3 +1,8 @@
+/**
+ * @module ResumeSection
+ * @description Modul yang menampilkan bagian resume dengan informasi profesional dan opsi unduhan
+ */
+
 import React from 'react';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +17,11 @@ import { ResumeData } from '@/types/resume';
 import { exportToPDF, exportToDOCX } from '@/lib/resume-export';
 import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 
+/**
+ * @function ResumeSection
+ * @description Komponen yang menampilkan resume lengkap dengan pengalaman, pendidikan, keterampilan, dan opsi unduhan
+ * @returns {JSX.Element} Komponen React yang merender bagian resume
+ */
 export function ResumeSection() {
   const { downloadButton, header, summary, experience, education, skills } = resumeData;
   const { ref: headerRef, style: headerStyle } = useViewportAnimation({type: "fade-in", duration: 700});

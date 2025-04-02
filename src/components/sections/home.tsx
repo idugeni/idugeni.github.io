@@ -7,7 +7,7 @@ import React from 'react';
 import profileData from '@/data/profile.json';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { SocialIcons } from '@/components/ui/social-icons';
+import { SocialIcons } from '@/components/social/social-icons';
 import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 
 /**

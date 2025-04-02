@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @module ContactSection
+ * @description Modul yang menampilkan bagian kontak dengan formulir dan informasi kontak
+ */
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +14,11 @@ import contactData from '@/data/contact.json';
 import { Github, Linkedin, Twitter, Instagram, Mail, Phone, MapPin, Loader2 } from 'lucide-react';
 import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 
+/**
+ * @function ContactSection
+ * @description Komponen yang menampilkan formulir kontak dan informasi kontak
+ * @returns {JSX.Element} Komponen React yang merender bagian kontak
+ */
 export function ContactSection() {
   const { intro, form, contactInfo } = contactData;
   const [isLoading, setIsLoading] = useState(false);
@@ -16,7 +26,12 @@ export function ContactSection() {
   const { ref: formRef, style: formStyle } = useViewportAnimation<HTMLDivElement>({type: "slide-in-up", duration: 700});
   const { ref: infoRef, style: infoStyle } = useViewportAnimation<HTMLDivElement>({type: "slide-in-up", duration: 700});
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  /**
+ * @function handleSubmit
+ * @description Menangani pengiriman formulir kontak
+ * @param {React.FormEvent} e - Event formulir
+ */
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     // Simulate form submission
@@ -24,6 +39,12 @@ export function ContactSection() {
     setIsLoading(false);
   };
 
+/**
+ * @function renderSocialIcon
+ * @description Menampilkan ikon media sosial berdasarkan nama
+ * @param {string} iconName - Nama ikon media sosial
+ * @returns {JSX.Element | null} Komponen ikon atau null jika tidak ditemukan
+ */
 const renderSocialIcon = (iconName: string) => {
     switch (iconName) {
       case 'github':
@@ -39,7 +60,13 @@ const renderSocialIcon = (iconName: string) => {
     }
   };
 
-  const renderContactIcon = (type: string) => {
+  /**
+ * @function renderContactIcon
+ * @description Menampilkan ikon kontak berdasarkan tipe
+ * @param {string} type - Tipe kontak (Email, Telepon, Lokasi)
+ * @returns {JSX.Element | null} Komponen ikon atau null jika tidak ditemukan
+ */
+const renderContactIcon = (type: string) => {
     switch (type) {
       case 'Email':
         return <Mail size={20} />;

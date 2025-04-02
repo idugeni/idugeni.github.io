@@ -5,10 +5,12 @@
 
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import "./globals.css";
 import { metadata as siteMetadata } from "@/lib/metadata";
 import Footer from "@/components/layout/footer";
-import { BackToTop } from "@/components/ui/back-to-top";
+import { BackToTop } from "@/components/back-to-top";
 
 /**
  * @constant {Object} geistSans
@@ -57,6 +59,8 @@ export default function RootLayout({
             <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">{children}</main>
             <Footer />
             <BackToTop />
+            <Analytics />
+            <SpeedInsights />
           </div>
         </ThemeProvider>
       </body>

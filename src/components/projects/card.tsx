@@ -1,10 +1,19 @@
 'use client';
 
+/**
+ * @module ProjectCard
+ * @description Modul yang menampilkan kartu proyek individual dengan gambar, judul, deskripsi, dan tag
+ */
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 
+/**
+ * @interface ProjectCardProps
+ * @description Interface untuk properti yang diperlukan oleh komponen ProjectCard
+ */
 interface ProjectCardProps {
   title: string;
   description: string;
@@ -13,6 +22,17 @@ interface ProjectCardProps {
   link: string;
 }
 
+/**
+ * @function ProjectCard
+ * @description Komponen yang menampilkan informasi proyek dalam bentuk kartu yang dapat diklik
+ * @param {ProjectCardProps} props - Properti yang diperlukan untuk menampilkan kartu proyek
+ * @param {string} props.title - Judul proyek
+ * @param {string} props.description - Deskripsi singkat proyek
+ * @param {string} props.image - URL gambar proyek
+ * @param {string[]} props.tags - Array tag teknologi yang digunakan dalam proyek
+ * @param {string} props.link - URL yang akan dibuka ketika kartu diklik
+ * @returns {JSX.Element} Komponen React yang merender kartu proyek
+ */
 export function ProjectCard({ title, description, image, tags, link }: ProjectCardProps) {
   return (
     <Link href={link} target="_blank" rel="noopener noreferrer">
