@@ -7,6 +7,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { metadata as siteMetadata } from "./metadata";
+import Footer from "@/components/ui/footer";
 
 /**
  * @constant {Object} geistSans
@@ -51,7 +52,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <div className="flex min-h-screen flex-col">
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
         </ThemeProvider>
       </body>
     </html>

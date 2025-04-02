@@ -8,6 +8,7 @@ import profileData from '@/data/profile.json';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { SocialIcons } from '@/components/ui/social-icons';
+import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 
 /**
  * @function HomeSection
@@ -18,10 +19,25 @@ export function HomeSection() {
   // Menggunakan data dari profile.json
   const { name, title, bio, photo, actions, socialMedia } = profileData;
 
+  const { ref: photoRef, style: photoStyle } = useViewportAnimation<HTMLDivElement>({
+    type: "fade-in",
+    duration: 800
+  });
+
+  const { ref: contentRef, style: contentStyle } = useViewportAnimation<HTMLDivElement>({
+    type: "slide-in-up",
+    delay: 200,
+    duration: 800
+  });
+
+  const { ref: bioRef, style: bioStyle } = useViewportAnimation<HTMLDivElement>({type: "fade-in", delay: 400, duration: 800});
+  const { ref: actionsRef, style: actionsStyle } = useViewportAnimation<HTMLDivElement>({type: "slide-in-up", delay: 600, duration: 800});
+  const { ref: socialRef, style: socialStyle } = useViewportAnimation<HTMLDivElement>({type: "fade-in", delay: 800, duration: 800});
+
   return (
     <Card className="flex flex-col items-center justify-center gap-6 py-8 text-center max-w-4xl mx-auto bg-background/50 backdrop-blur-sm border-primary/10">
       <CardContent className="flex flex-col items-center gap-6 w-full">
-        <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
+        <div ref={photoRef} style={photoStyle} className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 animate-pulse"></div>
           {/* Placeholder untuk foto profil */}
           <div className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-primary/50">
@@ -29,16 +45,16 @@ export function HomeSection() {
           </div>
         </div>
         
-        <div className="space-y-2">
+        <div ref={contentRef} style={contentStyle} className="space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">{name}</h1>
           <h2 className="text-xl text-muted-foreground">{title}</h2>
         </div>
         
-        <p className="text-muted-foreground max-w-lg">
+        <p ref={bioRef} style={bioStyle} className="text-muted-foreground max-w-lg">
           {bio}
         </p>
         
-        <div className="flex flex-wrap gap-4 justify-center">
+        <div ref={actionsRef} style={actionsStyle} className="flex flex-wrap gap-4 justify-center">
           {actions.map((action, index) => (
             <Button
               key={index}
@@ -54,7 +70,7 @@ export function HomeSection() {
           ))}
         </div>
 
-        <div className="flex gap-4 mt-2 group">
+        <div ref={socialRef} style={socialStyle} className="flex gap-4 mt-2 group">
           {socialMedia.map((social, index) => (
             <Button
               key={index}

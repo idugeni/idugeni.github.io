@@ -7,10 +7,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import contactData from '@/data/contact.json';
 import { Github, Linkedin, Twitter, Instagram, Mail, Phone, MapPin, Loader2 } from 'lucide-react';
+import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 
 export function ContactSection() {
   const { intro, form, contactInfo } = contactData;
   const [isLoading, setIsLoading] = useState(false);
+  const { ref: headerRef, style: headerStyle } = useViewportAnimation<HTMLDivElement>({type: "fade-in", duration: 700});
+  const { ref: formRef, style: formStyle } = useViewportAnimation<HTMLDivElement>({type: "slide-in-left", duration: 700});
+  const { ref: infoRef, style: infoStyle } = useViewportAnimation<HTMLDivElement>({type: "slide-in-right", duration: 700});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,13 +54,21 @@ const renderSocialIcon = (iconName: string) => {
 
   return (
     <div className="flex flex-col gap-8 py-8 max-w-4xl mx-auto">
-      <div className="text-center">
+      <div 
+        ref={headerRef}
+        className="text-center"
+        style={headerStyle}
+      >
         <h2 className="text-2xl font-bold mb-4">Contact</h2>
         <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">{intro}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className="bg-gradient-to-br from-background to-primary/5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+        <Card 
+          ref={formRef}
+          className="bg-gradient-to-br from-background to-primary/5 hover:shadow-lg hover:shadow-primary/5"
+          style={formStyle}
+        >
           <CardHeader>
             <CardTitle>{form.title}</CardTitle>
             <CardDescription>{form.description}</CardDescription>
@@ -99,7 +111,11 @@ const renderSocialIcon = (iconName: string) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-background to-primary/5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+        <Card 
+          ref={infoRef}
+          className="bg-gradient-to-br from-background to-primary/5 hover:shadow-lg hover:shadow-primary/5"
+          style={infoStyle}
+        >
           <CardHeader>
             <CardTitle>{contactInfo.title}</CardTitle>
             <CardDescription>{contactInfo.description}</CardDescription>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, Mail, Phone, MapPin } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -10,10 +10,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import resumeData from '@/data/resume.json';
 import { ResumeData } from '@/types/resume';
 import { exportToPDF, exportToDOCX } from '@/lib/resume-export';
+import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 
 export function ResumeSection() {
-  // Menggunakan data dari resume.json
-  const { downloadButton, header, summary, experience, education, skills, languages, certifications } = resumeData as ResumeData;
+  const { downloadButton, header, summary, experience, education, skills } = resumeData;
+  const { ref: headerRef, style: headerStyle } = useViewportAnimation({type: "fade-in", duration: 700});
+  const { ref: summaryRef, style: summaryStyle } = useViewportAnimation({type: "fade-in", duration: 700});
+  const { ref: experienceRef, style: experienceStyle } = useViewportAnimation({type: "fade-in", duration: 700});
+  const { ref: educationRef, style: educationStyle } = useViewportAnimation({type: "fade-in", duration: 700});
+  const { ref: skillsRef, style: skillsStyle } = useViewportAnimation({type: "fade-in", duration: 700});
   
   return (
     <div className="flex flex-col gap-8 py-8 max-w-4xl mx-auto">
@@ -57,7 +62,11 @@ export function ResumeSection() {
         <CardContent className="p-0">
           <div className="space-y-8">
             {/* Header */}
-            <div className="flex flex-col items-center gap-4">
+            <div 
+              ref={headerRef}
+              className="flex flex-col items-center gap-4"
+              style={headerStyle}
+            >
               <Avatar className="size-24 border-2 border-primary/20">
                 <AvatarImage src={header.photo} alt={header.name} />
                 <AvatarFallback className="text-lg">{header.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
@@ -67,7 +76,7 @@ export function ResumeSection() {
                 <p className="text-xl text-muted-foreground">{header.title}</p>
               </div>
               <div className="flex justify-center gap-6 mt-2">
-                {header.contact.map((item, index) => {
+                {header.contact.map((item: string, index: number) => {
                   const icon = item.toLowerCase().includes('@') ? Mail :
                              item.toLowerCase().includes('+') ? Phone :
                              MapPin;
@@ -84,7 +93,11 @@ export function ResumeSection() {
             <Separator />
             
             {/* Ringkasan */}
-            <div>
+            <div 
+              ref={summaryRef}
+              className=""
+              style={summaryStyle}
+            >
               <h3 className="text-lg font-semibold mb-2">Ringkasan Profesional</h3>
               <p className="text-muted-foreground">{summary}</p>
             </div>
@@ -92,7 +105,11 @@ export function ResumeSection() {
             <Separator />
             
             {/* Pengalaman */}
-            <div>
+            <div 
+              ref={experienceRef}
+              className=""
+              style={experienceStyle}
+            >
               <h3 className="text-lg font-semibold mb-4">Pengalaman Kerja</h3>
               <Accordion type="single" collapsible className="w-full">
                 {experience.map((exp, index) => (
@@ -105,7 +122,7 @@ export function ResumeSection() {
                         </div>
                         <span className="text-sm text-muted-foreground font-medium">{exp.company}</span>
                         <div className="flex flex-wrap gap-2 mt-2">
-                          {exp.technologies.map((tech, techIndex) => (
+                          {exp.technologies.map((tech: string, techIndex: number) => (
                             <Badge key={techIndex} variant="outline" className="text-xs bg-primary/5">
                               {tech}
                             </Badge>
@@ -118,7 +135,7 @@ export function ResumeSection() {
                         <div>
                           <h4 className="text-sm font-medium mb-2">Tanggung Jawab & Proyek</h4>
                           <ul className="list-disc pl-5 space-y-2 text-sm text-muted-foreground">
-                            {exp.responsibilities.map((resp, respIndex) => (
+                            {exp.responsibilities.map((resp: string, respIndex: number) => (
                               <li key={respIndex}>{resp}</li>
                             ))}
                           </ul>
@@ -126,7 +143,7 @@ export function ResumeSection() {
                         <div>
                           <h4 className="text-sm font-medium mb-2">Pencapaian Utama</h4>
                           <ul className="list-disc pl-5 space-y-2 text-sm text-muted-foreground">
-                            {exp.achievements.map((achievement, achievementIndex) => (
+                            {exp.achievements.map((achievement: string, achievementIndex: number) => (
                               <li key={achievementIndex}>{achievement}</li>
                             ))}
                           </ul>
@@ -141,7 +158,11 @@ export function ResumeSection() {
             <Separator />
             
             {/* Pendidikan */}
-            <div>
+            <div 
+              ref={educationRef}
+              className=""
+              style={educationStyle}
+            >
               <h3 className="text-lg font-semibold mb-4">Pendidikan</h3>
               <Accordion type="single" collapsible className="w-full">
                 {education.map((edu, index) => (
@@ -156,11 +177,16 @@ export function ResumeSection() {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
-                      <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                        {edu.achievements.map((achievement, achievementIndex) => (
-                          <li key={achievementIndex}>{achievement}</li>
-                        ))}
-                      </ul>
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">Pencapaian Akademik</h4>
+                          <ul className="list-disc pl-5 space-y-2 text-sm text-muted-foreground">
+                            {edu.achievements.map((achievement: string, achievementIndex: number) => (
+                              <li key={achievementIndex}>{achievement}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 ))}
@@ -169,74 +195,56 @@ export function ResumeSection() {
             
             <Separator />
             
-            {/* Keterampilan */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Keterampilan Teknis</h3>
-              
-              <div className="flex flex-col gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Technical Skills</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {Object.entries(skills.technical).map(([category, items]: [string, string[]]) => (
-                      <Card key={category} className="border border-primary/20">
-                        <CardHeader className="py-2">
-                          <CardTitle className="text-sm">{category}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="py-2">
+            {/* Skills */}
+            <div 
+              ref={skillsRef}
+              className=""
+              style={skillsStyle}
+            >
+              <h3 className="text-lg font-semibold mb-4">Keahlian</h3>
+              <div className="grid grid-cols-1 gap-6">
+                <div className="space-y-6">
+                  <h4 className="text-sm font-medium mb-4">Technical Skills</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {Object.entries(skills.technical).map(([category, items], index) => (
+                      <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                        <CardContent className="p-6">
+                          <h4 className="text-base font-semibold mb-4 text-primary">{category}</h4>
                           <div className="flex flex-wrap gap-2">
-                            {items.map((skill, index) => (
-                              <Badge key={index} variant="secondary">{skill}</Badge>
+                            {items.map((skill: string, skillIndex: number) => (
+                              <Badge 
+                                key={skillIndex} 
+                                variant="outline" 
+                                className="bg-primary/5 hover:bg-primary/10 transition-colors duration-200"
+                              >
+                                {skill}
+                              </Badge>
                             ))}
                           </div>
                         </CardContent>
                       </Card>
                     ))}
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Soft Skills</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {skills.soft.map((skill: string, index: number) => (
-                        <Badge key={index} variant="outline">{skill}</Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Bahasa</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {languages.map((lang: { name: string; level: string }, index: number) => (
-                        <Badge key={index} variant="default">
-                          {lang.name} <span className="text-xs ml-1">({lang.level})</span>
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium mb-4">Soft Skills</h4>
+                  <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                    <CardContent className="p-6">
+                      <div className="flex flex-wrap gap-2">
+                        {skills.soft.map((skill: string, index: number) => (
+                          <Badge 
+                            key={index} 
+                            variant="outline" 
+                            className="bg-primary/5 hover:bg-primary/10 transition-colors duration-200"
+                          >
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
-            </div>
-            
-            <Separator />
-            
-            {/* Sertifikasi */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Sertifikasi</h3>
-              
-              <ul className="list-disc pl-5 space-y-2 text-sm text-muted-foreground">
-                {certifications.map((cert, index) => (
-                  <li key={index}>{cert.name} - {cert.issuer} ({cert.year})</li>
-                ))}
-              </ul>
             </div>
           </div>
         </CardContent>
