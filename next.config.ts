@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
         has: [
           {
             type: 'host',
-            value: 'idugeni.github.io',
+            value: 'oldsoul.id',
           },
         ],
         destination: 'https://oldsoul.id/:path*',

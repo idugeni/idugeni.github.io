@@ -1,6 +1,6 @@
 'use client';
 
-import { ProjectCard } from '@/components/ui/project-card';
+import { ProjectCard } from '@/components/projects/card';
 import projectsData from '@/data/projects.json';
 import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 

@@ -15,8 +15,8 @@
  * @property {string} icons.icon - Path ke file favicon
  */
 export const metadata = {
-  title: "IduGeni - Pengembang Web Full Stack & Portfolio",
-  description: "Portfolio profesional IduGeni, pengembang web full stack dengan keahlian dalam React, Node.js, dan teknologi modern. Lihat proyek terbaru dan pengalaman saya dalam pengembangan aplikasi web enterprise.",
+  title: "Eliyanto Sarage - Pengembang Web Full Stack & Portfolio",
+  description: "Portfolio profesional Eliyanto Sarage, pengembang web full stack dengan keahlian dalam React, Node.js, dan teknologi modern. Lihat proyek terbaru dan pengalaman saya dalam pengembangan aplikasi web enterprise.",
   keywords: "pengembang web, full stack developer, react developer, node.js developer, portfolio web developer, web development indonesia",
   icons: {
     icon: "/favicon.png"
@@ -27,10 +27,10 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "IduGeni - Pengembang Web Full Stack & Portfolio",
-    description: "Portfolio profesional IduGeni, pengembang web full stack dengan keahlian dalam React, Node.js, dan teknologi modern.",
+    title: "Eliyanto Sarage - Pengembang Web Full Stack & Portfolio",
+    description: "Portfolio profesional Eliyanto Sarage, pengembang web full stack dengan keahlian dalam React, Node.js, dan teknologi modern.",
     images: ["https://oldsoul.id/thumbnail.png"],
-    creator: "@idugeni"
+    creator: "@eliyantosarage"
   },
   robots: {
     index: true,
@@ -47,15 +47,15 @@ export const metadata = {
     type: "website",
     locale: "id_ID",
     url: "https://oldsoul.id",
-    siteName: "IduGeni Portfolio",
-    title: "IduGeni - Pengembang Web Full Stack & Portfolio",
-    description: "Portfolio profesional IduGeni, pengembang web full stack dengan keahlian dalam React, Node.js, dan teknologi modern. Lihat proyek terbaru dan pengalaman saya dalam pengembangan aplikasi web enterprise.",
+    siteName: "Eliyanto Sarage Portfolio",
+    title: "Eliyanto Sarage - Pengembang Web Full Stack & Portfolio",
+    description: "Portfolio profesional Eliyanto Sarage, pengembang web full stack dengan keahlian dalam React, Node.js, dan teknologi modern. Lihat proyek terbaru dan pengalaman saya dalam pengembangan aplikasi web enterprise.",
     images: [
       {
         url: "/thumbnail.png",
         width: 1200,
         height: 630,
-        alt: "IduGeni Portfolio Preview - Pengembang Web Full Stack"
+        alt: "Eliyanto Sarage Portfolio Preview - Pengembang Web Full Stack"
       }
     ]
   },

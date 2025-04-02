@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, Mail, Phone, MapPin } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -204,13 +204,13 @@ export function ResumeSection() {
               <h3 className="text-lg font-semibold mb-4">Keahlian</h3>
               <div className="grid grid-cols-1 gap-6">
                 <div className="space-y-6">
-                  <h4 className="text-sm font-medium mb-4">Technical Skills</h4>
+                  <h4 className="text-sm text-center font-medium mb-4">Technical Skills</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {Object.entries(skills.technical).map(([category, items], index) => (
                       <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                        <CardContent className="p-6">
-                          <h4 className="text-base font-semibold mb-4 text-primary">{category}</h4>
-                          <div className="flex flex-wrap gap-2">
+                        <CardContent className="px-6">
+                          <CardTitle className="text-base text-center font-semibold mb-4 text-primary border-b pb-2 border-primary/30 bg-gradient-to-r from-transparent via-primary/20 to-transparent">{category}</CardTitle>
+                          <div className="flex flex-wrap justify-center gap-2">
                             {items.map((skill: string, skillIndex: number) => (
                               <Badge 
                                 key={skillIndex} 
@@ -227,10 +227,10 @@ export function ResumeSection() {
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium mb-4">Soft Skills</h4>
+                  <h4 className="text-sm text-center font-medium mb-4">Soft Skills</h4>
                   <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                    <CardContent className="p-6">
-                      <div className="flex flex-wrap gap-2">
+                    <CardContent className="px-6">
+                      <div className="flex flex-wrap justify-center gap-2">
                         {skills.soft.map((skill: string, index: number) => (
                           <Badge 
                             key={index} 

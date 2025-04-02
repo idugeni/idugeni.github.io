@@ -13,7 +13,7 @@ import { ContactSection } from '@/components/sections/contact';
 import { ResumeSection } from '@/components/sections/resume';
 import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Home as HomeIcon, User, Briefcase, Mail, FileText } from 'lucide-react';
+import { HomeIcon, PersonIcon, BackpackIcon, EnvelopeClosedIcon, FileTextIcon } from '@radix-ui/react-icons';
 
 /**
  * @function Home
@@ -44,23 +44,23 @@ export default function Home() {
         <div className="flex justify-center mb-8 max-w-4xl mx-auto w-full">
           <TabsList className={isMobile ? "w-full" : "w-auto"}>
             <TabsTrigger value="home" className="flex items-center gap-1">
-              <HomeIcon />
+              <HomeIcon className="size-4" />
               <span className={isMobile ? "hidden" : "inline"}>Home</span>
             </TabsTrigger>
             <TabsTrigger value="about" className="flex items-center gap-1">
-              <User />
+              <PersonIcon className="size-4" />
               <span className={isMobile ? "hidden" : "inline"}>About</span>
             </TabsTrigger>
             <TabsTrigger value="projects" className="flex items-center gap-1">
-              <Briefcase />
+              <BackpackIcon className="size-4" />
               <span className={isMobile ? "hidden" : "inline"}>Project</span>
             </TabsTrigger>
             <TabsTrigger value="contact" className="flex items-center gap-1">
-              <Mail />
+              <EnvelopeClosedIcon className="size-4" />
               <span className={isMobile ? "hidden" : "inline"}>Contact</span>
             </TabsTrigger>
             <TabsTrigger value="resume" className="flex items-center gap-1">
-              <FileText />
+              <FileTextIcon className="size-4" />
               <span className={isMobile ? "hidden" : "inline"}>Resume</span>
             </TabsTrigger>
           </TabsList>

@@ -1,9 +1,9 @@
 export const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "Person",
-  "name": "IduGeni",
+  "name": "Eliyanto Sarage",
   "url": "https://oldsoul.id",
-  "sameAs": ["https://idugeni.github.io"],
+  "sameAs": ["https://oldsoul.id"],
   "jobTitle": "Full Stack Web Developer",
   "worksFor": {
     "@type": "Organization",
@@ -28,10 +28,10 @@ export const websiteSchema = {
 export const portfolioSchema = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
-  "name": "Portfolio IduGeni",
-  "description": "Kumpulan proyek inovatif yang menunjukkan keahlian dan pengalaman dalam pengembangan perangkat lunak",
+  "name": "Portfolio Eliyanto Sarage",
+  "description": "Koleksi proyek dan karya terbaik",
   "url": "https://oldsoul.id/projects",
-  "sameAs": ["https://idugeni.github.io/projects"],
+  "sameAs": ["https://oldsoul.id/projects"],
   "about": {
     "@type": "Thing",
     "name": "Web Development Projects"

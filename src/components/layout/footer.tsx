@@ -26,7 +26,7 @@ const Footer = ({ className, ...props }: React.ComponentProps<"footer">) => {
           className="flex items-center justify-center py-6"
         >
           <p className="text-sm text-muted-foreground">
-            © {currentYear} Idugeni. All rights reserved.
+            © {currentYear} Eliyanto Sarage. All rights reserved.
           </p>
         </div>
       </div>

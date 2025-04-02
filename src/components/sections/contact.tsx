@@ -12,9 +12,9 @@ import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 export function ContactSection() {
   const { intro, form, contactInfo } = contactData;
   const [isLoading, setIsLoading] = useState(false);
-  const { ref: headerRef, style: headerStyle } = useViewportAnimation<HTMLDivElement>({type: "fade-in", duration: 700});
-  const { ref: formRef, style: formStyle } = useViewportAnimation<HTMLDivElement>({type: "slide-in-left", duration: 700});
-  const { ref: infoRef, style: infoStyle } = useViewportAnimation<HTMLDivElement>({type: "slide-in-right", duration: 700});
+  const { ref: headerRef, style: headerStyle } = useViewportAnimation<HTMLDivElement>({type: "slide-in-up", duration: 700});
+  const { ref: formRef, style: formStyle } = useViewportAnimation<HTMLDivElement>({type: "slide-in-up", duration: 700});
+  const { ref: infoRef, style: infoStyle } = useViewportAnimation<HTMLDivElement>({type: "slide-in-up", duration: 700});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

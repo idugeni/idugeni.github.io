@@ -32,9 +32,9 @@
       "id": 4,
       "title": "Portfolio Website",
       "description": "Website portofolio personal dengan desain minimalis dan responsif menggunakan teknologi modern. Dioptimalkan untuk performa dan aksesibilitas.",
-      "technologies": ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"],
+      "technologies": ["Next.js", "TypeScript", "Tailwind CSS"],
       "imageUrl": "/thumbnail.png",
-      "demoUrl": "https://idugeni.github.io",
+      "demoUrl": "https://oldsoul.id",
       "repoUrl": "https://github.com/idugeni/idugeni.github.io"
     }
   ]
