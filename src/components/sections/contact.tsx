@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import contactData from '@/data/contact.json';
 import { Github, Linkedin, Twitter, Instagram, Mail, Phone, MapPin, Loader2 } from 'lucide-react';
+import { ThreadsIcon } from '@/components/social/threads-icon';
 import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 
 /**
@@ -55,6 +56,8 @@ const renderSocialIcon = (iconName: string) => {
         return <Twitter size={20} />;
       case 'instagram':
         return <Instagram size={20} />;
+      case 'threads':
+        return <ThreadsIcon size={20} />;
       default:
         return null;
     }

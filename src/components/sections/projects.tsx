@@ -76,7 +76,8 @@ function ProjectCardWithAnimation({ project, index }: { project: Project; index:
         description={project.description}
         image={project.imageUrl}
         tags={project.technologies}
-        link={project.demoUrl || project.repoUrl || '#'}
+        demoUrl={project.demoUrl}
+        repoUrl={project.repoUrl}
       />
     </div>
   );

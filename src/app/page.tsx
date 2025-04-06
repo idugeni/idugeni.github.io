@@ -34,15 +34,17 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-4 md:p-8 max-w-4xl mx-auto w-full">
+    <div className="min-h-screen flex flex-col p-4 md:p-8 w-full">
       <Tabs 
         defaultValue="home" 
         value={activeTab} 
         onValueChange={handleTabChange}
         className="flex-1 flex flex-col"
       >
-        <div className="flex justify-center mb-8 max-w-4xl mx-auto w-full">
-          <TabsList className={isMobile ? "w-full" : "w-auto"}>
+        <div className="flex justify-center mb-8 w-full">
+          <TabsList 
+            className={`${isMobile ? "w-full" : "w-auto max-w-4xl"} w-full`}
+          >
             <TabsTrigger value="home" className="flex items-center gap-1">
               <HomeIcon className="size-4" />
               <span className={isMobile ? "hidden" : "inline"}>Home</span>
@@ -66,7 +68,7 @@ export default function Home() {
           </TabsList>
         </div>
 
-        <div className="flex-1 overflow-auto pb-8 max-w-4xl mx-auto w-full">
+        <div className="flex-1 overflow-auto pb-8 w-full">
           <TabsContent value="home" className="mt-0">
             <HomeSection />
           </TabsContent>

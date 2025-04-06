@@ -6,6 +6,7 @@
  */
 
 import { Github, Linkedin, Twitter, Instagram } from 'lucide-react';
+import { ThreadsIcon } from './threads-icon';
 
 /**
  * @interface SocialIconsProps
@@ -34,6 +35,8 @@ export function SocialIcons({ iconName, size = 24 }: SocialIconsProps) {
       return <Twitter size={size} />;
     case 'instagram':
       return <Instagram size={size} />;
+    case 'threads':
+      return <ThreadsIcon size={size} />;
     default:
       return null;
   }

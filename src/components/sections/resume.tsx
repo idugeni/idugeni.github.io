@@ -85,15 +85,22 @@ export function ResumeSection() {
                 <h1 className="text-3xl font-bold tracking-tight">{header.name}</h1>
                 <p className="text-xl text-muted-foreground">{header.title}</p>
               </div>
-              <div className="flex justify-center gap-6 mt-2">
+              <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 sm:gap-4 md:gap-6 mt-2 px-2">
                 {header.contact.map((item: string, index: number) => {
                   const icon = item.toLowerCase().includes('@') ? Mail :
                              item.toLowerCase().includes('+') ? Phone :
                              MapPin;
                   return (
-                    <Button key={index} variant="ghost" size="sm" className="gap-2 flex items-center">
-                      {React.createElement(icon, { size: 16 })}
-                      <span className="text-sm">{item}</span>
+                    <Button 
+                      key={index} 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full sm:w-auto gap-1 sm:gap-2 flex items-center text-xs sm:text-sm"
+                    >
+                      {React.createElement(icon, { 
+                        size: typeof window !== 'undefined' && window.innerWidth < 640 ? 14 : 16 
+                      })}
+                      <span className="sm:max-w-none">{item}</span>
                     </Button>
                   );
                 })}

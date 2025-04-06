@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Home from '../page';
+import Home from '@/app/page';
 
 export const metadata: Metadata = {
   title: 'Resume | Eliyanto Sarage',

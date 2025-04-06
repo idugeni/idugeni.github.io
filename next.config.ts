@@ -9,7 +9,6 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-    domains: ['oldsoul.id'],
     formats: ['image/avif', 'image/webp'],
   },
 };

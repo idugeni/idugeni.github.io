@@ -2,6 +2,25 @@
 
 Semua perubahan penting pada proyek ini akan didokumentasikan dalam file ini.
 
+## [2.0.0] - 2025-04-07
+
+### Changed
+- Arsitektur aplikasi yang lebih modular
+- Peningkatan performa loading dengan implementasi SSR
+- UI/UX yang lebih modern dan intuitif
+- Sistem routing yang lebih efisien
+
+### Fixed
+- Optimasi caching untuk performa yang lebih baik
+- Perbaikan masalah pada dark mode switching
+- Peningkatan accessibility score ke WCAG AAA
+
+### Security
+- Implementasi rate limiting
+- Peningkatan validasi input
+- Penambahan CSRF protection
+- Audit dan pembaruan dependencies
+
 ## [1.0.0] - 2025-04-03
 
 ### Added
@@ -32,8 +51,7 @@ Semua perubahan penting pada proyek ini akan didokumentasikan dalam file ini.
 - Proteksi terhadap common vulnerabilities
 
 ## [Unreleased]
-- Integrasi dengan CMS
-- Fitur blog
-- Sistem komentar
-- Analytics dashboard
-- Optimasi performa lanjutan
+- Integrasi dengan AI untuk personalisasi konten
+- Sistem notifikasi real-time
+- Multi-language support
+- Progressive Web App (PWA) implementation

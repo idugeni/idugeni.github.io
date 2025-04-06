@@ -6,36 +6,36 @@
       "title": "Aplikasi SaaS Manajemen Proyek",
       "description": "Platform manajemen proyek berbasis SaaS dengan 50K+ pengguna aktif. Fitur utama meliputi dashboard analytics real-time, sistem autentikasi OAuth, dan integrasi WebSocket untuk koneksi simultan.",
       "technologies": ["React", "Redux", "Node.js", "Express", "MongoDB", "Docker"],
-      "imageUrl": "/thumbnail.png",
-      "demoUrl": "https://example.com",
-      "repoUrl": "https://github.com/idugeni/project-management"
+      "imageUrl": "/illustration-depicts-a-cartoon-cat.webp",
+      "demoUrl": "https://oldsoul.id",
+      "repoUrl": "https://github.com/idugeni"
     },
     {
       "id": 2,
       "title": "Enterprise Web Application",
       "description": "Aplikasi web enterprise dengan arsitektur mikrofrontend yang mengutamakan performa dan skalabilitas. Implementasi modern state management dan optimasi performa.",
       "technologies": ["React", "Next.js", "TypeScript", "Tailwind CSS", "Redux"],
-      "imageUrl": "/thumbnail.png",
-      "demoUrl": "https://example.com",
-      "repoUrl": "https://github.com/idugeni/enterprise-web"
+      "imageUrl": "/illustration-depicts-a-cartoon-cat.webp",
+      "demoUrl": "https://oldsoul.id",
+      "repoUrl": "https://github.com/idugeni"
     },
     {
       "id": 3,
       "title": "Website Responsif Enterprise",
       "description": "Koleksi website responsif untuk klien enterprise dengan animasi kompleks, interaksi UI yang menarik, dan optimasi performa. Mencapai rating kepuasan klien 4.9/5.",
       "technologies": ["React", "JavaScript", "SASS", "Webpack", "Jest", "GSAP"],
-      "imageUrl": "/thumbnail.png",
-      "demoUrl": "https://example.com",
-      "repoUrl": "https://github.com/idugeni/responsive-websites"
+      "imageUrl": "/illustration-depicts-a-cartoon-cat.webp",
+      "demoUrl": "https://oldsoul.id",
+      "repoUrl": "https://github.com/idugeni"
     },
     {
       "id": 4,
       "title": "Portfolio Website",
       "description": "Website portofolio personal dengan desain minimalis dan responsif menggunakan teknologi modern. Dioptimalkan untuk performa dan aksesibilitas.",
       "technologies": ["Next.js", "TypeScript", "Tailwind CSS"],
-      "imageUrl": "/thumbnail.png",
+      "imageUrl": "/illustration-depicts-a-cartoon-cat.webp",
       "demoUrl": "https://oldsoul.id",
-      "repoUrl": "https://github.com/idugeni/idugeni.github.io"
+      "repoUrl": "https://github.com/idugeni"
     }
   ]
 }

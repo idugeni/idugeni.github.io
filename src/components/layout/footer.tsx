@@ -14,7 +14,7 @@ const Footer = ({ className, ...props }: React.ComponentProps<"footer">) => {
   return (
     <footer
       className={cn(
-        "w-full bg-background py-6",
+        "w-full bg-transparent p-6",
         className
       )}
       {...props}

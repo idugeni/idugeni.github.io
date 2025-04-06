@@ -35,8 +35,9 @@ export function HomeSection() {
   const { ref: socialRef, style: socialStyle } = useViewportAnimation<HTMLDivElement>({type: "fade-in", delay: 800, duration: 800});
 
   return (
-    <Card className="flex flex-col items-center justify-center gap-6 py-8 text-center max-w-4xl mx-auto bg-background/50 backdrop-blur-sm border-primary/10">
-      <CardContent className="flex flex-col items-center gap-6 w-full">
+    <div className="flex flex-col gap-8 py-8 max-w-4xl mx-auto">
+      <Card className="flex flex-col items-center justify-center gap-6 py-8 text-center w-full bg-background/50 backdrop-blur-sm border-primary/10">
+        <CardContent className="flex flex-col items-center gap-6 w-full">
         <div ref={photoRef} style={photoStyle} className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 animate-pulse"></div>
           {/* Placeholder untuk foto profil */}
@@ -92,5 +93,6 @@ export function HomeSection() {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }

@@ -13,7 +13,7 @@
   "socialMedia": [
     {
       "name": "GitHub",
-      "url": "https://github.com",
+      "url": "https://github.com/idugeni/",
       "icon": "github"
     },
     {
@@ -28,8 +28,13 @@
     },
     {
       "name": "Instagram",
-      "url": "https://instagram.com",
+      "url": "https://www.instagram.com/eliyantosarage_/",
       "icon": "instagram"
+    },
+    {
+      "name": "Threads",
+      "url": "https://www.threads.net/@eliyantosarage_",
+      "icon": "threads"
     }
   ],
   "actions": [
