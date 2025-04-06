@@ -23,7 +23,7 @@ export default function NotFound() {
     enableSystem
     disableTransitionOnChange
   >
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div ref={headerRef} style={headerStyle}>
           <h1 className="text-9xl font-bold text-foreground">404</h1>
@@ -38,7 +38,7 @@ export default function NotFound() {
           </p>
           <Link 
             href="/"
-            className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-lg
+            className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-full
                      hover:bg-primary/90 transition-colors duration-200"
           >
             Return Home
