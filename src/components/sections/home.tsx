@@ -18,6 +18,16 @@ import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 export function HomeSection() {
   // Menggunakan data dari profile.json
   const { name, title, bio, photo, actions, socialMedia } = profileData;
+  
+  // Mendapatkan fungsi handleTabChange dari parent component
+  const handleTabChange = (tab: string) => {
+    // Mengakses parent Tabs component value setter
+    const tabsElement = document.querySelector('[role="tablist"]');
+    if (tabsElement) {
+      const button = tabsElement.querySelector(`[data-value="${tab}"]`) as HTMLButtonElement;
+      if (button) button.click();
+    }
+  };
 
   const { ref: photoRef, style: photoStyle } = useViewportAnimation<HTMLDivElement>({
     type: "fade-in",
@@ -64,9 +74,9 @@ export function HomeSection() {
               className="rounded-full"
               asChild
             >
-              <a href={action.href}>
+              <button onClick={() => handleTabChange(action.href)}>
                 {action.label}
-              </a>
+              </button>
             </Button>
           ))}
         </div>

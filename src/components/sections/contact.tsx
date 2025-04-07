@@ -14,6 +14,7 @@ import contactData from '@/data/contact.json';
 import { Github, Linkedin, Twitter, Instagram, Mail, Phone, MapPin, Loader2 } from 'lucide-react';
 import { ThreadsIcon } from '@/components/social/threads-icon';
 import { useViewportAnimation } from '@/hooks/use-viewport-animation';
+import { toast } from 'sonner';
 
 /**
  * @function ContactSection
@@ -23,6 +24,11 @@ import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 export function ContactSection() {
   const { intro, form, contactInfo } = contactData;
   const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
   const { ref: headerRef, style: headerStyle } = useViewportAnimation<HTMLDivElement>({type: "slide-in-up", duration: 700});
   const { ref: formRef, style: formStyle } = useViewportAnimation<HTMLDivElement>({type: "slide-in-up", duration: 700});
   const { ref: infoRef, style: infoStyle } = useViewportAnimation<HTMLDivElement>({type: "slide-in-up", duration: 700});
@@ -35,9 +41,40 @@ export function ContactSection() {
 const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsLoading(false);
+
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.details && Array.isArray(data.details)) {
+          throw new Error(data.details.map((err: { message: string }) => err.message).join('\n'));
+        }
+        throw new Error(data.error || 'Gagal mengirim pesan');
+      }
+
+      toast.success('Pesan berhasil dikirim!');
+      setFormData({ name: '', email: '', message: '' });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan saat mengirim pesan');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
   };
 
 /**
@@ -112,17 +149,24 @@ const renderContactIcon = (type: string) => {
                     <Textarea 
                       id={field.id} 
                       placeholder={field.placeholder} 
-                      rows={field.rows || 5} 
+                      rows={field.rows || 5}
+                      autoComplete="off"
+                      value={formData[field.id as keyof typeof formData] || ''}
+                      onChange={handleInputChange}
                     />
                   ) : (
                     <Input 
                       id={field.id} 
                       type={field.type} 
-                      placeholder={field.placeholder} 
+                      placeholder={field.placeholder}
+                      autoComplete="off"
+                      value={formData[field.id as keyof typeof formData] || ''}
+                      onChange={handleInputChange}
                     />
                   )}
                 </div>
               ))}
+
               <Button 
                 type="submit" 
                 className="w-full transition-all duration-300 hover:opacity-90"
