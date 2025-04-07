@@ -15,17 +15,17 @@ import { useViewportAnimation } from '@/hooks/use-viewport-animation';
  * @description Komponen yang menampilkan informasi profil utama, termasuk foto, nama, bio, dan tautan sosial media
  * @returns {JSX.Element} Komponen React yang merender bagian beranda
  */
-export function HomeSection() {
+interface HomeSectionProps {
+  onTabChange?: (tab: string) => void;
+}
+
+export function HomeSection({ onTabChange }: HomeSectionProps) {
   // Menggunakan data dari profile.json
   const { name, title, bio, photo, actions, socialMedia } = profileData;
   
-  // Mendapatkan fungsi handleTabChange dari parent component
   const handleTabChange = (tab: string) => {
-    // Mengakses parent Tabs component value setter
-    const tabsElement = document.querySelector('[role="tablist"]');
-    if (tabsElement) {
-      const button = tabsElement.querySelector(`[data-value="${tab}"]`) as HTMLButtonElement;
-      if (button) button.click();
+    if (onTabChange) {
+      onTabChange(tab);
     }
   };
 

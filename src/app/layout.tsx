@@ -11,6 +11,7 @@ import "./globals.css";
 import { metadata as siteMetadata } from "@/lib/metadata";
 import Footer from "@/components/layout/footer";
 import { BackToTop } from "@/components/back-to-top";
+import { Toaster } from "@/components/ui/sonner";
 
 /**
  * @constant {Object} geistSans
@@ -61,6 +62,7 @@ export default function RootLayout({
             <BackToTop />
             <Analytics />
             <SpeedInsights />
+            <Toaster />
           </div>
         </ThemeProvider>
       </body>

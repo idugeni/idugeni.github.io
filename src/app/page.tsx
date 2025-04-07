@@ -70,7 +70,7 @@ export default function Home() {
 
         <div className="flex-1 overflow-auto pb-8 w-full">
           <TabsContent value="home" className="mt-0">
-            <HomeSection />
+            <HomeSection onTabChange={handleTabChange} />
           </TabsContent>
           <TabsContent value="about" className="mt-0">
             <AboutSection />
