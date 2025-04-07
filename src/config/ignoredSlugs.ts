@@ -1,0 +1,1 @@
+export const ignoredSlugs = ['about', 'contact', 'projects', 'resume', 'robots.txt', 'sitemap.xml', 'favicon.ico', 'api', 'public', '404'];

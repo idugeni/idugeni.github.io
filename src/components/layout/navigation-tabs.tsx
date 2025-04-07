@@ -1,9 +1,11 @@
-/**
- * @module NavigationTabs
- * @description Komponen navigasi tab yang dapat digunakan kembali untuk mengelola navigasi antar halaman
- */
+'use client';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 import { HomeSection } from '@/components/sections/home';
 import { AboutSection } from '@/components/sections/about';
 import { ProjectsSection } from '@/components/sections/projects';
@@ -15,57 +17,61 @@ interface NavigationTabsProps {
   onTabChange: (value: string) => void;
 }
 
-/**
- * @function NavigationTabs
- * @description Komponen yang mengelola navigasi tab dan konten
- * @param {NavigationTabsProps} props - Props komponen
- * @returns {JSX.Element} Komponen React yang merender navigasi tab
- */
+const tabTriggerClass = `
+  inline-flex items-center justify-center
+  px-4 py-2 rounded-full text-sm font-medium
+  transition-all duration-200 ease-in-out
+  data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-inner
+  data-[state=inactive]:opacity-60 data-[state=inactive]:hover:opacity-80
+  leading-none
+`;
+
+const animateClass = "animate__animated animate__fadeIn animate__slideInUp";
+
 export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) {
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center pt-8">
-      <Tabs
-        defaultValue={activeTab}
-        value={activeTab}
-        onValueChange={onTabChange}
-        className="w-full max-w-screen-xl mx-auto px-4"
-      >
-        <TabsList className="mb-4 flex justify-center w-full">
-          <TabsTrigger value="home" className="flex items-center gap-1">
-            Beranda
-          </TabsTrigger>
-          <TabsTrigger value="about" className="flex items-center gap-1">
-            Tentang
-          </TabsTrigger>
-          <TabsTrigger value="projects" className="flex items-center gap-1">
-            Proyek
-          </TabsTrigger>
-          <TabsTrigger value="contact" className="flex items-center gap-1">
-            Kontak
-          </TabsTrigger>
-          <TabsTrigger value="resume" className="flex items-center gap-1">
-            Resume
-          </TabsTrigger>
-        </TabsList>
-
-        <div className="flex items-center justify-center">
-          <TabsContent value="home" className="mt-0 w-full">
-            <HomeSection onTabChange={onTabChange} />
-          </TabsContent>
-          <TabsContent value="about" className="mt-0 w-full">
-            <AboutSection />
-          </TabsContent>
-          <TabsContent value="projects" className="mt-0 w-full">
-            <ProjectsSection />
-          </TabsContent>
-          <TabsContent value="contact" className="mt-0 w-full">
-            <ContactSection />
-          </TabsContent>
-          <TabsContent value="resume" className="mt-0 w-full">
-            <ResumeSection />
-          </TabsContent>
+    <div className="flex flex-col min-h-screen">
+      <div className="w-full border-b">
+        <div className="max-w-screen-xl mx-auto px-4">
+          <Tabs
+            defaultValue={activeTab}
+            value={activeTab}
+            onValueChange={onTabChange}
+            className="w-full"
+          >
+            <TabsList
+  className="w-full flex justify-center items-center gap-2 bg-muted/40 rounded-xl px-2 py-1 my-4"
+>
+              <TabsTrigger value="home" className={tabTriggerClass}>Home</TabsTrigger>
+              <TabsTrigger value="about" className={tabTriggerClass}>About</TabsTrigger>
+              <TabsTrigger value="projects" className={tabTriggerClass}>Projetcs</TabsTrigger>
+              <TabsTrigger value="contact" className={tabTriggerClass}>Contact</TabsTrigger>
+              <TabsTrigger value="resume" className={tabTriggerClass}>Resume</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
-      </Tabs>
+      </div>
+      <div className="flex-grow flex items-center justify-center px-4">
+        <div className="w-full max-w-screen-xl">
+          <Tabs value={activeTab} onValueChange={onTabChange}>
+            <TabsContent value="home" className={`w-full ${animateClass}`}>
+              <HomeSection onTabChange={onTabChange} />
+            </TabsContent>
+            <TabsContent value="about" className={`w-full ${animateClass}`}>
+              <AboutSection />
+            </TabsContent>
+            <TabsContent value="projects" className={`w-full ${animateClass}`}>
+              <ProjectsSection />
+            </TabsContent>
+            <TabsContent value="contact" className={`w-full ${animateClass}`}>
+              <ContactSection />
+            </TabsContent>
+            <TabsContent value="resume" className={`w-full ${animateClass}`}>
+              <ResumeSection />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 }
