@@ -1,9 +1,4 @@
-/**
- * @module RootLayout
- * @description Modul yang menangani layout utama aplikasi dan konfigurasi tema
- */
-
-import { Geist, Geist_Mono } from "next/font/google";
+import { Playfair_Display, Merriweather } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -13,33 +8,28 @@ import Footer from "@/components/layout/footer";
 import { BackToTop } from "@/components/back-to-top";
 import { Toaster } from "@/components/ui/sonner";
 
-/**
- * @constant {Object} geistSans
- * @description Konfigurasi font Geist Sans untuk tampilan umum
- */
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const playfair = Playfair_Display({
+  variable: "--font-playfair-display",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  display: "swap",
+  fallback: ["serif"],
+  preload: true,
+  adjustFontFallback: true
 });
 
-/**
- * @constant {Object} geistMono
- * @description Konfigurasi font Geist Mono untuk tampilan kode
- */
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const merriweather = Merriweather({
+  variable: "--font-merriweather", 
   subsets: ["latin"],
+  weight: ["300", "400", "700", "900"],
+  display: "swap",
+  fallback: ["serif"],
+  preload: true,
+  adjustFontFallback: true
 });
 
 export const metadata = siteMetadata;
 
-/**
- * @function RootLayout
- * @description Komponen layout utama yang membungkus seluruh aplikasi
- * @param {Object} props - Props komponen
- * @param {React.ReactNode} props.children - Konten child yang akan dirender
- * @returns {JSX.Element} Komponen React yang merender layout utama
- */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -48,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="id" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background`}
+        className={`${playfair.variable} ${merriweather.variable} antialiased min-h-screen bg-background`}
       >
         <ThemeProvider
           attribute="class"

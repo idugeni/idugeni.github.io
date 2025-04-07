@@ -6,7 +6,7 @@
 'use client';
 
 import { useState } from 'react';
-import { NavigationTabs } from '@/components/layout/navigation-tabs';
+import { NavigationTabs } from '@/components/layout/NavigationTabs';
 
 /**
  * @function Home

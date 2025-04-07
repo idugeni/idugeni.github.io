@@ -39,13 +39,6 @@ export default function RedirectContent({
     return () => clearInterval(timer)
   }, [enableRedirect, targetURL])
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [])
-
   const renderErrorCard = (title: string, description: string) => (
     <Card className="w-full max-w-4xl text-center shadow-xl">
       <CardHeader className="text-2xl md:text-3xl font-bold bg-destructive/10 rounded-t-lg py-6">
@@ -62,30 +55,36 @@ export default function RedirectContent({
     </Card>
   )
 
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
+    <main className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-transparent h-screen min-h-[100dvh] overflow-hidden">
+      {children}
+    </main>
+  )
+
   if (isInvalidPath) {
     return (
-      <main className="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4">
+      <Wrapper>
         {renderErrorCard(
           'URL Tidak Valid',
           'URL yang Anda masukkan kosong atau tidak sesuai format yang kami dukung.'
         )}
-      </main>
+      </Wrapper>
     )
   }
 
   if (isIgnoredSlug) {
     return (
-      <main className="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4">
+      <Wrapper>
         {renderErrorCard(
           'Halaman Tidak Tersedia',
           `Halaman /${path} termasuk dalam daftar yang tidak dapat diakses atau diabaikan.`
         )}
-      </main>
+      </Wrapper>
     )
   }
 
   return (
-    <main className="fixed inset-0 z-50 flex items-center justify-center bg-transparent p-4">
+    <Wrapper>
       <Card className="w-full max-w-2xl text-center shadow-xl py-0">
         <CardHeader className="text-2xl md:text-3xl font-bold bg-primary/10 rounded-t-lg py-6">
           Halaman Telah Dipindahkan
@@ -120,6 +119,6 @@ export default function RedirectContent({
           </div>
         </CardContent>
       </Card>
-    </main>
+    </Wrapper>
   )
 }

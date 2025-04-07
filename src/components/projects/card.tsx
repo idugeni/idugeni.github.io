@@ -46,6 +46,7 @@ export function ProjectCard({ title, description, image, tags, demoUrl, repoUrl 
               src={image}
               alt={title}
               fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 ease-in-out transform translate-y-full group-hover:translate-y-0"></div>
