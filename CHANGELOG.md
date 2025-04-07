@@ -2,6 +2,13 @@
 
 Semua perubahan penting pada proyek ini akan didokumentasikan dalam file ini.
 
+## [2.7.0] - 2025-04-08
+
+### Changed
+- Refactor halaman redirect untuk pemisahan komponen `RedirectContent` guna pemisahan logika client-side
+- Implementasi `ignoredSlugs.ts` untuk mencegah redirect pada halaman aplikasi (seperti /about, /contact) dan aset statis
+- Penyempurnaan UI notifikasi redirect dengan pesan yang lebih jelas, timer hitung mundur, serta penanganan error slug tidak valid atau diabaikan
+
 ## [2.0.0] - 2025-04-07
 
 ### Changed
