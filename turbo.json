@@ -10,7 +10,9 @@
         "SMTP_USER",
         "SMTP_PASS",
         "TO_EMAIL",
-        "TURNSTILE_SECRET_KEY"
+        "RECAPTCHA_SECRET_KEY",
+        "GITHUB_USERNAME",
+        "GITHUB_TOKEN"
       ]
     },
     "check-types": {

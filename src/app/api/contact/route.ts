@@ -9,7 +9,7 @@ const contactFormSchema = z.object({
   name: z.string().min(2).max(50),
   email: z.string().email(),
   message: z.string().min(1).max(1000),
-  "cf-turnstile-response": z.string().min(1),
+  "g-recaptcha-response": z.string().min(1),
 });
 
 const transporter = nodemailer.createTransport({
@@ -75,19 +75,19 @@ export async function POST(request: NextRequest) {
       name,
       email,
       message,
-      "cf-turnstile-response": turnstileToken,
+      "g-recaptcha-response": recaptchaToken,
     } = result.data;
 
-    // Verifikasi Turnstile dengan timeout
+    // Verifikasi reCAPTCHA dengan timeout
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000); // 5 detik
 
     const verifyResponse = await fetch(
-      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      "https://www.google.com/recaptcha/api/siteverify",
       {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `secret=${env.TURNSTILE_SECRET_KEY}&response=${turnstileToken}`,
+        body: `secret=6LdWuw4rAAAAABIH7mlWu6c7TQ3P7HMS1WFIUiAB&response=${recaptchaToken}`,
         signal: controller.signal,
       }
     ).finally(() => clearTimeout(timeout));
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     if (!verifyResult.success) {
       return NextResponse.json(
         {
-          error: "Verifikasi Turnstile gagal",
+          error: "Verifikasi reCAPTCHA gagal",
           details: verifyResult["error-codes"],
         },
         {

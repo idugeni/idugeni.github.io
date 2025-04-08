@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import TurnstileWidget from './TurnstileWidget';
+import ReCaptchaWidget from './ReCaptchaWidget';
 
 interface ContactFormProps {
   form: {
@@ -23,13 +23,13 @@ const ContactForm: React.FC<ContactFormProps> = ({ form }) => {
     name: '',
     email: '',
     message: '',
-    "cf-turnstile-response": ''
+    "g-recaptcha-response": ''
   });
 
   const handleVerify = (token: string) => {
     setFormData(prev => ({
       ...prev,
-      'cf-turnstile-response': token
+      'g-recaptcha-response': token
     }));
   };
 
@@ -56,7 +56,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
 
     toast.success('Pesan berhasil dikirim!');
-    setFormData({ name: '', email: '', message: '', 'cf-turnstile-response': '' });
+    setFormData({ name: '', email: '', message: '', 'g-recaptcha-response': '' });
   } catch (error) {
     toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan saat mengirim pesan');
   } finally {
@@ -102,7 +102,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               )}
             </div>
           ))}
-  <TurnstileWidget siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string} onVerify={handleVerify} />
+  <ReCaptchaWidget siteKey="6LdWuw4rAAAAAK9cD3rqRPMdyKX5xXKSMHOE8sez" onVerify={handleVerify} />
   <Button type="submit" disabled={isLoading} className="w-full">
     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : form.submitButton}
   </Button>

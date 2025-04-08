@@ -7,14 +7,17 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
-/**
- * @interface ProjectCardProps
- * @description Interface untuk properti yang diperlukan oleh komponen ProjectCard
- */
 interface ProjectCardProps {
   title: string;
   description: string;
@@ -24,23 +27,19 @@ interface ProjectCardProps {
   repoUrl?: string;
 }
 
-/**
- * @function ProjectCard
- * @description Komponen yang menampilkan informasi proyek dalam bentuk kartu yang dapat diklik
- * @param {ProjectCardProps} props - Properti yang diperlukan untuk menampilkan kartu proyek
- * @param {string} props.title - Judul proyek
- * @param {string} props.description - Deskripsi singkat proyek
- * @param {string} props.image - URL gambar proyek
- * @param {string[]} props.tags - Array tag teknologi yang digunakan dalam proyek
- * @param {string} props.link - URL yang akan dibuka ketika kartu diklik
- * @returns {JSX.Element} Komponen React yang merender kartu proyek
- */
-export function ProjectCard({ title, description, image, tags, demoUrl, repoUrl }: ProjectCardProps) {
+export function ProjectCard({
+  title,
+  description,
+  image,
+  tags,
+  demoUrl,
+  repoUrl,
+}: ProjectCardProps) {
   return (
     <div className="h-full animate-duration-200 animate-ease-in-out">
       <Card className="overflow-hidden h-full transition-colors hover:bg-muted/50 flex flex-col py-0">
         {/* Image Section */}
-        <CardHeader className="p-0">
+        <CardHeader className="p-0 m-0">
           <div className="aspect-video relative overflow-hidden group">
             <Image
               src={image}
@@ -49,36 +48,57 @@ export function ProjectCard({ title, description, image, tags, demoUrl, repoUrl 
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 ease-in-out transform translate-y-full group-hover:translate-y-0"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 ease-in-out transform translate-y-full group-hover:translate-y-0" />
           </div>
         </CardHeader>
 
-        <CardContent className="p-6 flex-grow flex flex-col gap-4">
-          {/* Tags Section */}
-          <div className="flex flex-wrap gap-2">
+        <CardContent className="p-3 pt-2 flex-grow flex flex-col gap-3">
+          {/* Title */}
+          <CardTitle 
+            className="
+              text-center 
+              uppercase 
+              text-lg 
+              font-bold 
+              tracking-wider
+              line-clamp-2
+              font-montserrat
+              letter-spacing-tight
+            "
+          >
+            {title}
+          </CardTitle>
+
+          <Separator />
+
+          {/* Description */}
+          <CardDescription className="line-clamp-3 text-center">
+            {description}
+          </CardDescription>
+
+          <Separator />
+
+          {/* Tags */}
+          <div className="flex flex-wrap gap-2 justify-center">
             {tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
+              <Badge 
+                key={tag} 
+                variant="secondary" 
+                className="rounded-full text-xs transition-colors duration-300 hover:bg-primary hover:text-primary-foreground"
+              >
                 {tag}
               </Badge>
             ))}
           </div>
 
-          <Separator />
-
-          {/* Title and Description Section */}
-          <div>
-            <CardTitle className="line-clamp-1 mb-2">{title}</CardTitle>
-            <CardDescription className="line-clamp-2">{description}</CardDescription>
-          </div>
-
           <Separator className="mt-auto" />
 
-          {/* Footer Section */}
+          {/* Footer */}
           <CardFooter className="p-0 flex gap-2">
             {demoUrl && (
-              <Link 
-                href={demoUrl} 
-                target="_blank" 
+              <Link
+                href={demoUrl}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1"
               >
@@ -88,9 +108,9 @@ export function ProjectCard({ title, description, image, tags, demoUrl, repoUrl 
               </Link>
             )}
             {repoUrl && (
-              <Link 
-                href={repoUrl} 
-                target="_blank" 
+              <Link
+                href={repoUrl}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1"
               >

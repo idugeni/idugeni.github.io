@@ -7,7 +7,9 @@ const envSchema = z.object({
   SMTP_USER: z.string(),
   SMTP_PASS: z.string(),
   TO_EMAIL: z.string().email(),
-  TURNSTILE_SECRET_KEY: z.string(),
+  RECAPTCHA_SECRET_KEY: z.string().optional(),
+  GITHUB_TOKEN: z.string().optional(),
+  GITHUB_USERNAME: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

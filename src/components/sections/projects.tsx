@@ -1,7 +1,7 @@
 'use client';
 
-import { ProjectCard } from '@/components/projects/card';
-import projectsData from '@/data/projects.json';
+import { useState, useEffect } from 'react';
+import { ProjectCard } from '@/components/projects/ProjectsCard';
 import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 
 /**
@@ -21,6 +21,7 @@ type Project = {
   description: string;
   technologies: string[];
   imageUrl: string;
+  image?: string; // URL thumbnail dari GitHub
   demoUrl?: string;
   repoUrl?: string;
 };
@@ -30,7 +31,34 @@ type Project = {
  * @returns {JSX.Element} Bagian proyek yang berisi daftar kartu proyek dengan animasi
  */
 export function ProjectsSection() {
-  const { intro, projects } = projectsData as { intro: string, projects: Project[] };
+  const [projectsData, setProjectsData] = useState<{ intro: string, projects: Project[] }>({ 
+    intro: "", 
+    projects: [] 
+  });
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const response = await fetch('/api/github-projects');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch projects: ${response.status}`);
+        }
+        const data = await response.json();
+        setProjectsData(data);
+      } catch (err) {
+        console.error('Error fetching projects:', err);
+        setError('Gagal memuat proyek. Silakan coba lagi nanti.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProjects();
+  }, []);
+
+  const { intro, projects } = projectsData;
 
   const { ref: headerRef, style: headerStyle } = useViewportAnimation<HTMLDivElement>({
     type: "fade-in",
@@ -47,9 +75,22 @@ export function ProjectsSection() {
       <div 
         className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in animate-duration-500 animate-ease-in-out"
       >
-        {projects.map((project, index) => (
-          <ProjectCardWithAnimation key={project.id} project={project} index={index} />
-        ))}
+        {loading ? (
+          // Tampilkan skeleton loader saat loading
+          Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="h-[400px] bg-muted animate-pulse rounded-lg"></div>
+          ))
+        ) : error ? (
+          // Tampilkan pesan error jika gagal memuat
+          <div className="col-span-2 text-center py-8">
+            <p className="text-red-500">{error}</p>
+          </div>
+        ) : (
+          // Tampilkan proyek jika berhasil dimuat
+          projects.map((project, index) => (
+            <ProjectCardWithAnimation key={project.id} project={project} index={index} />
+          ))
+        )}
       </div>
     </div>
   );
@@ -74,7 +115,7 @@ function ProjectCardWithAnimation({ project, index }: { project: Project; index:
       <ProjectCard
         title={project.title}
         description={project.description}
-        image={project.imageUrl}
+        image={project.image || project.imageUrl}
         tags={project.technologies}
         demoUrl={project.demoUrl}
         repoUrl={project.repoUrl}

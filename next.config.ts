@@ -8,6 +8,11 @@ const nextConfig = {
         hostname: 'oldsoul.id',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'opengraph.githubassets.com',
+        pathname: '/**',
+      },
     ],
     formats: ['image/avif', 'image/webp'],
   },
