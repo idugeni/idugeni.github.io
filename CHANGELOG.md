@@ -1,6 +1,22 @@
 # Changelog
 
-Semua perubahan penting pada proyek ini akan didokumentasikan dalam file ini.
+## [2.9.1] - 2025-04-08
+
+### Added
+- Form kontak aman dengan pemisahan komponen (`ContactForm`, `ContactInfo`, `TurnstileWidget`)
+- API `/api/contact` dengan validasi Zod & integrasi Nodemailer
+- Integrasi Cloudflare Turnstile untuk proteksi bot
+- Pembatasan rate limit berbasis IP pada API kontak
+- Peningkatan notifikasi email dengan IP geolokasi dan detail QR code
+- Sitemap dinamis di `/api/sitemap`
+
+### Changed
+- Update `robots.txt` untuk memblokir crawler non-esensial
+- Judul halaman dinamis mengikuti tab navigasi aktif
+- Validasi environment variable menggunakan Zod (`lib/env.ts`)
+
+### Dependencies
+- Penambahan package `qrcode`
 
 ## [2.7.0] - 2025-04-08
 
