@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.0.0] - 2025-04-09
+
+### Added
+- Implementasi pengambilan proyek dinamis dari GitHub API melalui route baru `/api/github-projects`, menggantikan `projects.json` statis
+- Penambahan loading states dan error handling pada bagian projects
+- Menampilkan gambar OpenGraph GitHub pada kartu proyek
+- Penambahan `sitemap.ts` untuk menghasilkan sitemap secara otomatis untuk meningkatkan SEO
+
+### Changed
+- Migrasi verifikasi form kontak dari Cloudflare Turnstile ke Google reCAPTCHA v2
+- Pembaruan tipografi situs: Inter untuk teks body, Montserrat untuk heading
+- Penyegaran styling untuk komponen ProjectCard untuk presentasi visual yang lebih baik
+- Pembaruan berbagai dependencies Radix UI ke versi terbaru
+- Pembaruan konfigurasi Next.js, environment variables, dan konfigurasi Turborepo untuk mendukung perubahan ini
+
 ## [2.9.1] - 2025-04-08
 
 ### Added
