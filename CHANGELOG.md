@@ -56,9 +56,3 @@ Semua perubahan penting pada proyek ini akan didokumentasikan dalam file ini.
 - Implementasi best practices keamanan
 - Penambahan security headers
 - Proteksi terhadap common vulnerabilities
-
-## [Unreleased]
-- Integrasi dengan AI untuk personalisasi konten
-- Sistem notifikasi real-time
-- Multi-language support
-- Progressive Web App (PWA) implementation

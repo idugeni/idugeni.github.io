@@ -1,16 +1,64 @@
+# robots.txt yang dioptimalkan untuk SEO dan memblokir crawler tidak diinginkan
+
+# Izinkan semua crawler utama mengakses seluruh website
 User-agent: *
 Allow: /
 
-# Sitemap location
+# Sitemap utama untuk membantu indexing
 Sitemap: https://oldsoul.id/sitemap.xml
 
-# Disallow specific paths
+# ============================================
+# Blokir Bot dan Crawler Buruk yang umum
+# ============================================
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: dotbot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: MauiBot
+Disallow: /
+
+User-agent: SeznamBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: 360Spider
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: Sogou spider
+Disallow: /
+
+User-agent: Baiduspider
+Disallow: /
+
+# Bisa tambahkan bot lain sesuai kebutuhan
+
+# ============================================
+# Disallow Folder Internal Next.js dan API
+# ============================================
 Disallow: /api/
 Disallow: /_next/static/
 Disallow: /_next/image/
 Disallow: /cdn-cgi/
 
-# Allow important paths
+# ============================================
+# Izinkan halaman penting diindeks
+# ============================================
 Allow: /about
 Allow: /projects
 Allow: /contact

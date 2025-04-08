@@ -1,154 +1,207 @@
-import React from 'react';
+import QRCode from 'qrcode';
 
 interface EmailTemplateProps {
   name: string;
   email: string;
   message: string;
+  ip?: string;
+  userAgent?: string;
+  timestamp?: string;
+  location?: string;
+  messageId?: string;
 }
 
-export const EmailTemplate: React.FC<EmailTemplateProps> = ({ name, email, message }) => {
+export const EmailTemplate = async ({
+  name,
+  email,
+  message,
+  ip = 'Tidak tersedia',
+  userAgent = 'Tidak tersedia',
+  timestamp = new Date().toLocaleString('id-ID', {
+    timeZone: 'Asia/Jakarta',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }),
+  location = 'Tidak tersedia',
+  messageId = 'MSG-' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+}: EmailTemplateProps) => {
+  const qrDataObj = {
+    messageId,
+    name,
+    email,
+    message,
+    timestamp,
+    ip,
+    userAgent,
+    location
+  };
+
+  const qrDataStr = JSON.stringify(qrDataObj);
+
+  const qrCodeUrl = await QRCode.toDataURL(qrDataStr);
+
   return `
     <!DOCTYPE html>
     <html lang="id">
       <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Pesan Kontak Baru</title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Pesan Baru</title>
         <style>
-          /* Reset CSS */
           body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #1a1a1a;
-            background-color: #f8fafc;
-          }
-
-          /* Container */
-          .email-container {
-            max-width: 600px;
-            margin: 24px auto;
-            padding: 32px;
-            background-color: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-          }
-
-          /* Header */
-          .header {
-            text-align: center;
-            padding: 24px 0 32px;
-            border-bottom: 1px solid #e2e8f0;
-            margin-bottom: 32px;
-          }
-
-          .logo {
-            width: 120px;
-            height: auto;
-            margin-bottom: 16px;
-          }
-
-          /* Content */
-          .content {
-            padding: 0 16px;
-          }
-
-          .field {
-            margin-bottom: 24px;
-          }
-
-          .field-label {
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-            font-size: 15px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-          }
-
-          .field-value {
-            color: #1f2937;
-            background-color: #f8fafc;
-            padding: 16px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            font-size: 16px;
-            line-height: 1.8;
-          }
-
-          .message-content {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-          }
-
-          /* Footer */
-          .footer {
-            text-align: center;
-            padding-top: 32px;
-            margin-top: 32px;
-            border-top: 1px solid #e2e8f0;
-            color: #64748b;
+            background: #f1f5f9;
+            color: #0f172a;
             font-size: 14px;
           }
 
-          .social-links {
-            margin-top: 16px;
-            padding: 0;
-            list-style: none;
-            display: flex;
-            justify-content: center;
-            gap: 16px;
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
           }
 
-          .social-link {
+          .header {
+            background: #2563eb;
+            color: white;
+            padding: 24px;
+            text-align: center;
+          }
+
+          .header img {
+            width: 40px;
+            height: 40px;
+            vertical-align: middle;
+          }
+
+          .header h1 {
+            font-size: 18px;
+            margin-top: 8px;
+          }
+
+          .badge {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 2px 10px;
+            font-size: 11px;
+            border-radius: 6px;
+            margin-top: 4px;
+          }
+
+          .content {
+            padding: 24px;
+          }
+
+          .field {
+            margin-bottom: 16px;
+          }
+
+          .label {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #475569;
+            font-size: 12px;
+          }
+
+          .value {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            font-size: 13px;
+            line-height: 1.6;
+          }
+
+          .footer {
+            background: #f1f5f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
             color: #64748b;
+          }
+
+          .qr {
+            text-align: center;
+            margin: 16px 0;
+          }
+
+          .cta {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 6px 12px;
+            background: #2563eb;
+            color: white;
             text-decoration: none;
+            border-radius: 6px;
+            font-size: 13px;
           }
 
-          .social-link:hover {
-            color: #2563eb;
-          }
-
-          /* Responsive Design */
           @media screen and (max-width: 600px) {
-            .email-container {
-              margin: 0;
-              padding: 24px;
-              border-radius: 0;
-            }
-
-            .content {
-              padding: 0;
-            }
+            .content { padding: 16px; }
           }
         </style>
       </head>
       <body>
-        <div class="email-container">
+        <div class="container">
           <div class="header">
-            <img src="https://raw.githubusercontent.com/idugeni/idugeni.github.io/main/public/favicon.png" alt="Logo" class="logo">
+            <img src="https://raw.githubusercontent.com/idugeni/idugeni.github.io/main/public/favicon.png" alt="Logo" />
+            <h1>Pesan Baru dari ${name}</h1>
+            <div class="badge">Penting</div>
           </div>
           <div class="content">
             <div class="field">
-              <div class="field-label">Nama</div>
-              <div class="field-value">${name}</div>
+              <div class="label">ID Pesan</div>
+              <div class="value">${messageId}</div>
             </div>
             <div class="field">
-              <div class="field-label">Email</div>
-              <div class="field-value">${email}</div>
+              <div class="label">Nama</div>
+              <div class="value">${name}</div>
             </div>
             <div class="field">
-              <div class="field-label">Pesan</div>
-              <div class="field-value message-content">${message.replace(/\n/g, '<br>')}</div>
+              <div class="label">Email</div>
+              <div class="value">${email}</div>
+            </div>
+            <div class="field">
+              <div class="label">Pesan</div>
+              <div class="value">${message.replace(/\n/g, '<br>')}</div>
+            </div>
+            <div class="qr">
+              <img src="${qrCodeUrl}" alt="QR Code" width="80" height="80" />
+            </div>
+            <a class="cta" href="mailto:${email}">Balas Sekarang</a>
+            <hr style="margin: 24px 0; border: none; border-top: 1px solid #e2e8f0;">
+            <div class="field">
+              <div class="label">Dikirim pada</div>
+              <div class="value">${timestamp}</div>
+            </div>
+            <div class="field">
+              <div class="label">Alamat IP Pengirim</div>
+              <div class="value">${ip}</div>
+            </div>
+            <div class="field">
+              <div class="label">User Agent</div>
+              <div class="value">${userAgent}</div>
+            </div>
+            <div class="field">
+              <div class="label">Lokasi Perkiraan</div>
+              <div class="value">${location}</div>
             </div>
           </div>
           <div class="footer">
-            <p>Email ini dikirim secara otomatis melalui formulir kontak website.</p>
-            <div class="social-links">
-              <a href="https://github.com/idugeni" class="social-link" target="_blank">GitHub</a>
-              <a href="https://instagram.com/eliyantosarage_/" class="social-link" target="_blank">Instagram</a>
-            </div>
+            Email ini dikirim otomatis melalui formulir situs Anda. Jika ini bukan Anda, abaikan pesan ini.<br/>
+            &copy; ${new Date().getFullYear()} oldsoul.id
           </div>
         </div>
       </body>

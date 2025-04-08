@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import {
   Tabs,
   TabsContent,
@@ -19,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { HomeSection } from '@/components/sections/home';
 import { AboutSection } from '@/components/sections/about';
 import { ProjectsSection } from '@/components/sections/projects';
-import { ContactSection } from '@/components/sections/contact';
+import { ContactSection } from '@/components/contact/ContactSection';
 import { ResumeSection } from '@/components/sections/resume';
 
 interface NavigationTabsProps {
@@ -38,6 +39,17 @@ const tabs = [
 const animateClass = 'animate__animated animate__fadeIn animate__slideInUp';
 
 export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) {
+  useEffect(() => {
+    const pageTitles = {
+      home: 'Home',
+      about: 'About',
+      projects: 'Projects',
+      contact: 'Contact',
+      resume: 'Resume'
+    };
+    document.title = `${pageTitles[activeTab as keyof typeof pageTitles]} | Eliyanto Sarage`;
+  }, [activeTab]);
+
   return (
     <div className="flex flex-col min-h-screen">
       <div className="w-full border-b border-border">

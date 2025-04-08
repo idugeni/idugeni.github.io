@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ContactSection } from '@/components/sections/contact';
+import { ContactSection } from '@/components/contact/ContactSection';
 
 export const metadata: Metadata = {
   title: 'Contact | Eliyanto Sarage',
