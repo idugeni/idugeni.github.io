@@ -33,10 +33,18 @@ export function useViewportAnimation<T extends HTMLElement = HTMLDivElement>(opt
   const ref = useRef<T | null>(null);
   const [isInView, setIsInView] = useState(initiallyVisible);
   const [hasAnimated, setHasAnimated] = useState(initiallyVisible);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   useEffect(() => {
     const currentRef = ref.current;
-    if (!currentRef) return;
+    if (!currentRef || isMobile) return;
     
     const observer = new IntersectionObserver(
       (entries) => {
@@ -69,7 +77,7 @@ export function useViewportAnimation<T extends HTMLElement = HTMLDivElement>(opt
         observer.unobserve(currentRef);
       }
     };
-  }, [threshold, rootMargin, repeat, delay, hasAnimated]);
+  }, [threshold, rootMargin, repeat, delay, hasAnimated, isMobile]);
   
   const style = {
     opacity: isInView ? 1 : 0,
