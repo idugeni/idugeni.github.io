@@ -9,7 +9,7 @@ const contactFormSchema = z.object({
   name: z.string().min(2).max(50),
   email: z.string().email(),
   message: z.string().min(1).max(1000),
-  "g-recaptcha-response": z.string().min(1),
+  "g-recaptcha-response": z.string().nonempty("Verifikasi CAPTCHA wajib dilakukan"),
 });
 
 const transporter = nodemailer.createTransport({
@@ -82,12 +82,15 @@ export async function POST(request: NextRequest) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000); // 5 detik
 
+    // Gunakan RECAPTCHA_SECRET_KEY dari variabel lingkungan
+    const secretKey = env.RECAPTCHA_SECRET_KEY;
+    
     const verifyResponse = await fetch(
       "https://www.google.com/recaptcha/api/siteverify",
       {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `secret=6LdWuw4rAAAAABIH7mlWu6c7TQ3P7HMS1WFIUiAB&response=${recaptchaToken}`,
+        body: `secret=${secretKey}&response=${recaptchaToken}`,
         signal: controller.signal,
       }
     ).finally(() => clearTimeout(timeout));

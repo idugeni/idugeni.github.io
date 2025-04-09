@@ -22,47 +22,56 @@ const ContactForm: React.FC<ContactFormProps> = ({ form }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    message: '',
-    "g-recaptcha-response": ''
+    message: ''
   });
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>('');
 
-  const handleVerify = (token: string) => {
-    setFormData(prev => ({
-      ...prev,
-      'g-recaptcha-response': token
-    }));
-  };
-
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
-
-  try {
-    const response = await fetch('/api/contact', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      if (data.details && Array.isArray(data.details)) {
-        throw new Error(data.details.map((err: { message: string }) => err.message).join('\n'));
-      }
-      throw new Error(data.error || 'Gagal mengirim pesan');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validasi form sebelum memeriksa CAPTCHA
+    if (!formData.name || !formData.email || !formData.message) {
+      toast.error("Mohon lengkapi semua field yang diperlukan.");
+      return;
     }
 
-    toast.success('Pesan berhasil dikirim!');
-    setFormData({ name: '', email: '', message: '', 'g-recaptcha-response': '' });
-  } catch (error) {
-    toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan saat mengirim pesan');
-  } finally {
-    setIsLoading(false);
-  }
-};
+    if (!recaptchaToken) {
+      toast.error("Mohon verifikasi bahwa Anda bukan robot dengan menyelesaikan CAPTCHA.");
+      return;
+    }
+
+    setIsLoading(true);
+  
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          'g-recaptcha-response': recaptchaToken
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        if (data.details && Array.isArray(data.details)) {
+          throw new Error(data.details.map((err: { message: string }) => err.message).join('\n'));
+        }
+        throw new Error(data.error || 'Gagal mengirim pesan');
+      }
+  
+      toast.success('Pesan berhasil dikirim!');
+      setFormData({ name: '', email: '', message: '' });
+      setRecaptchaToken('');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan saat mengirim pesan');
+    } finally {
+      setIsLoading(false);
+    }
+  };  
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -71,6 +80,8 @@ const handleSubmit = async (e: React.FormEvent) => {
       [id]: value
     }));
   };
+
+
 
   return (
     <div className="bg-background/80 backdrop-blur-sm border border-border rounded-lg hover:shadow-lg hover:shadow-primary/5">
@@ -102,11 +113,13 @@ const handleSubmit = async (e: React.FormEvent) => {
               )}
             </div>
           ))}
-  <ReCaptchaWidget siteKey="6LdWuw4rAAAAAK9cD3rqRPMdyKX5xXKSMHOE8sez" onVerify={handleVerify} />
-  <Button type="submit" disabled={isLoading} className="w-full">
-    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : form.submitButton}
-  </Button>
-</form>
+          <div className="flex justify-center">
+            <ReCaptchaWidget onVerify={setRecaptchaToken} />
+          </div>
+          <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : form.submitButton}
+          </Button>
+        </form>
       </div>
     </div>
   );

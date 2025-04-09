@@ -36,7 +36,7 @@ export function AboutSection() {
         <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">{intro}</p>
       </div>
       <Card ref={cardRef} style={cardStyle}>
-        <CardContent className="py-8 px-6">
+        <CardContent className="p-6">
           {paragraphs.map((paragraph, index) => (
             <div key={index} className="mb-8 last:mb-0">
               <h3 className="text-xl font-semibold mb-3">{paragraph.title}</h3>

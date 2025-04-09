@@ -8,6 +8,7 @@ const envSchema = z.object({
   SMTP_PASS: z.string(),
   TO_EMAIL: z.string().email(),
   RECAPTCHA_SECRET_KEY: z.string().optional(),
+  NEXT_PUBLIC_RECAPTCHA_SITE_KEY: z.string().optional(),
   GITHUB_TOKEN: z.string().optional(),
   GITHUB_USERNAME: z.string().optional(),
 });

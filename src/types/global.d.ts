@@ -1,17 +1,20 @@
-interface Turnstile {
-  render: (
-    container: HTMLElement,
-    options: {
-      sitekey: string;
-      callback: (token: string) => void;
-      'error-callback'?: () => void;
-      'expired-callback'?: () => void;
-    }
-  ) => void;
+interface ReCaptchaRenderParameters {
+  sitekey: string;
+  callback?: (token: string) => void;
+  'error-callback'?: () => void;
+  'expired-callback'?: () => void;
+  theme?: 'light' | 'dark';
+}
+
+interface ReCaptchaInstance {
+  ready: (callback: () => void) => void;
+  render: (container: HTMLElement | string, parameters: ReCaptchaRenderParameters) => number;
+  reset: (widgetId?: number) => void;
+  execute: (widgetId?: number) => Promise<string>;
+  getResponse: (widgetId?: number) => string;
 }
 
 interface Window {
-  turnstile?: Turnstile;
-  __turnstileScriptLoaded?: boolean;
-  onloadTurnstileCallback?: () => void;
+  grecaptcha: ReCaptchaInstance;
+  onRecaptchaLoad?: () => void;
 }
