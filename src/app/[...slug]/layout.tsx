@@ -9,7 +9,7 @@ export default function RedirectLayout({
 }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
         {children}
       </div>
     </ThemeProvider>

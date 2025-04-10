@@ -8,7 +8,7 @@ interface PageProps {
 
 export default async function DynamicRedirectPage(props: PageProps) {
   const params = await props.params;
-  const slugArray = params?.slug ?? [] // pastikan array
+  const slugArray = params?.slug ?? []
   const path = slugArray.join('/')
 
   const isInvalidPath = !path || path.trim() === ''

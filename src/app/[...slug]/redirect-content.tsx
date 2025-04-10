@@ -47,7 +47,7 @@ export default function RedirectContent({
       <CardContent className="p-6">
         <p className="text-base md:text-lg text-muted-foreground mb-6">{description}</p>
         <Link href="/">
-          <Button variant="outline" className="hover:scale-105 transition-transform duration-200">
+          <Button variant="outline" className="hover:opacity-80 transition-opacity duration-200">
             Kembali ke Beranda
           </Button>
         </Link>
@@ -56,7 +56,7 @@ export default function RedirectContent({
   )
 
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <main className="bg-transparent w-full min-h-screen flex items-center justify-center p-4">
+    <main className="w-full min-h-screen flex items-center justify-center p-4">
       {children}
     </main>
   )
