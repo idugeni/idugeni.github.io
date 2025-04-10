@@ -40,7 +40,7 @@ export default function RedirectContent({
   }, [enableRedirect, targetURL])
 
   const renderErrorCard = (title: string, description: string) => (
-    <Card className="w-full max-w-4xl text-center shadow-xl">
+    <Card className="w-full max-w-4xl text-center shadow-xl py-0">
       <CardHeader className="text-2xl md:text-3xl font-bold bg-destructive/10 rounded-t-lg py-6">
         {title}
       </CardHeader>
@@ -56,7 +56,7 @@ export default function RedirectContent({
   )
 
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <main className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-transparent h-screen min-h-[100dvh] overflow-hidden">
+    <main className="bg-transparent w-full min-h-screen flex items-center justify-center p-4">
       {children}
     </main>
   )

@@ -1,5 +1,4 @@
 // File: app/[...slug]/page.tsx
-import { ThemeProvider } from 'next-themes'
 import { ignoredSlugs } from '@/config/ignoredSlugs'
 import RedirectContent from './redirect-content'
 
@@ -16,8 +15,6 @@ export default async function DynamicRedirectPage(props: PageProps) {
   const isIgnoredSlug = ignoredSlugs.includes(path) || !path.includes('-')
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <RedirectContent path={path} isInvalidPath={isInvalidPath} isIgnoredSlug={isIgnoredSlug} />
-    </ThemeProvider>
+    <RedirectContent path={path} isInvalidPath={isInvalidPath} isIgnoredSlug={isIgnoredSlug} />
   )
 }
