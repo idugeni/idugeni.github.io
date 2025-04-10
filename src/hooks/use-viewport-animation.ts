@@ -33,18 +33,9 @@ export function useViewportAnimation<T extends HTMLElement = HTMLDivElement>(opt
   const ref = useRef<T | null>(null);
   const [isInView, setIsInView] = useState(initiallyVisible);
   const [hasAnimated, setHasAnimated] = useState(initiallyVisible);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-  
   useEffect(() => {
     const currentRef = ref.current;
-    if (!currentRef || isMobile) return;
+    if (!currentRef) return;
     
     const observer = new IntersectionObserver(
       (entries) => {
@@ -77,11 +68,11 @@ export function useViewportAnimation<T extends HTMLElement = HTMLDivElement>(opt
         observer.unobserve(currentRef);
       }
     };
-  }, [threshold, rootMargin, repeat, delay, hasAnimated, isMobile]);
+  }, [threshold, rootMargin, repeat, delay, hasAnimated]);
   
   const style = {
-    opacity: isInView ? 1 : 0,
-    transform: isInView
+    opacity: initiallyVisible ? 1 : isInView ? 1 : 0,
+    transform: initiallyVisible ? 'none' : isInView
       ? 'none'
       : type === 'slide-in-up'
       ? 'translateY(20px)'
@@ -92,7 +83,10 @@ export function useViewportAnimation<T extends HTMLElement = HTMLDivElement>(opt
       : type === 'slide-in-right'
       ? 'translateX(20px)'
       : 'none',
-    transition: `opacity ${duration}ms ease-in-out, transform ${duration}ms ease-in-out`
+    transition: `opacity ${duration}ms cubic-bezier(0.4, 0, 0.2, 1), transform ${duration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+    willChange: 'opacity, transform',
+    position: 'relative',
+    visibility: isInView || initiallyVisible ? 'visible' : 'hidden'
   };
   
   return { ref, isInView, style };
