@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, CSSProperties } from 'react';
 
 type AnimationType = 'fade-in' | 'slide-in-up' | 'slide-in-down' | 'slide-in-left' | 'slide-in-right';
 
@@ -70,7 +70,7 @@ export function useViewportAnimation<T extends HTMLElement = HTMLDivElement>(opt
     };
   }, [threshold, rootMargin, repeat, delay, hasAnimated]);
   
-  const style = {
+  const style: CSSProperties = {
     opacity: initiallyVisible ? 1 : isInView ? 1 : 0,
     transform: initiallyVisible ? 'none' : isInView
       ? 'none'
@@ -85,7 +85,7 @@ export function useViewportAnimation<T extends HTMLElement = HTMLDivElement>(opt
       : 'none',
     transition: `opacity ${duration}ms cubic-bezier(0.4, 0, 0.2, 1), transform ${duration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
     willChange: 'opacity, transform',
-    position: 'relative',
+    position: 'relative' as const,
     visibility: isInView || initiallyVisible ? 'visible' : 'hidden'
   };
   
