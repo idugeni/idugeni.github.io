@@ -39,23 +39,28 @@ export function ProjectsSection() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     async function fetchProjects() {
       try {
-        const response = await fetch('/api/github-projects');
+        const response = await fetch('/api/github-projects', { signal: controller.signal });
         if (!response.ok) {
           throw new Error(`Failed to fetch projects: ${response.status}`);
         }
         const data = await response.json();
         setProjectsData(data);
-      } catch (err) {
-        console.error('Error fetching projects:', err);
-        setError('Gagal memuat proyek. Silakan coba lagi nanti.');
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== 'AbortError') {
+          console.error('Error fetching projects:', err);
+          setError('Gagal memuat proyek. Silakan coba lagi nanti.');
+        }
       } finally {
         setLoading(false);
       }
     }
 
     fetchProjects();
+    return () => controller.abort();
   }, []);
 
   const { intro, projects } = projectsData;
