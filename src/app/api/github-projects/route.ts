@@ -1,39 +1,14 @@
 import { NextResponse } from 'next/server';
-import { isRateLimited } from '@/lib/rate-limit';
+import { isRateLimited, RATE_LIMIT, RATE_LIMIT_WINDOW } from './rateLimit';
 import { env } from '@/lib/env';
 import { createHash } from 'crypto';
-
-// Konfigurasi rate limiting
-const RATE_LIMIT = 10; // 10 permintaan per menit
-const RATE_LIMIT_WINDOW = 60000; // 1 menit
-
-// Tipe data untuk respons GitHub API
-type GitHubRepo = {
-  id: number;
-  name: string;
-  description: string | null;
-  html_url: string;
-  homepage: string | null;
-  topics: string[];
-  updated_at: string;
-  language: string | null;
-};
-
-// Tipe data untuk proyek yang diformat
-type FormattedProject = {
-  id: number;
-  title: string;
-  description: string;
-  technologies: string[];
-  imageUrl: string;
-  image: string; // URL thumbnail dari GitHub
-  demoUrl?: string;
-  repoUrl: string;
-};
+import type { GitHubRepo, FormattedProject } from '@/types/github';
 
 /**
  * Handler untuk GET request ke /api/github-projects
  * Mengambil data repositori dari GitHub API dan memformatnya sesuai dengan struktur yang dibutuhkan
+ *
+ * @returns {Promise<NextResponse>} Response JSON berisi daftar proyek GitHub yang sudah diformat
  */
 export async function GET() {
   try {
@@ -49,17 +24,16 @@ export async function GET() {
     }
 
     // Username GitHub yang akan diambil repositorinya
-    // Gunakan username dari environment variable jika tersedia, atau gunakan default
     const username = env.GITHUB_USERNAME || 'idugeni';
-    
-    // Mengambil data dari GitHub API
+    const token = env.GITHUB_TOKEN;
+
+    // Mengambil data dari GitHub API dengan autentikasi token
     const response = await fetch(
       `https://api.github.com/users/${username}/repos?per_page=6&sort=updated&type=owner`,
       {
         headers: {
           'Accept': 'application/vnd.github.v3+json',
-          // Tambahkan token GitHub jika tersedia untuk menghindari rate limiting
-          ...(env.GITHUB_TOKEN ? { 'Authorization': `token ${env.GITHUB_TOKEN}` } : {}),
+          ...(token ? { 'Authorization': `token ${token}` } : {}),
         },
         next: { revalidate: 3600 }, // Cache selama 1 jam
       }
@@ -71,7 +45,11 @@ export async function GET() {
 
     const repos: GitHubRepo[] = await response.json();
 
-    // Fungsi untuk membuat hash SHA1 dari nama repositori
+    /**
+     * Membuat hash SHA1 dari nama repositori
+     * @param {string} repoName Nama repo
+     * @returns {string} Hash SHA1
+     */
     const createSHA1Hash = (repoName: string): string => {
       return createHash('sha1').update(repoName).digest('hex');
     };
@@ -90,7 +68,6 @@ export async function GET() {
         repoUrl: repo.html_url,
       };
     });
-
 
     // Mengembalikan data yang sudah diformat
     return NextResponse.json({
