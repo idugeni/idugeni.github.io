@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { ProjectCard } from '@/components/projects/ProjectsCard';
 import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 
@@ -15,7 +15,7 @@ import { useViewportAnimation } from '@/hooks/use-viewport-animation';
  * @property {string} [demoUrl] - URL demo proyek (opsional)
  * @property {string} [repoUrl] - URL repository proyek (opsional)
  */
-type Project = {
+export type Project = {
   id: number;
   title: string;
   description: string;
@@ -27,43 +27,28 @@ type Project = {
 };
 
 /**
- * Komponen untuk menampilkan bagian proyek-proyek
+ * Fetcher untuk SWR
+ * @param {string} url - URL endpoint
+ * @returns {Promise<unknown>} Data hasil fetch
+ */
+const fetcher = (url: string) => fetch(url).then(res => {
+  if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+  return res.json();
+});
+
+/**
+ * Komponen untuk menampilkan bagian proyek-proyek dengan SWR
  * @returns {JSX.Element} Bagian proyek yang berisi daftar kartu proyek dengan animasi
  */
 export function ProjectsSection() {
-  const [projectsData, setProjectsData] = useState<{ intro: string, projects: Project[] }>({ 
-    intro: "", 
-    projects: [] 
-  });
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, error, isLoading }: { data: { intro: string, projects: Project[] } | undefined, error: unknown, isLoading: boolean } = useSWR<{ intro: string, projects: Project[] }>(
+    '/api/github-projects',
+    fetcher,
+    { revalidateOnFocus: false }
+  );
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function fetchProjects() {
-      try {
-        const response = await fetch('/api/github-projects', { signal: controller.signal });
-        if (!response.ok) {
-          throw new Error(`Failed to fetch projects: ${response.status}`);
-        }
-        const data = await response.json();
-        setProjectsData(data);
-      } catch (err: unknown) {
-        if (err instanceof Error && err.name !== 'AbortError') {
-          console.error('Error fetching projects:', err);
-          setError('Gagal memuat proyek. Silakan coba lagi nanti.');
-        }
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchProjects();
-    return () => controller.abort();
-  }, []);
-
-  const { intro, projects } = projectsData;
+  const intro = data?.intro || '';
+  const projects = data?.projects || [];
 
   const { ref: headerRef, style: headerStyle } = useViewportAnimation<HTMLDivElement>({
     type: "fade-in",
@@ -80,19 +65,16 @@ export function ProjectsSection() {
       <div 
         className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in animate-duration-500 animate-ease-in-out"
       >
-        {loading ? (
-          // Tampilkan skeleton loader saat loading
-          Array.from({ length: 4 }).map((_, index) => (
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, index: number) => (
             <div key={index} className="h-[400px] bg-muted animate-pulse rounded-lg"></div>
           ))
         ) : error ? (
-          // Tampilkan pesan error jika gagal memuat
           <div className="col-span-2 text-center py-8">
-            <p className="text-red-500">{error}</p>
+            <p className="text-red-500">Gagal memuat proyek. Silakan coba lagi nanti.</p>
           </div>
         ) : (
-          // Tampilkan proyek jika berhasil dimuat
-          projects.map((project, index) => (
+          projects.map((project: Project, index: number) => (
             <ProjectCardWithAnimation key={project.id} project={project} index={index} />
           ))
         )}
