@@ -5,31 +5,55 @@ import { ProjectCard } from '@/components/projects/ProjectsCard';
 import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 
 /**
- * Tipe data untuk mendefinisikan struktur proyek
- * @typedef {Object} Project
- * @property {number} id - ID unik proyek
- * @property {string} title - Judul proyek
- * @property {string} description - Deskripsi proyek
- * @property {string[]} technologies - Array teknologi yang digunakan
- * @property {string} imageUrl - URL gambar proyek
- * @property {string} [demoUrl] - URL demo proyek (opsional)
- * @property {string} [repoUrl] - URL repository proyek (opsional)
+ * Tipe data untuk mendefinisikan struktur proyek.
+ * @property id ID unik proyek.
+ * @property title Judul proyek.
+ * @property description Deskripsi proyek.
+ * @property technologies Array teknologi yang digunakan.
+ * @property imageUrl URL gambar proyek.
+ * @property image URL thumbnail dari GitHub (opsional).
+ * @property demoUrl URL demo proyek (opsional).
+ * @property repoUrl URL repository proyek (opsional).
  */
 export type Project = {
+  /**
+   * ID unik proyek.
+   */
   id: number;
+  /**
+   * Judul proyek.
+   */
   title: string;
+  /**
+   * Deskripsi proyek.
+   */
   description: string;
+  /**
+   * Array teknologi yang digunakan.
+   */
   technologies: string[];
+  /**
+   * URL gambar proyek.
+   */
   imageUrl: string;
-  image?: string; // URL thumbnail dari GitHub
+  /**
+   * URL thumbnail dari GitHub (opsional).
+   */
+  image?: string;
+  /**
+   * URL demo proyek (opsional).
+   */
   demoUrl?: string;
+  /**
+   * URL repository proyek (opsional).
+   */
   repoUrl?: string;
 };
 
 /**
- * Fetcher untuk SWR
- * @param {string} url - URL endpoint
- * @returns {Promise<unknown>} Data hasil fetch
+ * Fungsi fetcher untuk SWR (pengambilan data proyek dari API).
+ * @param url URL endpoint yang akan di-fetch.
+ * @returns Data hasil fetch dalam bentuk Promise.
  */
 const fetcher = (url: string) => fetch(url).then(res => {
   if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
@@ -37,8 +61,10 @@ const fetcher = (url: string) => fetch(url).then(res => {
 });
 
 /**
- * Komponen untuk menampilkan bagian proyek-proyek dengan SWR
- * @returns {JSX.Element} Bagian proyek yang berisi daftar kartu proyek dengan animasi
+ * Komponen untuk menampilkan bagian proyek-proyek dengan SWR.
+ * Menampilkan daftar proyek dengan animasi fade-in dan slide-in-up.
+ *
+ * @returns Komponen React yang merender bagian proyek.
  */
 export function ProjectsSection() {
   const { data, error, isLoading }: { data: { intro: string, projects: Project[] } | undefined, error: unknown, isLoading: boolean } = useSWR<{ intro: string, projects: Project[] }>(
@@ -84,11 +110,11 @@ export function ProjectsSection() {
 }
 
 /**
- * Komponen untuk menampilkan kartu proyek dengan animasi
- * @param {Object} props - Props komponen
- * @param {Project} props.project - Data proyek yang akan ditampilkan
- * @param {number} props.index - Indeks proyek untuk menentukan delay animasi
- * @returns {JSX.Element} Kartu proyek dengan animasi slide-in-up
+ * Komponen untuk menampilkan kartu proyek dengan animasi.
+ * @param props Properti komponen.
+ * @param props.project Data proyek yang akan ditampilkan.
+ * @param props.index Indeks proyek untuk menentukan delay animasi.
+ * @returns Kartu proyek dengan animasi slide-in-up.
  */
 function ProjectCardWithAnimation({ project, index }: { project: Project; index: number }) {
   const { ref: cardRef, style: cardStyle } = useViewportAnimation({

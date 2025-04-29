@@ -4,8 +4,8 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import "./globals.css";
 import { metadata as siteMetadata } from "@/lib/metadata";
-import Footer from "@/components/layout/footer";
-import { BackToTop } from "@/components/back-to-top";
+import Footer from "@/components/layout/Footer";
+import { BackToTop } from "@/components/layout/BackToTop";
 import { Toaster } from "@/components/ui/sonner";
 
 // Font utama yang modern dan tegas untuk judul dan heading
@@ -33,8 +33,24 @@ const inter = Inter({
 // Font untuk kode (menggunakan variabel CSS untuk konsistensi)
 const fontMono = { variable: "--font-mono" };
 
-export const metadata = siteMetadata;
+export const metadata = {
+  ...siteMetadata,
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': 7,
+      'max-image-preview': "large", 
+      'max-snippet': 8,
+    },
+  },
+};
 
+/**
+ * Layout root aplikasi yang membungkus seluruh halaman dengan ThemeProvider dan komponen global.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { AboutSection } from '@/components/sections/about';
+import { AboutSection } from '@/components/sections/AboutSections';
 
 export const metadata: Metadata = {
   title: 'About | Eliyanto Sarage',

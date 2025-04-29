@@ -4,16 +4,14 @@
  */
 
 import React from 'react';
-import profileData from '@/data/profile.json';
+import profileData from '@/data/profileData.json';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { SocialIcons } from '@/components/social/social-icons';
+import { SocialIcons } from '@/components/social/SocialIcons';
 import { useViewportAnimation } from '@/hooks/use-viewport-animation';
 
 /**
- * @function HomeSection
- * @description Komponen yang menampilkan informasi profil utama, termasuk foto, nama, bio, dan tautan sosial media
- * @returns {JSX.Element} Komponen React yang merender bagian beranda
+ * Komponen yang menampilkan informasi profil utama, termasuk foto, nama, bio, dan tautan sosial media.
  */
 interface HomeSectionProps {
   onTabChange?: (tab: string) => void;
@@ -94,6 +92,7 @@ export function HomeSection({ onTabChange }: HomeSectionProps) {
                 href={social.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label={`Ikuti saya di ${social.icon}`}
                 className="text-muted-foreground hover:text-foreground transition-colors duration-300 transform-style-preserve-3d backface-visible-hidden"
               >
                 <SocialIcons iconName={social.icon} size={20} />

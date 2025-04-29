@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { isRateLimited, RATE_LIMIT, RATE_LIMIT_WINDOW } from './rateLimit';
-import { env } from '@/lib/env';
 import { createHash } from 'crypto';
+import { isRateLimited, RATE_LIMIT, RATE_LIMIT_WINDOW } from '@/app/api/github-projects/rateLimit';
+import { env } from '@/lib/env';
 import type { GitHubRepo, FormattedProject } from '@/types/github';
 
 /**

@@ -2,8 +2,11 @@
 
 import Link from 'next/link'
 import { useViewportAnimation } from '@/hooks/use-viewport-animation'
-import { ThemeProvider } from "next-themes";
+import { Button } from '@/components/ui/button';
 
+/**
+ * Komponen halaman error 404 yang menampilkan pesan halaman tidak ditemukan dan tombol kembali ke beranda.
+ */
 export default function NotFound() {
   const { ref: headerRef, style: headerStyle } = useViewportAnimation<HTMLDivElement>({
     type: "fade-in",
@@ -17,12 +20,6 @@ export default function NotFound() {
   });
 
   return (
-    <ThemeProvider
-    attribute="class"
-    defaultTheme="system"
-    enableSystem
-    disableTransitionOnChange
-  >
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div ref={headerRef} style={headerStyle}>
@@ -36,16 +33,13 @@ export default function NotFound() {
             The page you are looking for might have been removed, had its name changed,
             or is temporarily unavailable.
           </p>
-          <Link 
-            href="/"
-            className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-full
-                     hover:bg-primary/90 transition-colors duration-200"
-          >
-            Return Home
+          <Link href="/">
+            <Button asChild className="px-4 py-2 rounded-full">
+              Return Home
+            </Button>
           </Link>
         </div>
       </div>
     </div>
-    </ThemeProvider>
   )
 }

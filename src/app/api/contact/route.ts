@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 import { z } from "zod";
 import { EmailTemplate } from "@/components/email/EmailTemplate";
 import { env } from "@/lib/env";
-import { isRateLimited } from "@/lib/rate-limit";
+import { isRateLimited } from "@/lib/rateLimit";
 
 const contactFormSchema = z.object({
   name: z.string().min(2).max(50),

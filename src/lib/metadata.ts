@@ -39,6 +39,8 @@
  * @property {OpenGraphImage[]} images - Array objek gambar untuk OpenGraph
  */
 
+import { validateMetadata } from "./validateMetadata";
+
 /**
  * Konfigurasi metadata untuk SEO dan tampilan halaman.
  * Berisi pengaturan untuk mesin pencari, media sosial, dan tampilan browser.
@@ -59,7 +61,7 @@
  * @property {Object} verification - Kode verifikasi untuk layanan webmaster
  * @see {@link https://nextjs.org/docs/app/api-reference/functions/generate-metadata Metadata API Next.js}
  */
-export const metadata = {
+export const metadata = validateMetadata({
   title: "Eliyanto Sarage - Pengembang Web Full Stack & Portfolio",
   description: "Portfolio profesional Eliyanto Sarage, pengembang web full stack dengan keahlian dalam React, Node.js, dan teknologi modern. Lihat proyek terbaru dan pengalaman saya dalam pengembangan aplikasi web enterprise.",
   keywords: "pengembang web, full stack developer, react developer, node.js developer, portfolio web developer, web development indonesia",
@@ -83,11 +85,11 @@ export const metadata = {
     googleBot: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
+      'max-video-preview': 30,
       'max-image-preview': 'large',
-      'max-snippet': -1
+      'max-snippet': 50
     }
-  },
+  } as const,
   openGraph: {
     type: "website",
     locale: "id_ID",
@@ -106,7 +108,6 @@ export const metadata = {
   },
   verification: {
     google: "A8fHl75zCCT4JkAAiEkw_t9bxs07JyH0Z0gclsIFG7A",
-    yandex: "yandex-verification_code",
-    bing: "msvalidate.01.verification_code"
+    yandex: "yandex-verification_code"
   }
-};
+});

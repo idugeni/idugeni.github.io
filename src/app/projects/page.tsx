@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ProjectsSection } from '@/components/sections/projects';
+import { ProjectsSection } from '@/components/sections/ProjectsSections';
 
 export const metadata: Metadata = {
   title: 'Projects | Eliyanto Sarage',

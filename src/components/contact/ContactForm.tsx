@@ -1,4 +1,4 @@
-"Use Client";
+"use client";
 
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import ReCaptchaWidget from './ReCaptchaWidget';
+import ReCaptchaWidget from '@/components/contact/ReCaptchaWidget';
 
 interface ContactFormProps {
   form: {

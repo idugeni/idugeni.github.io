@@ -1,3 +1,6 @@
+/**
+ * Schema.org untuk data profil pribadi (Person) pada SEO website.
+ */
 export const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "Person",
@@ -25,6 +28,9 @@ export const websiteSchema = {
   }
 };
 
+/**
+ * Schema.org untuk halaman portfolio (CollectionPage) pada SEO website.
+ */
 export const portfolioSchema = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",

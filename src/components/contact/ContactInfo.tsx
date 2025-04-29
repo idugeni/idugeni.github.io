@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Mail, Phone, MapPin } from 'lucide-react';
-import { SocialIcons } from '@/components/social/social-icons';
+import { SocialIcons } from '@/components/social/SocialIcons';
 
 interface ContactInfoProps {
   contactInfo: {

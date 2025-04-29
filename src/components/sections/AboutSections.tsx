@@ -1,30 +1,20 @@
 'use client';
 
 /**
+ * Komponen AboutSection
  * @module AboutSection
- * @description Modul yang menampilkan bagian tentang dengan informasi personal dan profesional
- */
-
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import aboutData from '@/data/about.json';
-import { useViewportAnimation } from '@/hooks/use-viewport-animation';
-
-/**
- * @function AboutSection
- * @description Komponen yang menampilkan informasi tentang pemilik portfolio
- * @returns {JSX.Element} Komponen React yang merender bagian about
+ * @description Menampilkan bagian tentang dengan informasi personal dan profesional.
  */
 export function AboutSection() {
   const { intro, paragraphs } = aboutData;
 
   const { ref: headerRef, style: headerStyle } = useViewportAnimation<HTMLDivElement>({
-    type: "fade-in",
+    type: 'fade-in',
     duration: 800
   });
 
   const { ref: cardRef, style: cardStyle } = useViewportAnimation<HTMLDivElement>({
-    type: "slide-in-up",
+    type: 'slide-in-up',
     delay: 200,
     duration: 800
   });
@@ -37,14 +27,19 @@ export function AboutSection() {
       </div>
       <Card ref={cardRef} style={cardStyle}>
         <CardContent className="p-6">
-          {paragraphs.map((paragraph, index) => (
-            <div key={index} className="mb-8 last:mb-0">
+          {paragraphs.map((paragraph: { title: string; content: string }, index: number) => (
+            <section key={index} className="mb-8 last:mb-0">
               <h3 className="text-xl font-semibold mb-3">{paragraph.title}</h3>
               <p className="text-muted-foreground leading-relaxed">{paragraph.content}</p>
-            </div>
+            </section>
           ))}
         </CardContent>
       </Card>
     </div>
   );
 }
+
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import aboutData from '@/data/aboutData.json';
+import { useViewportAnimation } from '@/hooks/use-viewport-animation';

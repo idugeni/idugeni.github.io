@@ -17,11 +17,11 @@ import {
 import { Home, User, Briefcase, Mail, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-import { HomeSection } from '@/components/sections/home';
-import { AboutSection } from '@/components/sections/about';
-import { ProjectsSection } from '@/components/sections/projects';
+import { HomeSection } from '@/components/sections/HomeSections';
+import { AboutSection } from '@/components/sections/AboutSections';
+import { ProjectsSection } from '@/components/sections/ProjectsSections';
 import { ContactSection } from '@/components/contact/ContactSection';
-import { ResumeSection } from '@/components/sections/resume';
+import { ResumeSection } from '@/components/sections/ResumeSections';
 
 interface NavigationTabsProps {
   activeTab: string;

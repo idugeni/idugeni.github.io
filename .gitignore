@@ -23,8 +23,9 @@
 # turbo
 .turbo
 
-# vscode
+# rules
 .vscode
+.windsurfrules
 
 # misc
 .DS_Store
