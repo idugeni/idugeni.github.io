@@ -4,7 +4,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import "./globals.css";
 import { metadata as siteMetadata } from "@/lib/metadata";
-import Footer from "@/components/layout/Footer";
+import Footer from "@/components/layout/FooterTemp";
 import { BackToTop } from "@/components/layout/BackToTop";
 import { Toaster } from "@/components/ui/sonner";
 
