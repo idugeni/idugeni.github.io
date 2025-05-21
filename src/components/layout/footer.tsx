@@ -1,9 +1,9 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+
 import { useViewportAnimation } from "@/hooks/use-viewport-animation";
 
-const Footer = ({ className, ...props }: React.ComponentProps<"footer">) => {
+const Footer = ({ className, ...props }: React.ComponentProps<"div">) => {
   const currentYear = new Date().getFullYear();
 
   const { ref: footerRef, style: footerStyle } = useViewportAnimation<HTMLDivElement>({
@@ -12,11 +12,8 @@ const Footer = ({ className, ...props }: React.ComponentProps<"footer">) => {
   });
 
   return (
-    <footer
-      className={cn(
-        "w-full bg-transparent p-6",
-        className
-      )}
+    <div
+      className={ `w-full bg-transparent p-6 ${className || ''}` }
       {...props}
     >
       <div className="max-w-4xl mx-auto border-t">
@@ -30,7 +27,7 @@ const Footer = ({ className, ...props }: React.ComponentProps<"footer">) => {
           </p>
         </div>
       </div>
-    </footer>
+    </div>
   );
 };
 
