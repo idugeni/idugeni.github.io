@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   turbopack: {
     rules: {
       '*.svg': {
@@ -11,6 +12,7 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: true,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',

@@ -40,6 +40,7 @@ export function BackToTop() {
         size="icon"
         className="rounded-full shadow-lg bg-primary/10 hover:bg-primary/20 backdrop-blur-sm hover:scale-110 transition-transform duration-300"
         onClick={scrollToTop}
+        aria-label="Scroll to top"
       >
         <ChevronUp className="h-5 w-5" />
       </Button>
