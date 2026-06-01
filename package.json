@@ -24,10 +24,6 @@
     "tailwindcss-v4",
     "developer-blog"
   ],
-  "engines": {
-    "node": "20.x",
-    "npm": ">=9.0.0"
-  },
   "scripts": {
     "dev": "next dev",
     "dev:inspect": "next dev --inspect",
