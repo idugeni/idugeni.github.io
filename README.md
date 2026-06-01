@@ -9,15 +9,22 @@
 </p>
 
 <p align="center">
-  <a href="https://idugeni.github.io"><img src="https://img.shields.io/badge/Live%20Platform-idugeni.github.io-06b6d4?style=for-the-badge&logo=google-chrome&logoColor=white&labelColor=020406" alt="Live Platform" /></a>
-  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/Build-Next.js%2016.2.6-10b981?style=for-the-badge&logo=nextdotjs&logoColor=white&labelColor=020406" alt="Build Status" /></a>
-  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/React-19.2.6-ec4899?style=for-the-badge&logo=react&logoColor=white&labelColor=020406" alt="React 19" /></a>
-  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/Database-Supabase%20RLS-3ecf8e?style=for-the-badge&logo=supabase&logoColor=white&labelColor=020406" alt="Database" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-eab308?style=for-the-badge&labelColor=020406" alt="License" /></a>
+  <a href="https://idugeni.github.io"><img src="https://img.shields.io/badge/Live%20Platform-idugeni.github.io-00f0ff?style=for-the-badge&logo=google-chrome&logoColor=00f0ff&labelColor=020406" alt="Live Platform" /></a>
+  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/Build-Next.js%2016.2.7-10b981?style=for-the-badge&logo=nextdotjs&logoColor=10b981&labelColor=020406" alt="Next.js Version" /></a>
+  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/React-19.2.7-ff007f?style=for-the-badge&logo=react&logoColor=ff007f&labelColor=020406" alt="React Version" /></a>
+  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/Database-Supabase%20RLS-3ecf8e?style=for-the-badge&logo=supabase&logoColor=3ecf8e&labelColor=020406" alt="Supabase Database" /></a>
 </p>
 
 <p align="center">
-  <img src="public/h269ii0w5js0.png" alt="IRNK CODES OpenGraph Header Banner" style="border-radius: 8px; border: 1px solid rgba(6, 182, 212, 0.25); box-shadow: 0 0 30px rgba(6, 182, 212, 0.15);" />
+  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/Styling-Tailwind%20v4-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white&labelColor=020406" alt="Tailwind CSS" /></a>
+  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/Motion-Framer%20Motion-7b2cbf?style=flat-square&logo=framer&logoColor=white&labelColor=020406" alt="Framer Motion" /></a>
+  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/Language-TypeScript%206-3178c6?style=flat-square&logo=typescript&logoColor=white&labelColor=020406" alt="TypeScript" /></a>
+  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/Serverless-Vercel%20Edge-000000?style=flat-square&logo=vercel&logoColor=white&labelColor=020406" alt="Vercel Hosting" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-eab308?style=flat-square&labelColor=020406" alt="License" /></a>
+</p>
+
+<p align="center">
+  <img src="public/h269ii0w5js0.png" alt="IRNK CODES OpenGraph Header Banner" style="border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.25); box-shadow: 0 0 30px rgba(0, 240, 255, 0.15);" />
 </p>
 
 ---
@@ -80,8 +87,8 @@ The landing page of **IRNK CODES** is structured into high-performance, responsi
 ## 🛠️ Premium Technical Stack
 
 ### Frontend Architecture
-* **Core Framework**: Next.js 16.2.6 (App Router, React Server Components by default, Suspense, and Streaming)
-* **Runtime**: React 19.2.6 (Turbopack compiler compatible, optimized rendering granularity)
+* **Core Framework**: Next.js 16.2.7 (App Router, React Server Components by default, Suspense, and Streaming)
+* **Runtime**: React 19.2.7 (Turbopack compiler compatible, optimized rendering granularity)
 * **Styling**: Tailwind CSS v4 (Deep HSL variables, fluid glassmorphic styling, and interactive layouts)
 * **Animations**: Framer Motion (Smooth cyberpunk HUD indicators, micro-interactions, and neon glow transitions)
 
@@ -93,66 +100,33 @@ The landing page of **IRNK CODES** is structured into high-performance, responsi
 
 ---
 
-## 💻 Local Development & Deployment
-
-### 1. Setup Environment
-Clone the repository and create your local configuration:
-```bash
-cp .env.example .env
-```
-Populate `.env` with your Supabase credentials, Resend API keys, and whitelisted admin emails.
-
-### 2. Install Dependencies
-Install packages cleanly using the suppressed peer-dependency flag:
-```bash
-npm install
-```
-
-### 3. Database Synchronization
-Synchronize your local schema and production hardening migrations directly with Supabase:
-```bash
-node scratch/apply-production-hardening.cjs
-```
-
-### 4. Build & Verify
-Validate compilation, TypeScript typecheck, and linter standards cleanly:
-```bash
-npm run verify
-```
-
----
-
 ## 👨‍💻 Meet the Founder
 
-<table align="center">
-  <tr>
-    <td align="center" width="220" style="border: 1px solid rgba(6, 182, 212, 0.25); background: rgba(2, 4, 6, 0.6);">
-      <img src="https://github.com/idugeni.png" width="180" style="border-radius: 50%; margin: 15px; border: 3px solid #06b6d4; box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);" alt="Eliyanto Sarage" />
-      <br />
-      <strong>Eliyanto Sarage</strong>
-      <br />
-      <sub>Founder & Lead Engineer</sub>
-    </td>
-    <td valign="top" style="padding-left: 20px; border: 1px solid rgba(6, 182, 212, 0.25); background: rgba(2, 4, 6, 0.3);">
-      <h3>🚀 Senior Full-Stack Developer, UI/UX Designer & AI Engineer</h3>
-      <p>
-        I do not just build software; I engineer the future. I combine strict cryptographic security, robust cloud scalability, and modern AI orchestration with premium, visually breathtaking frontends to create memorable digital experiences.
-      </p>
-      <h4>Core Expertises:</h4>
-      <ul>
-        <li><strong>Frontend</strong>: Next.js (App Router, RSC), React 19, TypeScript, Tailwind CSS v4, Framer Motion.</li>
-        <li><strong>Backend & Security</strong>: Supabase, PostgreSQL (RLS), Node.js, RESTful & RPC APIs, Secure RBAC.</li>
-      </ul>
-      <h4>Get in Touch:</h4>
-      <p>
-        <a href="mailto:irnk.codes@proton.me"><img src="https://img.shields.io/badge/Email-irnk.codes%40proton.me-blue?style=flat-square&logo=protonmail&logoColor=white&color=6d4aff" alt="Email" /></a>
-        <a href="https://wa.me/6285800644055"><img src="https://img.shields.io/badge/WhatsApp-%2B62%20858--0064--4055-green?style=flat-square&logo=whatsapp&logoColor=white&color=25d366" alt="WhatsApp" /></a>
-        <a href="https://github.com/idugeni"><img src="https://img.shields.io/badge/GitHub-idugeni-black?style=flat-square&logo=github&logoColor=white&color=181717" alt="GitHub" /></a>
-        <a href="https://www.instagram.com/eliyantosarage_/"><img src="https://img.shields.io/badge/Instagram-eliyantosarage__-pink?style=flat-square&logo=instagram&logoColor=white&color=e4405f" alt="Instagram" /></a>
-      </p>
-    </td>
-  </tr>
-</table>
+<div align="center" style="margin-top: 30px;">
+  <img src="https://github.com/idugeni.png" width="150" style="border-radius: 50%; border: 3px solid #00f0ff; box-shadow: 0 0 25px rgba(0, 240, 255, 0.35); margin: 10px 0;" alt="Eliyanto Sarage" />
+  
+  ## **Eliyanto Sarage**
+  ### *Founder & Lead Engineer*
+  
+  <p align="center" style="max-width: 700px; line-height: 1.6; margin: 15px 0;">
+    <strong>Senior Full-Stack Developer, UI/UX Designer & AI Systems Architect</strong>
+    <br />
+    I do not just build software; I engineer the future. I combine strict cryptographic security, robust database architectures, and cutting-edge artificial intelligence orchestrations with visually breathtaking frontends to create memorable digital experiences.
+  </p>
+</div>
+
+### 🚀 Core Engineering Domain
+
+* **Frontend Engineering**: Next.js (App Router, Server Components), React 19, TypeScript, Tailwind CSS v4 (Design Tokens & CSS Variables), Framer Motion.
+* **Backend & Security Architecture**: Supabase Authentication, PostgreSQL (Security Definer Hardening, Row-Level Security), Node.js serverless execution, Secure whitelisted RBAC systems.
+
+### 📨 Establish Comm-Link
+<p align="center">
+  <a href="mailto:irnk.codes@proton.me"><img src="https://img.shields.io/badge/Email-irnk.codes%40proton.me-blue?style=for-the-badge&logo=protonmail&logoColor=white&color=6d4aff" alt="Email" /></a>
+  <a href="https://wa.me/6285800644055"><img src="https://img.shields.io/badge/WhatsApp-%2B62%20858--0064--4055-green?style=for-the-badge&logo=whatsapp&logoColor=white&color=25d366" alt="WhatsApp" /></a>
+  <a href="https://github.com/idugeni"><img src="https://img.shields.io/badge/GitHub-idugeni-black?style=for-the-badge&logo=github&logoColor=white&color=181717" alt="GitHub" /></a>
+  <a href="https://www.instagram.com/eliyantosarage_/"><img src="https://img.shields.io/badge/Instagram-eliyantosarage__-pink?style=for-the-badge&logo=instagram&logoColor=white&color=e4405f" alt="Instagram" /></a>
+</p>
 
 ---
 
