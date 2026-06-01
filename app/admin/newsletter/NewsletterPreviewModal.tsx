@@ -1,0 +1,9 @@
+"use client";
+
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import type { AdminNewsletterSubscriber } from "./NewsletterTable";
+export function NewsletterPreviewModal({ subscriber, open, onOpenChange, formatDate }: { subscriber: AdminNewsletterSubscriber | null; open: boolean; onOpenChange: (open: boolean) => void; formatDate: (value: string | null | undefined) => string }) {
+  if (!subscriber) return null;
+  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="max-w-2xl rounded-none"><DialogHeader><DialogTitle className="font-orbitron text-primary">SUBSCRIBER_DETAIL</DialogTitle></DialogHeader><div className="grid gap-4"><div className="rounded-none border border-border/50 p-4"><div className="font-mono text-sm font-medium">{subscriber.email}</div><div className="font-mono text-xs text-muted-foreground">{subscriber.nama || "NO_NAME"}</div></div><div className="flex gap-2"><Badge variant={subscriber.aktif ? "default" : "destructive"} className="rounded-none font-mono">{subscriber.aktif ? "ACTIVE" : "UNSUBSCRIBED"}</Badge><Badge variant="secondary" className="rounded-none font-mono">TOKEN_MASKED</Badge></div><div className="grid gap-3 font-mono text-xs text-muted-foreground md:grid-cols-2"><div className="rounded-none border border-border/50 p-3">ID: {subscriber.id}</div><div className="rounded-none border border-border/50 p-3">Token: {subscriber.token_unsubscribe.slice(0, 8)}••••</div><div className="rounded-none border border-border/50 p-3">Subscribed: {formatDate(subscriber.subscribed_at)}</div><div className="rounded-none border border-border/50 p-3">Unsubscribed: {formatDate(subscriber.unsubscribed_at)}</div></div></div></DialogContent></Dialog>;
+}

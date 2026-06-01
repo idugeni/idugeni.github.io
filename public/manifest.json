@@ -1,0 +1,30 @@
+{
+  "name": "IRNK Codes — Eliyanto Sarage",
+  "short_name": "IRNK",
+  "description": "Portfolio resmi Eliyanto Sarage — Full Stack Developer, UI/UX Designer, dan AI Engineer. Membangun solusi digital premium dengan teknologi modern.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#06b6d4",
+  "orientation": "portrait-primary",
+  "lang": "id",
+  "dir": "ltr",
+  "scope": "/",
+  "categories": ["technology", "portfolio", "development"],
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "prefer_related_applications": false
+}
