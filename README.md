@@ -5,13 +5,13 @@
 </p>
 
 <p align="center">
-  <strong>An immersive, high-performance, and secure-by-default developer portfolio, tech center, and automation engine.</strong>
+  <strong>An immersive, high-performance, and secure-by-default developer portfolio, tech center, and serverless automation engine.</strong>
 </p>
 
 <p align="center">
-  <a href="https://irnk.codes"><img src="https://img.shields.io/badge/Live%20Platform-irnk.codes-06b6d4?style=for-the-badge&logo=google-chrome&logoColor=white&labelColor=020406" alt="Live Platform" /></a>
-  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/Build-Next.js%2016-10b981?style=for-the-badge&logo=nextdotjs&logoColor=white&labelColor=020406" alt="Build Status" /></a>
-  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/React-19.0.0-ec4899?style=for-the-badge&logo=react&logoColor=white&labelColor=020406" alt="React 19" /></a>
+  <a href="https://idugeni.github.io"><img src="https://img.shields.io/badge/Live%20Platform-idugeni.github.io-06b6d4?style=for-the-badge&logo=google-chrome&logoColor=white&labelColor=020406" alt="Live Platform" /></a>
+  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/Build-Next.js%2016.2.6-10b981?style=for-the-badge&logo=nextdotjs&logoColor=white&labelColor=020406" alt="Build Status" /></a>
+  <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/React-19.2.6-ec4899?style=for-the-badge&logo=react&logoColor=white&labelColor=020406" alt="React 19" /></a>
   <a href="https://github.com/idugeni/idugeni.github.io"><img src="https://img.shields.io/badge/Database-Supabase%20RLS-3ecf8e?style=for-the-badge&logo=supabase&logoColor=white&labelColor=020406" alt="Database" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-eab308?style=for-the-badge&labelColor=020406" alt="License" /></a>
 </p>
@@ -24,39 +24,101 @@
 
 ## 🔮 What is IRNK CODES?
 
-**IRNK CODES** is a premium, cutting-edge digital ecosystem that functions as a sophisticated technical portfolio, developer blog, and operations center. Designed with a custom retro-futuristic **cyberpunk hacker-HUD layout**, the application combines deep HSL variables, fluid glassmorphic container aesthetics, glowing neon borders, and micro-interactive framer-motion transitions.
+**IRNK CODES** is a premium, cutting-edge digital ecosystem that functions as a highly sophisticated technical portfolio, developer blog, and operations center. Designed with an immersive retro-futuristic **cyberpunk hacker-HUD layout**, the application combines deep HSL variables, fluid glassmorphic container aesthetics, glowing neon borders, and micro-interactive framer-motion transitions.
 
 The engine represents a production-grade showcase of modern web engineering, prioritizing **server-first architectures**, secure whitelisted server actions, and aggressive client bundle optimization.
 
 ---
 
-## 🎨 Landing Page Architecture & Core Sections
+## 🔒 Production DevSecOps Hardening & Architecture
 
-The landing page of **IRNK CODES** is structured into modular sections designed to showcase technical capabilities and engage audience telemetry:
+IRNK CODES is engineered with a strict **Security-by-Design** philosophy. The entire codebase and database layers have undergone exhaustive production-grade security hardening:
 
-### 1. 🖥️ Mission Control (Hero & Stats)
-An immersive, high-impact introductory segment displaying the platform tagline and core mission, supported by a live stats console tracking years of experience, projects delivered, happy clients, and mastered technologies.
+### 1. Database-Native Private Schema Isolation
+All high-privilege operations, transient tables, and backend validators are isolated in a custom **`private` schema** inside the Supabase PostgreSQL database:
+* **REST API Isolation**: Because Supabase PostgREST strictly exposes the `public` schema by default, placing sensitive assets inside the `private` schema makes them completely unreachable via external client REST endpoints (`/rest/v1/rpc/*`).
+* **Resolved Database Linter Warnings**: This completely neutralizes public anonymous execution exploits (Supabase Lint 0028 & 0029).
 
-### 2. 🗃️ Innovation Vault (Featured Projects)
-A database-driven showcase of engineered systems and applications, enabling visitors to explore technical descriptions, live applications, and separate code repositories.
+### 2. Search Path Hijack Prevention
+All `SECURITY DEFINER` functions in the database are hard-configured with a secure, explicit search path to neutralize schema hijack vectors:
+```sql
+CREATE OR REPLACE FUNCTION private.check_rate_limit(...)
+RETURNS BOOLEAN AS $$
+...
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+```
+This locks down search resolutions to the `public` and temporary schemas, satisfying strict security standards (Supabase Lint 0011).
 
-### 3. ⚙️ Service Spectrum (Core Services)
-An interactive presentation of consulting and development services, highlighting expertise in Full-Stack Web Development, AI/ML integrations, and DevOps orchestrations.
+### 3. Serverless Connection Pool Tuning
+To prevent database connection exhaustion during serverless scaling events on Vercel, the direct PostgreSQL client pool has been optimized:
+* **Max Pool size**: Limited to `1` connection per stateless instance in `lib/db/pooler.ts`.
+* **Fast Release Timings**: Idle connections are released in seconds, allowing thousands of scaling lambdas to execute seamlessly without locking the relational database.
 
-### 4. 🛠️ Tech Stack Grid
-A visual database representing the frameworks, database backends, styling systems, and cloud infrastructure platforms mastered in the ecosystem.
+### 4. Sliding-Window Rate Limiting
+Transient rate log tables (`private.rate_limits`) and helper evaluators are integrated directly into the database. A sliding window check blocks rapid request amplification at the PostgreSQL layer before executing heavy Node runtimes, featuring inline automated log pruning to keep tables fast and bounded.
 
-### 5. 👥 Client Proof Engine (Testimonials)
-A fluid recommendations carousel showcasing verified reviews and feedback from clients, creators, and engineering partners.
+### 5. Industry-Standard HTML Sanitization
+To protect dynamic user-generated rich text (such as blog comments and admin editor previews) against stored and DOM-based Cross-Site Scripting (XSS), custom regex sanitizers are replaced with a strict **`isomorphic-dompurify`** parser configured with custom element allowlists.
 
-### 6. 🖼️ Visual Archive (Gallery Preview)
- A visual masonry-grid showcase rendering development setups, design mockups, event images, and high-fidelity tech art.
+---
 
-### 7. 📰 Intel Stream (Latest Blog Articles)
-An editorial sector exhibiting the newest guides, tech reviews, and engineering articles written to share deep knowledge with the developer community.
+## 🎨 Modular Interface Sections
 
-### 8. 📨 Comm-Link (Newsletter Portal)
-A secure subscription component allowing visitors to join the email list for direct announcements, tech articles, and system updates.
+The landing page of **IRNK CODES** is structured into high-performance, responsive sections:
+
+1. **🖥️ Mission Control (Hero & Stats)**: A live cyberpunk dashboard tracking years of experience, projects delivered, happy clients, and mastered technologies.
+2. **🗃️ Innovation Vault (Featured Projects)**: A database-driven masonry grid showcase of engineered applications, with detailed technical stack specs and live repo links.
+3. **⚙️ Service Spectrum**: A dynamic grid highlighting specialized solutions in Full-Stack Web Development, AI/ML integrations, and DevOps orchestrations.
+4. **🛠️ Tech Stack Grid**: A visual database representing framework proficiencies, styled database assets, and cloud systems.
+5. **👥 Client Proof Engine (Testimonials)**: A fluid recommendations carousel displaying verified reviews from engineering partners.
+6. **🖼️ Visual Archive (Gallery Masonry)**: A visually striking visual preview showcasing developer setups, high-fidelity tech art, and mockups.
+7. **📰 Intel Stream (Latest Blog Articles)**: An editorial blog segment bringing the latest guides and tutorials to the developer community.
+8. **📨 Comm-Link (Newsletter)**: A secure subscription portal letting visitors join the list for instant system updates.
+
+---
+
+## 🛠️ Premium Technical Stack
+
+### Frontend Architecture
+* **Core Framework**: Next.js 16.2.6 (App Router, React Server Components by default, Suspense, and Streaming)
+* **Runtime**: React 19.2.6 (Turbopack compiler compatible, optimized rendering granularity)
+* **Styling**: Tailwind CSS v4 (Deep HSL variables, fluid glassmorphic styling, and interactive layouts)
+* **Animations**: Framer Motion (Smooth cyberpunk HUD indicators, micro-interactions, and neon glow transitions)
+
+### Backend & Cloud Infrastructure
+* **Database**: PostgreSQL on Supabase (Secure Row-Level Security policies, optimized indexes)
+* **Security & Auth**: Supabase SSR Auth, Secure Cookie Sessions, whitelisted RBAC checks (`requireAdmin()`)
+* **Email Orchestration**: Resend API Integration with transaction logs
+* **Hosting Platform**: Vercel (Edge network, global CDN, Partial Prerendering enabled)
+
+---
+
+## 💻 Local Development & Deployment
+
+### 1. Setup Environment
+Clone the repository and create your local configuration:
+```bash
+cp .env.example .env
+```
+Populate `.env` with your Supabase credentials, Resend API keys, and whitelisted admin emails.
+
+### 2. Install Dependencies
+Install packages cleanly using the suppressed peer-dependency flag:
+```bash
+npm install
+```
+
+### 3. Database Synchronization
+Synchronize your local schema and production hardening migrations directly with Supabase:
+```bash
+node scratch/apply-production-hardening.cjs
+```
+
+### 4. Build & Verify
+Validate compilation, TypeScript typecheck, and linter standards cleanly:
+```bash
+npm run verify
+```
 
 ---
 
@@ -95,5 +157,5 @@ A secure subscription component allowing visitors to join the email list for dir
 ---
 
 <p align="center">
-  Developed with ⚡ by <strong><a href="https://irnk.codes">Eliyanto Sarage</a></strong> · Wonosobo, Central Java, Indonesia.
+  Developed with ⚡ by <strong><a href="https://idugeni.github.io">Eliyanto Sarage</a></strong> · Wonosobo, Central Java, Indonesia.
 </p>
