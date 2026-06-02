@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Mono, Orbitron } from "next/font/google";
 import { Suspense } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ZoomLock } from "@/components/layout/ZoomLock";
@@ -132,6 +133,7 @@ export default function RootLayout({
           </Suspense>
           <Toaster />
         </TooltipProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
