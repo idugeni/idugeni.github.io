@@ -1,59 +1,81 @@
 import { Suspense } from "react";
-import { getAdminAnnouncements, getAnnouncementStats, type Announcement } from "@/actions/announcements";
+import { getAdminAnnouncements, type Announcement } from "@/actions/announcements";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AnnouncementsClient } from "./AnnouncementsClient";
-import { AdminLoadingSkeleton } from "@/components/admin/AdminLoadingSkeleton";
-import { AdminErrorBoundary } from "@/components/admin/AdminErrorBoundary";
+import { Button } from "@/components/ui/button";
+import { Plus, Loader2Icon } from "@/lib/icons";
+import Link from "next/link";
 
 /**
  * Admin Announcements Page (Server Component)
  * 
  * Architecture:
- * - Server Component: Fetches data server-side, renders server-first
- * - Suspense Boundary: Streams data progressively to client
- * - AnnouncementsClient: Islands pattern for interactivity (delete, edit)
- * - Error Boundary: Graceful error handling at page level
+ * - Server Component: Fetches data server-side with requireAdmin auth
+ * - Suspense: Streams data progressively
+ * - AnnouncementsClient: Islands pattern for interactivity
  * 
  * Benefits:
- * - No useEffect loops or hydration mismatches
- * - Authentication enforced at request time (requireAdmin)
- * - Progressive rendering with streaming
- * - Server-side caching via revalidatePath
- * - Zero client-side initial fetch overhead
+ * - No useEffect infinite loops
+ * - Auth enforced at request time
+ * - Server-side caching
+ * - Zero hydration mismatches
  */
 
 async function AnnouncementsContent() {
-  try {
-    // Fetch data server-side with built-in auth check (requireAdmin)
-    const [announcements, stats] = await Promise.all([
-      getAdminAnnouncements(),
-      getAnnouncementStats(),
-    ]);
+  let announcements: Announcement[] = [];
+  let error: string | null = null;
 
-    return (
-      <div className="space-y-6">
-        <AdminPageHeader
-          eyebrow="NOTIFICATION_CENTER"
-          title="Announcements"
-          subtitle="Manage global notifications, banners, and popup modals across all pages"
-        />
-        <AnnouncementsClient
-          initialAnnouncements={announcements}
-          stats={stats}
-        />
-      </div>
-    );
-  } catch (error) {
-    throw error; // Propagate to error boundary
+  try {
+    announcements = await getAdminAnnouncements();
+  } catch (err) {
+    error = err instanceof Error ? err.message : "Failed to load announcements";
   }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-orbitron text-2xl font-bold uppercase tracking-wider text-primary">
+            ANNOUNCEMENTS
+          </h1>
+          <p className="text-sm text-muted-foreground font-mono">
+            Manage global notifications, banners, popup modals, and cards
+          </p>
+        </div>
+        <div>
+          <Link href="/admin/announcements/new">
+            <Button className="rounded-none font-mono text-xs text-primary-foreground">
+              <Plus className="mr-2 h-4 w-4" />
+              NEW_ANNOUNCEMENT
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {error ? (
+        <div className="rounded-none border border-red-500/30 bg-red-500/10 p-6">
+          <p className="text-red-400 font-mono text-sm">{error}</p>
+        </div>
+      ) : (
+        <AnnouncementsClient initialAnnouncements={announcements} />
+      )}
+    </div>
+  );
+}
+
+function AnnouncementsLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 space-y-4">
+      <Loader2Icon className="h-8 w-8 animate-spin text-primary" />
+      <p className="font-mono text-xs text-muted-foreground">Retrieving announcements...</p>
+    </div>
+  );
 }
 
 export default function AdminAnnouncementsPage() {
   return (
-    <AdminErrorBoundary>
-      <Suspense fallback={<AdminLoadingSkeleton />}>
-        <AnnouncementsContent />
-      </Suspense>
-    </AdminErrorBoundary>
+    <Suspense fallback={<AnnouncementsLoading />}>
+      <AnnouncementsContent />
+    </Suspense>
   );
 }
