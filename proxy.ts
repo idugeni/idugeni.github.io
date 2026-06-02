@@ -17,8 +17,8 @@ export async function proxy(request: NextRequest) {
             return request.cookies.getAll();
           },
           setAll(cookiesToSet) {
+            // Only set cookies on the outgoing response; the incoming request cookies are read-only.
             cookiesToSet.forEach(({ name, value, options }) => {
-              request.cookies.set(name, value);
               response.cookies.set(name, value, options);
             });
           },
@@ -47,8 +47,8 @@ export async function proxy(request: NextRequest) {
             return request.cookies.getAll();
           },
           setAll(cookiesToSet) {
+            // Only set cookies on the outgoing response; the incoming request cookies are read-only.
             cookiesToSet.forEach(({ name, value, options }) => {
-              request.cookies.set(name, value);
               response.cookies.set(name, value, options);
             });
           },
