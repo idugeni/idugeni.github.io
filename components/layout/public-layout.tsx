@@ -11,7 +11,7 @@ function PublicChromeFallback() {
 
 export function PublicLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-[100dvh] flex flex-col relative dark">
+    <div className="min-h-[100dvh] flex flex-col relative dark overflow-x-hidden w-full max-w-[100vw]">
       <Suspense fallback={<PublicChromeFallback />}>
         <Navbar />
       </Suspense>
