@@ -1,18 +1,28 @@
 "use client";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export function LoadingScreen() {
   const [isVisible, setIsVisible] = useState(true);
   const [phase, setPhase] = useState<"loading" | "fadeout" | "done">("loading");
   const [progress, setProgress] = useState(0);
+  const pathname = usePathname();
 
   useEffect(() => {
-    // First visit = longer, return visit = shorter
+    // Check if we've already shown the loading screen in this session
     const hasVisited = sessionStorage.getItem("irnk_loaded");
-    const duration = hasVisited ? 800 : 1500;
 
+    // If we've already loaded and just navigating, don't show the full boot screen
+    if (hasVisited === "1") {
+      setIsVisible(false);
+      setPhase("done");
+      return;
+    }
+
+    const duration = 1500;
     const interval = 30;
     let elapsed = 0;
+    let fadeTimer: NodeJS.Timeout;
 
     const timer = setInterval(() => {
       elapsed += interval;
@@ -24,26 +34,31 @@ export function LoadingScreen() {
         clearInterval(timer);
         setPhase("fadeout");
         sessionStorage.setItem("irnk_loaded", "1");
-        setTimeout(() => {
+
+        // Use a standard timeout for fadeout animation
+        fadeTimer = setTimeout(() => {
           setPhase("done");
           setIsVisible(false);
         }, 300);
       }
     }, interval);
 
-    return () => clearInterval(timer);
-  }, []);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(fadeTimer);
+    };
+  }, [pathname]);
 
   if (!isVisible) return null;
 
   return (
     <div
       className={`fixed inset-0 z-[10000] bg-background flex flex-col items-center justify-center transition-all duration-400 ${
-        phase === "fadeout" ? "opacity-0 scale-105" : "opacity-100 scale-100"
+        phase === "fadeout" ? "opacity-0 scale-105 pointer-events-none" : "opacity-100 scale-100"
       }`}
     >
       {/* Background pulse */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.03)_0%,transparent_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.03)_0%,transparent_70%)] pointer-events-none" />
 
       {/* Logo */}
       <div className="relative mb-8">
