@@ -185,11 +185,13 @@
   html,
   body {
     touch-action: manipulation;
+    overflow-x: hidden;
   }
 
   html[data-zoom-locked="true"],
   html[data-zoom-locked="true"] body {
     touch-action: manipulation;
+    overflow-x: hidden;
   }
 
   body {
