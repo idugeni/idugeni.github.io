@@ -170,3 +170,85 @@ export function PublicDetailSkeleton({ media = true, sidebar = true }: PublicDet
     </PublicPageSkeleton>
   );
 }
+
+export function PublicSimplePageSkeleton({ label = "Loading page" }: { label?: string }) {
+  return (
+    <PublicPageSkeleton label={label}>
+      <section className="mx-auto max-w-5xl space-y-8 py-10">
+        <header className="space-y-4 text-center">
+          <SkeletonBlock className="mx-auto h-5 w-32 rounded-full" />
+          <SkeletonBlock className="mx-auto h-12 w-full max-w-2xl" />
+          <SkeletonBlock className="mx-auto h-5 w-full max-w-xl" />
+        </header>
+        <div className="grid gap-5 md:grid-cols-3">
+          <SkeletonBlock className="h-40 rounded-2xl" />
+          <SkeletonBlock className="h-40 rounded-2xl" />
+          <SkeletonBlock className="h-40 rounded-2xl" />
+        </div>
+        <div className="space-y-4 rounded-2xl border border-primary/10 bg-card/40 p-6">
+          {Array.from({ length: 6 }, (_, index) => (
+            <SkeletonBlock key={index} className={`h-4 ${index % 2 === 0 ? "w-full" : "w-5/6"}`} />
+          ))}
+        </div>
+      </section>
+    </PublicPageSkeleton>
+  );
+}
+
+export function PublicLegalSkeleton({ label = "Loading document" }: { label?: string }) {
+  return (
+    <PublicPageSkeleton label={label}>
+      <article className="mx-auto max-w-3xl space-y-8 py-10">
+        <header className="space-y-4">
+          <SkeletonBlock className="h-5 w-28 rounded-full" />
+          <SkeletonBlock className="h-11 w-2/3" />
+          <SkeletonBlock className="h-4 w-1/2" />
+        </header>
+        {Array.from({ length: 4 }, (_, section) => (
+          <section key={section} className="space-y-3 rounded-2xl border border-primary/10 bg-card/35 p-5">
+            <SkeletonBlock className="h-6 w-48" />
+            <SkeletonBlock className="h-4 w-full" />
+            <SkeletonBlock className="h-4 w-11/12" />
+            <SkeletonBlock className="h-4 w-4/5" />
+          </section>
+        ))}
+      </article>
+    </PublicPageSkeleton>
+  );
+}
+
+export function PublicFormSkeleton({ label = "Loading secure form" }: { label?: string }) {
+  return (
+    <PublicPageSkeleton label={label}>
+      <section className="mx-auto flex min-h-[65vh] max-w-md items-center justify-center py-10">
+        <div className="w-full space-y-6 rounded-2xl border border-primary/20 bg-card/70 p-8 shadow-[0_0_80px_rgba(0,229,255,0.08)]">
+          <SkeletonBlock className="mx-auto h-12 w-12 rounded-full" />
+          <div className="space-y-3 text-center">
+            <SkeletonBlock className="mx-auto h-8 w-56" />
+            <SkeletonBlock className="mx-auto h-4 w-44" />
+          </div>
+          <div className="space-y-4">
+            <SkeletonBlock className="h-12 w-full" />
+            <SkeletonBlock className="h-12 w-full" />
+            <SkeletonBlock className="h-12 w-full" />
+          </div>
+        </div>
+      </section>
+    </PublicPageSkeleton>
+  );
+}
+
+export function PublicRedirectSkeleton({ label = "Resolving destination" }: { label?: string }) {
+  return (
+    <PublicPageSkeleton label={label}>
+      <section className="mx-auto flex min-h-[60vh] max-w-xl items-center justify-center py-10 text-center">
+        <div className="w-full space-y-6 rounded-2xl border border-primary/20 bg-card/70 p-8 shadow-[0_0_80px_rgba(0,229,255,0.08)]">
+          <SkeletonBlock className="mx-auto h-16 w-16 rounded-full" />
+          <SkeletonBlock className="mx-auto h-8 w-64" />
+          <SkeletonBlock className="mx-auto h-4 w-full max-w-sm" />
+          <SkeletonBlock className="mx-auto h-10 w-40" />
+        </div>
+      </section>
+    </PublicPageSkeleton>
+  );
+}
