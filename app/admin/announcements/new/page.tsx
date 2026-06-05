@@ -1,8 +1,11 @@
-"use client";
-
+import { Suspense } from "react";
+import { connection } from "next/server";
+import { AdminRuntimeFallback } from "@/components/admin/AdminRuntimeFallback";
 import { AnnouncementForm } from "../AnnouncementForm";
 
-export default function NewAnnouncementPage() {
+async function NewAnnouncementRuntimeContent() {
+  await connection();
+
   return (
     <div className="space-y-6">
       <div>
@@ -15,5 +18,13 @@ export default function NewAnnouncementPage() {
       </div>
       <AnnouncementForm mode="create" />
     </div>
+  );
+}
+
+export default function NewAnnouncementPage() {
+  return (
+    <Suspense fallback={<AdminRuntimeFallback label="LOADING_ANNOUNCEMENT_CREATE" />}>
+      <NewAnnouncementRuntimeContent />
+    </Suspense>
   );
 }

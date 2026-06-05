@@ -127,9 +127,7 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <AnnouncementBanner />
           </Suspense>
-          <Suspense fallback={null}>
-            {children}
-          </Suspense>
+          {children}
           <Suspense fallback={null}>
             <AnnouncementModal />
           </Suspense>

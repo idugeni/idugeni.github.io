@@ -1,5 +1,18 @@
+import { Suspense } from "react";
+import { connection } from "next/server";
+import { AdminRuntimeFallback } from "@/components/admin/AdminRuntimeFallback";
 import { ServiceForm } from "../ServiceForm";
 
-export default function AdminServiceNew() {
+async function NewServiceRuntimeContent() {
+  await connection();
+
   return <ServiceForm mode="create" />;
+}
+
+export default function AdminServiceNew() {
+  return (
+    <Suspense fallback={<AdminRuntimeFallback label="LOADING_SERVICE_CREATE" />}>
+      <NewServiceRuntimeContent />
+    </Suspense>
+  );
 }

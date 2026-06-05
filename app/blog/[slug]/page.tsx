@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
@@ -55,7 +56,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function BlogDetailPage({ params }: Props) {
+function BlogDetailFallback() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center px-4">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">LOADING_ARTICLE</p>
+      </div>
+    </div>
+  );
+}
+
+async function BlogDetailContent({ params }: Props) {
   const { slug } = await params;
   const supabase = await createClient();
 
@@ -91,7 +103,7 @@ export default async function BlogDetailPage({ params }: Props) {
   const processedContent = await renderRichHtml(article.konten);
 
   return (
-    <PublicLayout>
+    <>
       <ArticleJsonLd article={article} />
       <BlogDetailClient
         article={article}
@@ -99,6 +111,17 @@ export default async function BlogDetailPage({ params }: Props) {
         relatedArticles={relatedArticles}
         processedContent={processedContent}
       />
+    </>
+  );
+}
+
+export default function BlogDetailPage({ params }: Props) {
+  return (
+    <PublicLayout>
+      <Suspense fallback={<BlogDetailFallback />}>
+        <BlogDetailContent params={params} />
+      </Suspense>
     </PublicLayout>
   );
 }
+

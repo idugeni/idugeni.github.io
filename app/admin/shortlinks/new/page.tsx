@@ -1,7 +1,12 @@
+import { Suspense } from "react";
+import { connection } from "next/server";
+import { AdminRuntimeFallback } from "@/components/admin/AdminRuntimeFallback";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { ShortlinkForm } from "../ShortlinkForm";
 
-export default function NewShortlink() {
+async function NewShortlinkRuntimeContent() {
+  await connection();
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
@@ -12,5 +17,13 @@ export default function NewShortlink() {
 
       <ShortlinkForm mode="create" />
     </div>
+  );
+}
+
+export default function NewShortlink() {
+  return (
+    <Suspense fallback={<AdminRuntimeFallback label="LOADING_SHORTLINK_CREATE" />}>
+      <NewShortlinkRuntimeContent />
+    </Suspense>
   );
 }

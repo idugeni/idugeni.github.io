@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
@@ -54,7 +55,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ProjectDetailPage({ params }: Props) {
+function ProjectDetailFallback() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center px-4">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">LOADING_PROJECT</p>
+      </div>
+    </div>
+  );
+}
+
+async function ProjectDetailContent({ params }: Props) {
   const { slug } = await params;
   const supabase = await createClient();
 
@@ -83,18 +95,29 @@ export default async function ProjectDetailPage({ params }: Props) {
     .neq("id", project.id)
     .limit(3);
 
-  const relatedProjects = rawRelatedProjects 
-    ? toCamelCase<Project[]>(rawRelatedProjects) 
+  const relatedProjects = rawRelatedProjects
+    ? toCamelCase<Project[]>(rawRelatedProjects)
     : [];
 
   return (
-    <PublicLayout>
+    <>
       <ProjectJsonLd project={projectJsonLd} />
       <ProjectDetailClient
         project={project}
         relatedProjects={relatedProjects}
         processedDescription={processedDescription}
       />
+    </>
+  );
+}
+
+export default function ProjectDetailPage({ params }: Props) {
+  return (
+    <PublicLayout>
+      <Suspense fallback={<ProjectDetailFallback />}>
+        <ProjectDetailContent params={params} />
+      </Suspense>
     </PublicLayout>
   );
 }
+
