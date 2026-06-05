@@ -104,12 +104,35 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 function ProjectDetailFallback() {
   return (
-    <div className="flex min-h-[60vh] items-center justify-center px-4">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">LOADING_PROJECT</p>
+    <main className="min-h-screen pt-4 pb-16">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 h-10 w-48 animate-pulse rounded-md border border-primary/20 bg-primary/5" />
+        <div className="mb-6 flex items-center gap-4">
+          <div className="h-7 w-28 animate-pulse rounded-full border border-primary/20 bg-primary/10" />
+          <div className="h-7 w-32 animate-pulse rounded-full border border-accent/20 bg-accent/10" />
+        </div>
+        <h1 className="mb-6 font-orbitron text-4xl font-bold uppercase tracking-wider text-primary md:text-6xl">
+          PROJECT_DETAIL
+        </h1>
+        <p className="mb-12 max-w-2xl font-mono text-xs uppercase tracking-[0.22em] text-muted-foreground">
+          Preparing project archive content...
+        </p>
+        <div className="mb-12 aspect-video w-full animate-pulse rounded-lg border border-primary/30 bg-secondary/40" />
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
+          <section className="space-y-4 md:col-span-2">
+            <div className="h-7 w-56 rounded bg-primary/10" />
+            <div className="h-4 w-full rounded bg-muted/40" />
+            <div className="h-4 w-11/12 rounded bg-muted/40" />
+            <div className="h-4 w-10/12 rounded bg-muted/40" />
+          </section>
+          <aside className="glass-card space-y-3 p-6">
+            <div className="h-5 w-32 rounded bg-primary/10" />
+            <div className="h-4 w-full rounded bg-muted/40" />
+            <div className="h-4 w-2/3 rounded bg-muted/40" />
+          </aside>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }
 
