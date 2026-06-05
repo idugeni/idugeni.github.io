@@ -118,7 +118,7 @@ export function GalleryPreview({ items }: { items: GalleryItem[] }) {
                   fill
                   className="object-contain"
                   sizes="95vw"
-                  priority
+                  loading="eager"
                 />
               </div>
 

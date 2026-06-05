@@ -357,7 +357,7 @@ export function GalleryClient({ items }: GalleryClientProps) {
                         fill
                         className="object-cover opacity-80"
                         sizes="(max-width: 768px) 100vw, 900px"
-                        priority
+                        loading="eager"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-secondary/60 text-primary">
@@ -401,7 +401,7 @@ export function GalleryClient({ items }: GalleryClientProps) {
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, 900px"
-                    priority
+                    loading="eager"
                   />
                 )}
               </div>

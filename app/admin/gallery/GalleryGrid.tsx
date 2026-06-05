@@ -94,7 +94,6 @@ export function GalleryGrid({
                   className="object-cover opacity-80 mix-blend-screen group-hover:scale-105 transition-transform duration-500"
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   loading={index < 4 ? "eager" : "lazy"}
-                  priority={index < 4}
                 />
               ) : (
                 <div className="w-full h-full bg-secondary/30 flex items-center justify-center">
