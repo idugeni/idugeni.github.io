@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Mono, Orbitron } from "next/font/google";
 import { Suspense } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -133,6 +134,7 @@ export default function RootLayout({
           </Suspense>
           <Toaster />
         </TooltipProvider>
+        <Analytics />
         <SpeedInsights />
       </body>
     </html>
