@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { BlogListClient } from "@/components/pages/blog/blog-list-client";
 import { getBlogIndexPageData } from "@/lib/data/public-content";
@@ -15,7 +16,7 @@ interface BlogPageProps {
   }>;
 }
 
-export default async function BlogPage({ searchParams }: BlogPageProps) {
+async function BlogContent({ searchParams }: BlogPageProps) {
   const params = await searchParams;
   const page = Number(params?.page ?? "1");
   const { articles, categories, pagination, activeCategory, error } = await getBlogIndexPageData({
@@ -25,23 +26,28 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
 
   if (error) {
     return (
-      <PublicLayout>
-        <div className="text-center py-20">
-          <p className="text-muted-foreground">Failed to load blog data.</p>
-        </div>
-      </PublicLayout>
+      <div className="text-center py-20">
+        <p className="text-muted-foreground">Failed to load blog data.</p>
+      </div>
     );
   }
 
+  return (
+    <BlogListClient
+      articles={articles}
+      categories={categories}
+      activeCategory={activeCategory}
+      pagination={pagination}
+    />
+  );
+}
 
+export default function BlogPage({ searchParams }: BlogPageProps) {
   return (
     <PublicLayout>
-      <BlogListClient
-        articles={articles}
-        categories={categories}
-        activeCategory={activeCategory}
-        pagination={pagination}
-      />
+      <Suspense fallback={null}>
+        <BlogContent searchParams={searchParams} />
+      </Suspense>
     </PublicLayout>
   );
 }

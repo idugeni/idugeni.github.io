@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { ProjectsListClient } from "@/components/pages/projects/projects-list-client";
 import { getProjectsIndexPageData } from "@/lib/data/public-content";
@@ -17,7 +18,7 @@ interface ProjectsPageProps {
   }>;
 }
 
-export default async function ProjectsPage({ searchParams }: ProjectsPageProps) {
+async function ProjectsContent({ searchParams }: ProjectsPageProps) {
   const params = await searchParams;
   const page = Number(params?.page ?? "1");
   const { projects, filters, activeFilters, pagination, error } = await getProjectsIndexPageData({
@@ -29,23 +30,28 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
 
   if (error) {
     return (
-      <PublicLayout>
-        <div className="text-center py-20">
-          <p className="text-muted-foreground">Failed to load projects.</p>
-        </div>
-      </PublicLayout>
+      <div className="text-center py-20">
+        <p className="text-muted-foreground">Failed to load projects.</p>
+      </div>
     );
   }
 
+  return (
+    <ProjectsListClient
+      projects={projects}
+      filters={filters}
+      activeFilters={activeFilters}
+      pagination={pagination}
+    />
+  );
+}
 
+export default function ProjectsPage({ searchParams }: ProjectsPageProps) {
   return (
     <PublicLayout>
-      <ProjectsListClient
-        projects={projects}
-        filters={filters}
-        activeFilters={activeFilters}
-        pagination={pagination}
-      />
+      <Suspense fallback={null}>
+        <ProjectsContent searchParams={searchParams} />
+      </Suspense>
     </PublicLayout>
   );
 }
