@@ -349,13 +349,44 @@ export function GalleryClient({ items }: GalleryClientProps) {
             <NeonBorder className="w-full">
               <div className={`relative w-full ${getAspectRatioClass(selectedItem.aspectRatio)} max-h-[75vh] overflow-hidden`}>
                 {isYouTubeUrl(selectedItem.fileUrl) ? (
-                  <iframe
-                    src={selectedItem.fileUrl}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    suppressHydrationWarning
-                  />
+                  <div className="relative h-full w-full overflow-hidden bg-black">
+                    {getGalleryPreviewImage(selectedItem) ? (
+                      <Image
+                        src={getGalleryPreviewImage(selectedItem)!}
+                        alt={selectedItem.judul}
+                        fill
+                        className="object-cover opacity-80"
+                        sizes="(max-width: 768px) 100vw, 900px"
+                        priority
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-secondary/60 text-primary">
+                        <HiOutlinePlay className="h-16 w-16" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/45" aria-hidden="true" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full border border-primary/50 bg-primary/20 text-primary shadow-[0_0_30px_hsl(var(--primary)/0.35)] backdrop-blur-sm">
+                        <HiOutlinePlay className="h-8 w-8 translate-x-0.5" />
+                      </div>
+                      <div>
+                        <p className="font-orbitron text-sm font-bold text-white md:text-base">
+                          YouTube video tersedia
+                        </p>
+                        <p className="mt-1 max-w-md font-mono text-xs text-white/70">
+                          Preview eksternal digunakan agar modal tetap bersih dari iframe/adblock cross-origin error.
+                        </p>
+                      </div>
+                      <a
+                        href={selectedItem.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center border border-primary/50 bg-primary px-5 py-2.5 font-mono text-xs font-bold uppercase text-primary-foreground transition-colors hover:bg-primary/90"
+                      >
+                        Buka di YouTube
+                      </a>
+                    </div>
+                  </div>
                 ) : selectedItem.tipe === "video" ? (
                   <video
                     src={selectedItem.fileUrl}
