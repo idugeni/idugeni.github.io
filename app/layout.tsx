@@ -122,7 +122,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className="dark" suppressHydrationWarning>
-      <body className={`${inter.variable} ${spaceMono.variable} ${orbitron.variable} font-sans antialiased overflow-x-hidden min-h-screen flex flex-col`}>
+      <body
+        className={`${inter.variable} ${spaceMono.variable} ${orbitron.variable} font-sans antialiased overflow-x-hidden min-h-screen flex flex-col`}
+        suppressHydrationWarning
+      >
         <TooltipProvider>
           <ZoomLock />
           <Suspense fallback={null}>
