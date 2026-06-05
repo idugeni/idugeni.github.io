@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { cacheLife, cacheTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache/tags";
+import { createPublicClient } from "@/lib/supabase/public";
 import { toCamelCase } from "@/lib/utils/case";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { ProjectDetailClient } from "@/components/pages/projects/project-detail-client";
@@ -11,42 +13,86 @@ import { renderRichHtml, richHtmlToPlainText } from "@/lib/content/rich-html";
 
 type Props = { params: Promise<{ slug: string }> };
 
+const PROJECT_DETAIL_CACHE_LIFE = {
+  stale: 300,
+  revalidate: 300,
+  expire: 3_600,
+} as const;
+
+async function getProjectDetailData(slug: string) {
+  "use cache";
+  cacheLife(PROJECT_DETAIL_CACHE_LIFE);
+  cacheTag(CACHE_TAGS.projects);
+
+  const supabase = createPublicClient();
+
+  const { data: rawProject, error: projectError } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (projectError) {
+    throw projectError;
+  }
+
+  if (!rawProject) {
+    return null;
+  }
+
+  const project = toCamelCase<Project>(rawProject);
+  const { data: rawRelatedProjects, error: relatedError } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("kategori", project.kategori)
+    .neq("id", project.id)
+    .limit(3);
+
+  if (relatedError) {
+    throw relatedError;
+  }
+
+  const relatedProjects = toCamelCase<Project[]>(rawRelatedProjects ?? []);
+  const processedDescription = await renderRichHtml(project.deskripsi);
+
+  return {
+    project,
+    relatedProjects,
+    processedDescription,
+  };
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createClient();
+  const detail = await getProjectDetailData(slug);
 
-  const { data: project } = await supabase
-    .from("projects")
-    .select("nama, deskripsi, thumbnail_url, kategori, slug")
-    .eq("slug", slug)
-    .single();
-
-  if (!project) {
+  if (!detail) {
     return { title: "Proyek Tidak Ditemukan" };
   }
 
+  const { project } = detail;
   const baseUrl = "https://irnk.codes";
   const description = richHtmlToPlainText(project.deskripsi);
 
   return {
     title: project.nama,
-    description: description,
+    description,
     authors: [{ name: "Eliyanto Sarage" }],
     openGraph: {
       title: project.nama,
-      description: description,
+      description,
       type: "article",
       authors: ["Eliyanto Sarage"],
       url: `${baseUrl}/projects/${slug}`,
-      images: project.thumbnail_url
-        ? [{ url: project.thumbnail_url, width: 1200, height: 630, alt: project.nama }]
+      images: project.thumbnailUrl
+        ? [{ url: project.thumbnailUrl, width: 1200, height: 630, alt: project.nama }]
         : undefined,
     },
     twitter: {
       card: "summary_large_image",
       title: project.nama,
-      description: description,
-      images: project.thumbnail_url ? [project.thumbnail_url] : undefined,
+      description,
+      images: project.thumbnailUrl ? [project.thumbnailUrl] : undefined,
       creator: "@idugeni",
     },
     alternates: {
@@ -68,36 +114,17 @@ function ProjectDetailFallback() {
 
 async function ProjectDetailContent({ params }: Props) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const detail = await getProjectDetailData(slug);
 
-  const { data: rawProject } = await supabase
-    .from("projects")
-    .select("*")
-    .eq("slug", slug)
-    .single();
-
-  if (!rawProject) {
+  if (!detail) {
     notFound();
   }
 
-  const project = toCamelCase<Project>(rawProject);
-  const processedDescription = await renderRichHtml(project.deskripsi);
+  const { project, relatedProjects, processedDescription } = detail;
   const projectJsonLd = {
     ...project,
     deskripsi: richHtmlToPlainText(project.deskripsi),
   };
-
-  // Fetch related projects (same category, exclude current project)
-  const { data: rawRelatedProjects } = await supabase
-    .from("projects")
-    .select("*")
-    .eq("kategori", project.kategori)
-    .neq("id", project.id)
-    .limit(3);
-
-  const relatedProjects = rawRelatedProjects
-    ? toCamelCase<Project[]>(rawRelatedProjects)
-    : [];
 
   return (
     <>
@@ -120,4 +147,3 @@ export default function ProjectDetailPage({ params }: Props) {
     </PublicLayout>
   );
 }
-
