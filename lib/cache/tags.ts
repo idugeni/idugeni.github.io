@@ -7,11 +7,12 @@ export const CACHE_TAGS = {
   services: "services",
   testimonials: "testimonials",
   gallery: "gallery",
+  announcements: "announcements",
 } as const;
 
 type CacheTag = (typeof CACHE_TAGS)[keyof typeof CACHE_TAGS];
 
-const PUBLIC_HOME_DEPENDENCIES = [
+const PUBLIC_HOME_DEPENDENCIES: readonly CacheTag[] = [
   CACHE_TAGS.home,
   CACHE_TAGS.projects,
   CACHE_TAGS.services,

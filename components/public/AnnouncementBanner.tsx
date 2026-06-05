@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { getPublicAnnouncements, type Announcement } from "@/actions/announcements";
+import type { Announcement } from "@/actions/announcements";
 import { AlertTriangle, CheckCircle, Info, X } from "@/lib/icons";
 
 export function AnnouncementBanner() {
@@ -13,7 +13,13 @@ export function AnnouncementBanner() {
   useEffect(() => {
     const fetchAndFilterBanner = async () => {
       try {
-        const announcements = await getPublicAnnouncements();
+        const response = await fetch("/api/announcements", {
+          cache: "force-cache",
+        });
+
+        const announcements = response.ok
+          ? ((await response.json()) as Announcement[])
+          : [];
         
         // Find first active banner matching current pathname
         const matchingBanner = announcements.find((item) => {
@@ -34,8 +40,8 @@ export function AnnouncementBanner() {
         } else {
           setIsVisible(false);
         }
-      } catch (err) {
-        console.error("Failed to load public banners", err);
+      } catch {
+        setIsVisible(false);
       }
     };
 

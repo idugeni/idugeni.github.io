@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { getPublicAnnouncements, type Announcement } from "@/actions/announcements";
+import type { Announcement } from "@/actions/announcements";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, CheckCircle, Info, X } from "@/lib/icons";
 
@@ -16,7 +16,13 @@ export function AnnouncementModal() {
 
     const fetchAndFilterModal = async () => {
       try {
-        const announcements = await getPublicAnnouncements();
+        const response = await fetch("/api/announcements", {
+          cache: "force-cache",
+        });
+
+        const announcements = response.ok
+          ? ((await response.json()) as Announcement[])
+          : [];
         
         // Find first active modal matching pathname
         const matchingModal = announcements.find((item) => {
@@ -34,8 +40,8 @@ export function AnnouncementModal() {
             timer = setTimeout(() => setIsOpen(true), 1500);
           }
         }
-      } catch (err) {
-        console.error("Failed to load public modals", err);
+      } catch {
+        setIsOpen(false);
       }
     };
 
