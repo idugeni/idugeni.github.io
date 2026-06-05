@@ -6,6 +6,10 @@ import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import type { Project } from "@/types/pages";
 import { getAspectRatioClass } from "@/lib/utils/aspect-ratio";
 import { ArrowRight } from "@/lib/icons";
+import {
+  getSafeImageSource,
+  shouldBypassImageOptimization,
+} from "@/lib/utils/image-source";
 
 interface RelatedProjectsProps {
   projects: Project[];
@@ -38,14 +42,15 @@ export function RelatedProjects({ projects }: RelatedProjectsProps) {
             <Link href={`/projects/${project.slug}`}>
               <div className="glass-card group hover:border-primary/50 transition-all duration-300 overflow-hidden">
                 {/* Thumbnail */}
-                {project.thumbnailUrl ? (
+                {getSafeImageSource(project.thumbnailUrl) ? (
                   <div className={`relative ${getAspectRatioClass(project.thumbnailAspectRatio)} overflow-hidden`}>
                     <Image 
-                      src={project.thumbnailUrl} 
+                      src={getSafeImageSource(project.thumbnailUrl)!}
                       alt={project.nama} 
                       fill 
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
                       sizes="(max-width: 768px) 100vw, 33vw"
+                      unoptimized={shouldBypassImageOptimization(project.thumbnailUrl)}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>

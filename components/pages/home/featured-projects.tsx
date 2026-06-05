@@ -8,6 +8,10 @@ import { NeonBorder } from "@/components/ui/neon-border";
 import { Button } from "@/components/ui/button";
 import { HiOutlineArrowRight } from "react-icons/hi2";
 import type { FeaturedProjectsProps } from "@/types/pages";
+import {
+  getSafeImageSource,
+  shouldBypassImageOptimization,
+} from "@/lib/utils/image-source";
 
 export function FeaturedProjects({ projects }: FeaturedProjectsProps) {
   if (!projects || projects.length === 0) return null;
@@ -38,13 +42,14 @@ export function FeaturedProjects({ projects }: FeaturedProjectsProps) {
                 <TiltCard className="h-full">
                   <NeonBorder className="h-full flex flex-col">
                     <div className="relative h-48 bg-secondary/50 border-b border-primary/20 overflow-hidden group">
-                      {project.thumbnailUrl ? (
+                      {getSafeImageSource(project.thumbnailUrl) ? (
                         <Image
-                          src={project.thumbnailUrl}
+                          src={getSafeImageSource(project.thumbnailUrl)!}
                           alt={project.nama}
                           fill
                           className="object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
                           sizes="(max-width: 768px) 100vw, 400px"
+                          unoptimized={shouldBypassImageOptimization(project.thumbnailUrl)}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">

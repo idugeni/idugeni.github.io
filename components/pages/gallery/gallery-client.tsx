@@ -20,6 +20,11 @@ import {
   HiOutlineChevronRight,
 } from "react-icons/hi2";
 import type { GalleryClientProps, GalleryItem } from "@/types/pages";
+import {
+  getSafeImageSource,
+  isYouTubeUrl,
+  shouldBypassImageOptimization,
+} from "@/lib/utils/image-source";
 
 type GalleryFilter = "semua" | "foto" | "video" | string;
 
@@ -29,51 +34,8 @@ function normalizeFilter(value: string | null): GalleryFilter {
   return value?.trim().toLowerCase() || "semua";
 }
 
-// Helper to detect YouTube URLs
-function isYouTubeUrl(url: string): boolean {
-  return url.includes("youtube.com/embed/") || url.includes("youtu.be/");
-}
-
-function getYouTubeThumbnailUrl(url: string): string | null {
-  const patterns = [
-    /youtube\.com\/embed\/([^?&/]+)/,
-    /youtube\.com\/watch\?v=([^?&/]+)/,
-    /youtu\.be\/([^?&/]+)/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match?.[1]) {
-      return `https://i.ytimg.com/vi_webp/${match[1]}/sddefault.webp`;
-    }
-  }
-  return null;
-}
-
-function isVideoLikeUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url, "https://irnk.codes");
-    const pathname = parsed.pathname.toLowerCase();
-    return /\.(m3u8|mov|mp4|mpeg|mpg|ogv|webm)$/.test(pathname);
-  } catch {
-    return false;
-  }
-}
-
-function getSafeImageSource(url: string | null | undefined): string | null {
-  if (!url) return null;
-  if (isYouTubeUrl(url)) return getYouTubeThumbnailUrl(url);
-  return isVideoLikeUrl(url) ? null : url;
-}
-
 function getGalleryPreviewImage(item: GalleryItem): string | null {
-  const thumbnailSource = getSafeImageSource(item.thumbnailUrl);
-  if (thumbnailSource) return thumbnailSource;
-
-  const filePreview = getSafeImageSource(item.fileUrl);
-  if (filePreview) return filePreview;
-
-  return null;
+  return getSafeImageSource(item.thumbnailUrl, item.fileUrl);
 }
 
 export function GalleryClient({ items }: GalleryClientProps) {
@@ -206,52 +168,57 @@ export function GalleryClient({ items }: GalleryClientProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {filteredItems.map((item, i) => (
-              <ScrollReveal key={item.id} delay={i * 40}>
-                <div
-                  className={`relative group cursor-pointer overflow-hidden border border-border/30 hover:border-primary/40 transition-all duration-300 ${getAspectRatioClass(item.aspectRatio)}`}
-                  onClick={() => {
-                    setSelectedIndex(i);
-                  }}
-                >
-                  {isYouTubeUrl(item.fileUrl) ? (
-                    <>
-                      {getGalleryPreviewImage(item) ? (
+            {filteredItems.map((item, i) => {
+              const previewImage = getGalleryPreviewImage(item);
+
+              return (
+                <ScrollReveal key={item.id} delay={i * 40}>
+                  <div
+                    className={`relative group cursor-pointer overflow-hidden border border-border/30 hover:border-primary/40 transition-all duration-300 ${getAspectRatioClass(item.aspectRatio)}`}
+                    onClick={() => {
+                      setSelectedIndex(i);
+                    }}
+                  >
+                    {isYouTubeUrl(item.fileUrl) ? (
+                      <>
+                        {previewImage ? (
+                          <Image
+                            src={previewImage}
+                            alt={item.judul}
+                            fill
+                            className="object-cover opacity-75 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                            sizes="(max-width: 768px) 50vw, 300px"
+                            unoptimized={shouldBypassImageOptimization(previewImage)}
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-secondary/60 text-primary">
+                            <HiOutlinePlay className="h-10 w-10" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
+                      </>
+                    ) : item.tipe === "video" && !item.thumbnailUrl ? (
+                      <video
+                        src={item.fileUrl}
+                        muted
+                        preload="metadata"
+                        className="w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                      />
+                    ) : (
+                      previewImage ? (
                         <Image
-                          src={getGalleryPreviewImage(item)!}
+                          src={previewImage}
                           alt={item.judul}
                           fill
                           className="object-cover opacity-75 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
                           sizes="(max-width: 768px) 50vw, 300px"
+                          unoptimized={shouldBypassImageOptimization(previewImage)}
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-secondary/60 text-primary">
-                          <HiOutlinePlay className="h-10 w-10" />
+                        <div className="flex h-full w-full items-center justify-center bg-secondary/60 text-muted-foreground">
+                          <HiOutlinePhoto className="h-10 w-10" />
                         </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
-                    </>
-                  ) : item.tipe === "video" && !item.thumbnailUrl ? (
-                    <video
-                      src={item.fileUrl}
-                      muted
-                      preload="metadata"
-                      className="w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
-                    />
-                  ) : (
-                    getGalleryPreviewImage(item) ? (
-                      <Image
-                        src={getGalleryPreviewImage(item)!}
-                        alt={item.judul}
-                        fill
-                        className="object-cover opacity-75 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
-                        sizes="(max-width: 768px) 50vw, 300px"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-secondary/60 text-muted-foreground">
-                        <HiOutlinePhoto className="h-10 w-10" />
-                      </div>
-                    ))}
+                      ))}
 
                   {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
@@ -289,9 +256,10 @@ export function GalleryClient({ items }: GalleryClientProps) {
                       {item.kategori}
                     </div>
                   )}
-                </div>
-              </ScrollReveal>
-            ))}
+                  </div>
+                </ScrollReveal>
+              );
+            })}
           </div>
         )}
       </div>
@@ -358,6 +326,7 @@ export function GalleryClient({ items }: GalleryClientProps) {
                         className="object-cover opacity-80"
                         sizes="(max-width: 768px) 100vw, 900px"
                         loading="eager"
+                        unoptimized={shouldBypassImageOptimization(getGalleryPreviewImage(selectedItem))}
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-secondary/60 text-primary">
@@ -395,14 +364,21 @@ export function GalleryClient({ items }: GalleryClientProps) {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <Image
-                    src={selectedItem.fileUrl}
-                    alt={selectedItem.judul}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 900px"
-                    loading="eager"
-                  />
+                  getGalleryPreviewImage(selectedItem) ? (
+                    <Image
+                      src={getGalleryPreviewImage(selectedItem)!}
+                      alt={selectedItem.judul}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 900px"
+                      loading="eager"
+                      unoptimized={shouldBypassImageOptimization(getGalleryPreviewImage(selectedItem))}
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-secondary/60 text-muted-foreground">
+                      <HiOutlinePhoto className="h-16 w-16" />
+                    </div>
+                  )
                 )}
               </div>
             </NeonBorder>

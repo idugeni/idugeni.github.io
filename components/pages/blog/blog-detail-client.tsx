@@ -28,6 +28,10 @@ import { toggleBlogLike, createBlogComment } from "@/actions/blog";
 import { createClient } from "@/lib/supabase/client";
 import type { BlogDetailClientProps } from "@/types/pages";
 import { getAspectRatioClass } from "@/lib/utils/aspect-ratio";
+import {
+  getSafeImageSource,
+  shouldBypassImageOptimization,
+} from "@/lib/utils/image-source";
 
 // --- Constants ---
 const SCROLL_OFFSET = 96; // Match scroll-mt-24 (24 * 4px) for consistent heading detection and scrolling
@@ -472,16 +476,18 @@ export function BlogDetailClient({
               </ScrollReveal>
 
               {/* Thumbnail */}
-              {article.thumbnailUrl && (
+              {getSafeImageSource(article.thumbnailUrl) && (
                 <ScrollReveal delay={100}>
                   <div className={`w-full ${getAspectRatioClass(article.thumbnailAspectRatio)} border border-primary/30 rounded-lg overflow-hidden mb-10 shadow-[0_0_30px_rgba(6,182,212,0.1)] relative`}>
                     <Image
-                      src={article.thumbnailUrl}
+                      src={getSafeImageSource(article.thumbnailUrl)!}
                       alt={article.judul}
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 800px"
-                      priority
+                      loading="eager"
+                      fetchPriority="high"
+                      unoptimized={shouldBypassImageOptimization(article.thumbnailUrl)}
                     />
                   </div>
                 </ScrollReveal>
@@ -662,14 +668,15 @@ export function BlogDetailClient({
                     {relatedArticles.map((rel) => (
                       <Link key={rel.id} href={`/blog/${rel.slug}`}>
                         <div className="border border-border/50 bg-secondary/30 p-4 hover:border-primary/50 transition-colors cursor-pointer group h-full">
-                          {rel.thumbnailUrl && (
+                          {getSafeImageSource(rel.thumbnailUrl) && (
                             <div className="relative w-full h-24 mb-3 overflow-hidden border border-primary/20">
                               <Image
-                                src={rel.thumbnailUrl}
+                                src={getSafeImageSource(rel.thumbnailUrl)!}
                                 alt={rel.judul}
                                 fill
                                 className="object-cover grayscale group-hover:grayscale-0 transition-all"
                                 sizes="(max-width: 768px) 100vw, 250px"
+                                unoptimized={shouldBypassImageOptimization(rel.thumbnailUrl)}
                               />
                             </div>
                           )}

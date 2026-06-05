@@ -9,6 +9,10 @@ import { PageHeader } from "@/components/ui/page-header";
 import { HiClock, HiEye, HiHeart, HiSignal, HiTag } from "react-icons/hi2";
 import { FiChevronLeft, FiChevronRight, FiGrid, FiLayers } from "react-icons/fi";
 import type { BlogListClientProps } from "@/types/pages";
+import {
+  getSafeImageSource,
+  shouldBypassImageOptimization,
+} from "@/lib/utils/image-source";
 
 function getCategoryHref(categoryId?: string, page?: number) {
   const params = new URLSearchParams();
@@ -46,14 +50,15 @@ export function BlogListClient({
             <Link href={`/blog/${featuredArticle.slug}`} className="block group">
               <div className="relative overflow-hidden rounded-xl bg-black shadow-2xl shadow-black/50">
                 <div className="relative h-[340px] md:h-[440px] overflow-hidden">
-                  {featuredArticle.thumbnailUrl && (
+                  {getSafeImageSource(featuredArticle.thumbnailUrl) && (
                     <Image
-                      src={featuredArticle.thumbnailUrl}
+                      src={getSafeImageSource(featuredArticle.thumbnailUrl)!}
                       alt={featuredArticle.judul}
                       fill
                       className="object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.03]"
                       sizes="(max-width: 768px) 100vw, 1200px"
-                      priority
+                      preload
+                      unoptimized={shouldBypassImageOptimization(featuredArticle.thumbnailUrl)}
                     />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/10" />
@@ -149,13 +154,14 @@ export function BlogListClient({
                     <Link href={`/blog/${article.slug}`} className="block h-full">
                       <div className="group h-full rounded-xl overflow-hidden bg-card/80 backdrop-blur-sm border border-border/20 hover:border-primary/30 transition-all duration-500 hover:shadow-[0_8px_40px_-12px_rgba(6,182,212,0.15)] hover:-translate-y-1">
                         <div className="relative h-48 overflow-hidden bg-black">
-                          {article.thumbnailUrl ? (
+                          {getSafeImageSource(article.thumbnailUrl) ? (
                             <Image
-                              src={article.thumbnailUrl}
+                              src={getSafeImageSource(article.thumbnailUrl)!}
                               alt={article.judul}
                               fill
                               className="object-cover opacity-90 transition-all duration-700 group-hover:opacity-100"
                               sizes="(max-width: 768px) 100vw, 400px"
+                              unoptimized={shouldBypassImageOptimization(article.thumbnailUrl)}
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-primary/5 to-black flex items-center justify-center">

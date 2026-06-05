@@ -8,6 +8,10 @@ import { HiArrowRight } from "react-icons/hi2";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { cn } from "@/lib/utils";
 import type { ProjectsListClientProps } from "@/types/pages";
+import {
+  getSafeImageSource,
+  shouldBypassImageOptimization,
+} from "@/lib/utils/image-source";
 
 function getProjectsHref(filters: { category?: string; status?: string; tech?: string }, page?: number) {
   const params = new URLSearchParams();
@@ -195,13 +199,14 @@ export function ProjectsListClient({
                   <Link href={`/projects/${project.slug}`}>
                     <div className="h-full flex flex-col cursor-pointer bg-card/90 backdrop-blur-sm border border-border/30 rounded-lg overflow-hidden hover:border-primary/40 hover:shadow-[0_0_20px_rgba(6,182,212,0.1)] transition-all duration-300">
                       <div className="relative h-48 bg-secondary/50 flex items-center justify-center overflow-hidden">
-                        {project.thumbnailUrl ? (
+                        {getSafeImageSource(project.thumbnailUrl) ? (
                           <Image
-                            src={project.thumbnailUrl}
+                            src={getSafeImageSource(project.thumbnailUrl)!}
                             alt={project.nama}
                             fill
                             className="object-cover opacity-80 hover:opacity-100 transition-opacity"
                             sizes="(max-width: 768px) 100vw, 400px"
+                            unoptimized={shouldBypassImageOptimization(project.thumbnailUrl)}
                           />
                         ) : (
                           <span className="font-mono text-muted-foreground/50">

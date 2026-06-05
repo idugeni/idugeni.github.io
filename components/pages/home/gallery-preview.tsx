@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { HiOutlineArrowRight, HiChevronLeft, HiChevronRight, HiXMark } from "react-icons/hi2";
 import type { GalleryItem } from "@/types/pages";
+import {
+  getSafeImageSource,
+  shouldBypassImageOptimization,
+} from "@/lib/utils/image-source";
 
 export function GalleryPreview({ items }: { items: GalleryItem[] }) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -63,34 +67,45 @@ export function GalleryPreview({ items }: { items: GalleryItem[] }) {
 
           <ScrollReveal delay={150}>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-              {displayItems.map((item, i) => (
-                <button
-                  key={item.id}
-                  onClick={() => openModal(i)}
-                  className={`relative group overflow-hidden border border-primary/10 hover:border-primary/40 transition-all duration-300 cursor-pointer ${
-                    i === 0 ? "col-span-2 row-span-2" : ""
-                  }`}
-                >
-                  <div className={`relative ${i === 0 ? "h-64 md:h-80" : "h-32 md:h-40"} bg-secondary/30`}>
-                    <Image
-                      src={item.thumbnailUrl || item.fileUrl}
-                      alt={item.judul}
-                      fill
-                      className="object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
-                      sizes={i === 0 ? "(max-width: 768px) 100vw, 600px" : "(max-width: 768px) 50vw, 300px"}
-                    />
-                  </div>
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <p className="font-mono text-xs text-foreground truncate">{item.judul}</p>
-                      {item.kategori && (
-                        <span className="font-mono text-[10px] text-primary/70">{item.kategori}</span>
+              {displayItems.map((item, i) => {
+                const previewImage = getSafeImageSource(item.thumbnailUrl, item.fileUrl);
+
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => openModal(i)}
+                    className={`relative group overflow-hidden border border-primary/10 hover:border-primary/40 transition-all duration-300 cursor-pointer ${
+                      i === 0 ? "col-span-2 row-span-2" : ""
+                    }`}
+                  >
+                    <div className={`relative ${i === 0 ? "h-64 md:h-80" : "h-32 md:h-40"} bg-secondary/30`}>
+                      {previewImage ? (
+                        <Image
+                          src={previewImage}
+                          alt={item.judul}
+                          fill
+                          className="object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+                          sizes={i === 0 ? "(max-width: 768px) 100vw, 600px" : "(max-width: 768px) 50vw, 300px"}
+                          unoptimized={shouldBypassImageOptimization(previewImage)}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-secondary/60 font-mono text-xs text-muted-foreground">
+                          [NO_IMAGE]
+                        </div>
                       )}
                     </div>
-                  </div>
-                </button>
-              ))}
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <p className="font-mono text-xs text-foreground truncate">{item.judul}</p>
+                        {item.kategori && (
+                          <span className="font-mono text-[10px] text-primary/70">{item.kategori}</span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </ScrollReveal>
         </div>
@@ -112,14 +127,21 @@ export function GalleryPreview({ items }: { items: GalleryItem[] }) {
 
               {/* Image Container */}
               <div className="relative flex-1 bg-black/50">
-                <Image
-                  src={selectedItem.fileUrl}
-                  alt={selectedItem.judul}
-                  fill
-                  className="object-contain"
-                  sizes="95vw"
-                  loading="eager"
-                />
+                {getSafeImageSource(selectedItem.fileUrl, selectedItem.thumbnailUrl) ? (
+                  <Image
+                    src={getSafeImageSource(selectedItem.fileUrl, selectedItem.thumbnailUrl)!}
+                    alt={selectedItem.judul}
+                    fill
+                    className="object-contain"
+                    sizes="95vw"
+                    loading="eager"
+                    unoptimized={shouldBypassImageOptimization(getSafeImageSource(selectedItem.fileUrl, selectedItem.thumbnailUrl))}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center font-mono text-sm text-muted-foreground">
+                    [NO_IMAGE]
+                  </div>
+                )}
               </div>
 
               {/* Navigation Controls */}

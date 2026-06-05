@@ -10,6 +10,10 @@ import {
 import { Download } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import {
+  getSafeImageSource,
+  shouldBypassImageOptimization,
+} from "@/lib/utils/image-source";
 
 interface GalleryPreviewModalProps {
   item: {
@@ -64,14 +68,23 @@ export function GalleryPreviewModal({ item, open, onOpenChange }: GalleryPreview
                 Your browser does not support the video tag.
               </video>
             ) : (
-              <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-                <Image
-                  src={item.thumbnailUrl || item.fileUrl}
-                  alt={item.judul}
-                  fill
-                  className="object-contain"
-                />
-              </div>
+              getSafeImageSource(item.thumbnailUrl, item.fileUrl) ? (
+                <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                  <Image
+                    src={getSafeImageSource(item.thumbnailUrl, item.fileUrl)!}
+                    alt={item.judul}
+                    fill
+                    className="object-contain"
+                    unoptimized={shouldBypassImageOptimization(getSafeImageSource(item.thumbnailUrl, item.fileUrl))}
+                  />
+                </div>
+              ) : (
+                <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                  <div className="absolute inset-0 flex items-center justify-center bg-secondary/50 font-mono text-xs text-muted-foreground">
+                    [NO_PREVIEW]
+                  </div>
+                </div>
+              )
             )}
           </div>
 

@@ -11,6 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Eye, Heart, Clock, Calendar, Tag, Star } from "@/lib/icons";
 import Image from "next/image";
+import {
+  getSafeImageSource,
+  shouldBypassImageOptimization,
+} from "@/lib/utils/image-source";
 
 interface PreviewModalProps {
   article: {
@@ -60,13 +64,14 @@ export function PreviewModal({ article, open, onOpenChange }: PreviewModalProps)
 
         <div className="space-y-6">
           {/* Thumbnail */}
-          {article.thumbnail_url && (
+          {getSafeImageSource(article.thumbnail_url) && (
             <div className="relative w-full h-64 bg-secondary">
               <Image
-                src={article.thumbnail_url}
+                src={getSafeImageSource(article.thumbnail_url)!}
                 alt={article.judul}
                 fill
                 className="object-cover"
+                unoptimized={shouldBypassImageOptimization(article.thumbnail_url)}
               />
             </div>
           )}

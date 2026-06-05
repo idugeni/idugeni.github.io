@@ -7,6 +7,10 @@ import { HiOutlineStar } from "react-icons/hi2";
 import { RiDoubleQuotesL } from "react-icons/ri";
 import type { TestimonialsCarouselProps } from "@/types/pages";
 import type { Testimonial } from "@/types/pages";
+import {
+  getSafeImageSource,
+  shouldBypassImageOptimization,
+} from "@/lib/utils/image-source";
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
@@ -25,13 +29,14 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
         </p>
 
         <div className="flex items-center gap-3">
-          {testimonial.avatarUrl && (
+          {getSafeImageSource(testimonial.avatarUrl) && (
             <Image
-              src={testimonial.avatarUrl}
+              src={getSafeImageSource(testimonial.avatarUrl)!}
               alt={testimonial.nama}
               width={36}
               height={36}
               className="rounded-full border border-primary/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]"
+              unoptimized={shouldBypassImageOptimization(testimonial.avatarUrl)}
             />
           )}
           <div className="flex-1 min-w-0">

@@ -6,6 +6,10 @@ import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { Button } from "@/components/ui/button";
 import { HiOutlineArrowRight } from "react-icons/hi2";
 import type { LatestArticlesProps } from "@/types/pages";
+import {
+  getSafeImageSource,
+  shouldBypassImageOptimization,
+} from "@/lib/utils/image-source";
 
 export function LatestArticles({ articles }: LatestArticlesProps) {
   if (!articles || articles.length === 0) return null;
@@ -34,14 +38,15 @@ export function LatestArticles({ articles }: LatestArticlesProps) {
             <ScrollReveal key={article.id} delay={i * 150}>
               <Link href={`/blog/${article.slug}`}>
                 <div className="glass-card h-full flex flex-col overflow-hidden group cursor-pointer hover:shadow-[0_0_20px_rgba(6,182,212,0.1)] transition-shadow">
-                  {article.thumbnailUrl && (
+                  {getSafeImageSource(article.thumbnailUrl) && (
                     <div className="relative h-40 overflow-hidden border-b border-primary/20">
                       <Image
-                        src={article.thumbnailUrl}
+                        src={getSafeImageSource(article.thumbnailUrl)!}
                         alt={article.judul}
                         fill
                         className="object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
                         sizes="(max-width: 768px) 100vw, 350px"
+                        unoptimized={shouldBypassImageOptimization(article.thumbnailUrl)}
                       />
                     </div>
                   )}

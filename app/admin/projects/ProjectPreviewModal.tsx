@@ -11,6 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { Star, ExternalLink } from "@/lib/icons";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  getSafeImageSource,
+  shouldBypassImageOptimization,
+} from "@/lib/utils/image-source";
 
 interface ProjectPreviewModalProps {
   project: {
@@ -49,13 +53,14 @@ export function ProjectPreviewModal({ project, open, onOpenChange }: ProjectPrev
 
         <div className="space-y-6">
           {/* Thumbnail */}
-          {project.thumbnail_url && (
+          {getSafeImageSource(project.thumbnail_url) && (
             <div className="relative w-full h-64 bg-secondary">
               <Image
-                src={project.thumbnail_url}
+                src={getSafeImageSource(project.thumbnail_url)!}
                 alt={project.nama}
                 fill
                 className="object-cover"
+                unoptimized={shouldBypassImageOptimization(project.thumbnail_url)}
               />
             </div>
           )}

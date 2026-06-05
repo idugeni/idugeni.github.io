@@ -11,6 +11,10 @@ import { getAspectRatioClass } from "@/lib/utils/aspect-ratio";
 import { ProjectMetadataCard } from "./project-metadata-card";
 import { RelatedProjects } from "./related-projects";
 import { ProjectCTA } from "./project-cta";
+import {
+  getSafeImageSource,
+  shouldBypassImageOptimization,
+} from "@/lib/utils/image-source";
 
 interface ProjectDetailClientProps {
   project: Project;
@@ -65,10 +69,19 @@ export function ProjectDetailClient({
         </ScrollReveal>
 
         <ScrollReveal delay={200}>
-          {project.thumbnailUrl ? (
+          {getSafeImageSource(project.thumbnailUrl) ? (
             <div className={`w-full ${getAspectRatioClass(project.thumbnailAspectRatio)} border border-primary/30 rounded-lg overflow-hidden mb-12 shadow-[0_0_30px_rgba(6,182,212,0.15)] relative group`}>
               <div className="absolute inset-0 bg-primary/20 mix-blend-overlay group-hover:opacity-0 transition-opacity duration-500 z-10" />
-              <Image src={project.thumbnailUrl} alt={project.nama} fill className="object-cover" sizes="(max-width: 768px) 100vw, 900px" priority />
+              <Image
+                src={getSafeImageSource(project.thumbnailUrl)!}
+                alt={project.nama}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 900px"
+                loading="eager"
+                fetchPriority="high"
+                unoptimized={shouldBypassImageOptimization(project.thumbnailUrl)}
+              />
               <div className="absolute top-4 left-4 z-20 font-mono text-xs bg-background/80 backdrop-blur px-2 py-1 border border-primary/30 text-primary">
                 SYS_IMG_01
               </div>
