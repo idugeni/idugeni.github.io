@@ -25,6 +25,23 @@ function isYouTubeUrl(url: string): boolean {
   return url.includes("youtube.com/embed/") || url.includes("youtu.be/");
 }
 
+function getYouTubeThumbnailUrl(url: string): string | null {
+  const patterns = [
+    /youtube\.com\/embed\/([^?&/]+)/,
+    /youtube\.com\/watch\?v=([^?&/]+)/,
+    /youtu\.be\/([^?&/]+)/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match?.[1]) {
+      return `https://i.ytimg.com/vi_webp/${match[1]}/sddefault.webp`;
+    }
+  }
+
+  return null;
+}
+
 
 export function GalleryClient({ items }: GalleryClientProps) {
   const [filter, setFilter] = useState<"semua" | "foto" | "video">("semua");
@@ -152,13 +169,16 @@ export function GalleryClient({ items }: GalleryClientProps) {
                   }}
                 >
                   {isYouTubeUrl(item.fileUrl) ? (
-                    <iframe
-                      src={item.fileUrl}
-                      className="w-full h-full opacity-75 group-hover:opacity-100 transition-opacity duration-700"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      suppressHydrationWarning
-                    />
+                    <>
+                      <Image
+                        src={item.thumbnailUrl || getYouTubeThumbnailUrl(item.fileUrl) || item.fileUrl}
+                        alt={item.judul}
+                        fill
+                        className="object-cover opacity-75 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                        sizes="(max-width: 768px) 50vw, 300px"
+                      />
+                      <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
+                    </>
                   ) : item.tipe === "video" && !item.thumbnailUrl ? (
                     <video
                       src={item.fileUrl}
