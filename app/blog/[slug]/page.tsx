@@ -1,7 +1,8 @@
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { cacheLife, cacheTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache/tags";
+import { createPublicClient } from "@/lib/supabase/public";
 import { toCamelCase } from "@/lib/utils/case";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { BlogDetailClient } from "@/components/pages/blog/blog-detail-client";
@@ -11,21 +12,109 @@ import { renderRichHtml } from "@/lib/content/rich-html";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const supabase = await createClient();
+const BLOG_DETAIL_CACHE_LIFE = {
+  stale: 300,
+  revalidate: 300,
+  expire: 3_600,
+} as const;
 
-  const { data: article } = await supabase
+async function getBlogSlugs() {
+  "use cache";
+  cacheLife(BLOG_DETAIL_CACHE_LIFE);
+  cacheTag(CACHE_TAGS.blog);
+
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
     .from("blog_artikel")
-    .select("judul, ringkasan, thumbnail_url, published_at, slug, kategori_id")
+    .select("slug")
+    .eq("status", "published")
+    .not("slug", "is", null)
+    .order("published_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? [])
+    .map((article) => article.slug)
+    .filter((slug): slug is string => Boolean(slug));
+}
+
+async function getBlogDetailData(slug: string) {
+  "use cache";
+  cacheLife(BLOG_DETAIL_CACHE_LIFE);
+  cacheTag(CACHE_TAGS.blog);
+
+  const supabase = createPublicClient();
+
+  const { data: rawArticle, error: articleError } = await supabase
+    .from("blog_artikel")
+    .select("*")
     .eq("slug", slug)
     .eq("status", "published")
-    .single();
+    .maybeSingle();
 
-  if (!article) {
+  if (articleError) {
+    throw articleError;
+  }
+
+  if (!rawArticle) {
+    return null;
+  }
+
+  const [{ data: rawComments, error: commentsError }, { data: rawRelated, error: relatedError }] =
+    await Promise.all([
+      supabase
+        .from("blog_komentar")
+        .select("*")
+        .eq("artikel_id", rawArticle.id)
+        .eq("approved", true)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("blog_artikel")
+        .select("*")
+        .eq("status", "published")
+        .neq("id", rawArticle.id)
+        .order("created_at", { ascending: false })
+        .limit(3),
+    ]);
+
+  if (commentsError) {
+    throw commentsError;
+  }
+
+  if (relatedError) {
+    throw relatedError;
+  }
+
+  const article = toCamelCase<BlogArticle>(rawArticle);
+  const comments = toCamelCase<BlogComment[]>(rawComments ?? []);
+  const relatedArticles = toCamelCase<BlogArticle[]>(rawRelated ?? []);
+  const processedContent = await renderRichHtml(article.konten);
+
+  return {
+    article,
+    comments,
+    relatedArticles,
+    processedContent,
+  };
+}
+
+export async function generateStaticParams() {
+  const slugs = await getBlogSlugs();
+
+  return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const detail = await getBlogDetailData(slug);
+
+  if (!detail) {
     return { title: "Artikel Tidak Ditemukan" };
   }
 
+  const { article } = detail;
   const baseUrl = "https://irnk.codes";
 
   return {
@@ -36,18 +125,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: article.judul,
       description: article.ringkasan,
       type: "article",
-      publishedTime: article.published_at ?? undefined,
+      publishedTime: article.publishedAt ?? undefined,
       authors: ["Eliyanto Sarage"],
       url: `${baseUrl}/blog/${article.slug}`,
-      images: article.thumbnail_url
-        ? [{ url: article.thumbnail_url, width: 1200, height: 630, alt: article.judul }]
+      images: article.thumbnailUrl
+        ? [{ url: article.thumbnailUrl, width: 1200, height: 630, alt: article.judul }]
         : undefined,
     },
     twitter: {
       card: "summary_large_image",
       title: article.judul,
       description: article.ringkasan,
-      images: article.thumbnail_url ? [article.thumbnail_url] : undefined,
+      images: article.thumbnailUrl ? [article.thumbnailUrl] : undefined,
       creator: "@idugeni",
     },
     alternates: {
@@ -56,54 +145,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-function BlogDetailFallback() {
-  return (
-    <div className="flex min-h-[60vh] items-center justify-center px-4">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">LOADING_ARTICLE</p>
-      </div>
-    </div>
-  );
-}
-
-async function BlogDetailContent({ params }: Props) {
+export default async function BlogDetailPage({ params }: Props) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const detail = await getBlogDetailData(slug);
 
-  const { data: rawArticle } = await supabase
-    .from("blog_artikel")
-    .select("*")
-    .eq("slug", slug)
-    .eq("status", "published")
-    .single();
-
-  if (!rawArticle) {
+  if (!detail) {
     notFound();
   }
 
-  const { data: rawComments } = await supabase
-    .from("blog_komentar")
-    .select("*")
-    .eq("artikel_id", rawArticle.id)
-    .eq("approved", true)
-    .order("created_at", { ascending: false });
-
-  const { data: rawRelated } = await supabase
-    .from("blog_artikel")
-    .select("*")
-    .eq("status", "published")
-    .neq("id", rawArticle.id)
-    .order("created_at", { ascending: false })
-    .limit(3);
-
-  const article = toCamelCase<BlogArticle>(rawArticle);
-  const comments = toCamelCase<BlogComment[]>(rawComments ?? []);
-  const relatedArticles = toCamelCase<BlogArticle[]>(rawRelated ?? []);
-  const processedContent = await renderRichHtml(article.konten);
+  const { article, comments, relatedArticles, processedContent } = detail;
 
   return (
-    <>
+    <PublicLayout>
       <ArticleJsonLd article={article} />
       <BlogDetailClient
         article={article}
@@ -111,17 +164,6 @@ async function BlogDetailContent({ params }: Props) {
         relatedArticles={relatedArticles}
         processedContent={processedContent}
       />
-    </>
-  );
-}
-
-export default function BlogDetailPage({ params }: Props) {
-  return (
-    <PublicLayout>
-      <Suspense fallback={<BlogDetailFallback />}>
-        <BlogDetailContent params={params} />
-      </Suspense>
     </PublicLayout>
   );
 }
-
