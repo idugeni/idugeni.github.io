@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAdminLogin } from "@/actions/hooks";
+import { createClient } from "@/lib/supabase/client";
 import { GlitchText } from "@/components/ui/glitch-text";
 import { NeonBorder } from "@/components/ui/neon-border";
 import { Button } from "@/components/ui/button";
@@ -14,28 +14,35 @@ import { Lock } from "@/lib/icons";
 
 export function LoginClient() {
   const router = useRouter();
-  const login = useAdminLogin();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isPending, setIsPending] = useState(false);
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    login.mutate(
-      { data: { email, password } },
-      {
-        onSuccess: (res) => {
-          if (res.token) {
-            localStorage.setItem("admin_token", res.token);
-            router.push("/admin");
-          }
-        },
-        onError: () => {
-          setError("ACCESS_DENIED: Invalid credentials");
-        },
-      },
-    );
+    setIsPending(true);
+
+    try {
+      const supabase = createClient();
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      if (loginError) {
+        setError(`ACCESS_DENIED: ${loginError.message}`);
+        return;
+      }
+
+      router.replace("/admin");
+      router.refresh();
+    } catch {
+      setError("ACCESS_DENIED: Login service unavailable. Please retry.");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -67,6 +74,7 @@ export function LoginClient() {
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="email"
                   required
                   className="bg-background/50 border-primary/30 focus:border-primary font-mono text-sm rounded-none h-12"
                   value={email}
@@ -78,6 +86,7 @@ export function LoginClient() {
                 <Input
                   id="password"
                   type="password"
+                  autoComplete="current-password"
                   required
                   className="bg-background/50 border-primary/30 focus:border-primary font-mono text-sm rounded-none h-12"
                   value={password}
@@ -89,9 +98,9 @@ export function LoginClient() {
             <Button
               type="submit"
               className="w-full font-mono bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-none tracking-widest"
-              disabled={login.isPending}
+              disabled={isPending}
             >
-              {login.isPending ? "VERIFYING..." : "AUTHORIZE"}
+              {isPending ? "VERIFYING..." : "AUTHORIZE"}
             </Button>
 
             <div className="mt-4 text-center">
