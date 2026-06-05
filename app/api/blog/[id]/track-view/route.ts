@@ -14,6 +14,43 @@ function getRequestIp(request: NextRequest) {
   return request.headers.get("x-real-ip") || "unknown";
 }
 
+function noStoreJson(data: unknown, status = 200) {
+  return NextResponse.json(data, {
+    status,
+    headers: {
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const parsed = blogViewParamsSchema.safeParse(await params);
+    if (!parsed.success) {
+      return noStoreJson({ jumlahView: 0, jumlahLike: 0 }, 200);
+    }
+
+    const serviceClient = createServiceClient();
+    const { data, error } = await serviceClient
+      .from("blog_artikel")
+      .select("jumlah_view, jumlah_like")
+      .eq("id", parsed.data.id)
+      .eq("status", "published")
+      .maybeSingle();
+
+    if (error || !data) {
+      return noStoreJson({ jumlahView: 0, jumlahLike: 0 }, 200);
+    }
+
+    return noStoreJson({
+      jumlahView: data.jumlah_view ?? 0,
+      jumlahLike: data.jumlah_like ?? 0,
+    });
+  } catch {
+    return noStoreJson({ jumlahView: 0, jumlahLike: 0 }, 200);
+  }
+}
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const parsed = blogViewParamsSchema.safeParse(await params);

@@ -251,7 +251,9 @@ export function BlogDetailClient({
   const { toast } = useToast();
   const viewTracked = useRef(false);
 
-  // Like state
+  // Live stats state. Initial values come from the static/PPR payload, then hydrate from the
+  // no-store stats endpoint so view counts can update without making the page dynamic.
+  const [viewCount, setViewCount] = useState(article.jumlahView);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(article.jumlahLike);
   const [likeLoading, setLikeLoading] = useState(false);
@@ -284,7 +286,24 @@ export function BlogDetailClient({
     [article.konten]
   );
 
-  // Track view once on mount through a fail-silent route handler.
+  const refreshStats = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/blog/${article.id}/track-view`, {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (!response.ok) return;
+
+      const stats = (await response.json()) as { jumlahView?: number; jumlahLike?: number };
+      if (typeof stats.jumlahView === "number") setViewCount(stats.jumlahView);
+      if (typeof stats.jumlahLike === "number") setLikeCount(stats.jumlahLike);
+    } catch {
+      // Live stats are non-critical; keep static/PPR values if the request fails.
+    }
+  }, [article.id]);
+
+  // Track view once on mount through a fail-silent route handler, then hydrate live stats.
   useEffect(() => {
     if (!viewTracked.current) {
       viewTracked.current = true;
@@ -292,9 +311,16 @@ export function BlogDetailClient({
         method: "POST",
         keepalive: true,
         cache: "no-store",
-      }).catch(() => undefined);
+      })
+        .catch(() => undefined)
+        .finally(() => {
+          void refreshStats();
+        });
+      return;
     }
-  }, [article.id]);
+
+    void refreshStats();
+  }, [article.id, refreshStats]);
 
   // Reading progress bar
   useEffect(() => {
@@ -326,11 +352,12 @@ export function BlogDetailClient({
     try {
       await toggleBlogLike(article.id);
     } catch {
-      // Revert on error
+      // Revert on error, then hydrate from the source of truth when possible.
       setLiked(liked);
       setLikeCount(article.jumlahLike);
     } finally {
       setLikeLoading(false);
+      void refreshStats();
     }
   };
 
@@ -428,7 +455,7 @@ export function BlogDetailClient({
                     <Clock className="w-3 h-3 mr-1" /> {readingTime} MIN
                   </span>
                   <span className="flex items-center">
-                    <Eye className="w-3 h-3 mr-1" /> {article.jumlahView}
+                    <Eye className="w-3 h-3 mr-1" /> {viewCount}
                   </span>
                   <span className="flex items-center">
                     <Heart className="w-3 h-3 mr-1" /> {likeCount}
@@ -677,7 +704,7 @@ export function BlogDetailClient({
                   <div className="space-y-2 font-mono text-xs text-muted-foreground">
                     <div className="flex justify-between">
                       <span>Views</span>
-                      <span className="text-foreground">{article.jumlahView}</span>
+                      <span className="text-foreground">{viewCount}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Likes</span>
