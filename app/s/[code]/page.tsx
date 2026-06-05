@@ -71,7 +71,7 @@ async function ShortlinkContent({ params }: { params: Promise<{ code: string }> 
         userAgent: userAgent || undefined,
         referrer: referrer || undefined,
         country: country || undefined,
-      }).catch((err) => console.error("Failed to track click:", err));
+      }).catch(() => undefined);
 
       // If code was found via previous_codes (slug history), redirect to current code
       if (shortlink.code !== code) {

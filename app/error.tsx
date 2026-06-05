@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { HiOutlineArrowPath, HiOutlineHome, HiOutlineExclamationTriangle } from "react-icons/hi2";
+import { ArrowPath, ExclamationTriangle, Home } from "@/lib/icons";
 import Link from "next/link";
 
 export default function Error({
@@ -12,9 +11,6 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    console.error(error);
-  }, [error]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden dark">
@@ -25,7 +21,7 @@ export default function Error({
       <div className="relative z-10 text-center px-4 max-w-lg">
         {/* Icon */}
         <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-destructive/10 border border-destructive/30 flex items-center justify-center">
-          <HiOutlineExclamationTriangle className="w-10 h-10 text-destructive" />
+          <ExclamationTriangle className="w-10 h-10 text-destructive" />
         </div>
 
         <h1 className="font-orbitron text-2xl md:text-3xl font-bold text-foreground mb-3">
@@ -53,21 +49,21 @@ export default function Error({
             onClick={reset}
             className="font-mono bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(6,182,212,0.3)]"
           >
-            <HiOutlineArrowPath className="mr-2 h-4 w-4" /> RETRY_SEQUENCE
+            <ArrowPath className="mr-2 h-4 w-4" /> RETRY_SEQUENCE
           </Button>
           <Button
             onClick={() => window.location.reload()}
             variant="outline"
             className="font-mono border-destructive/50 hover:bg-destructive/10"
           >
-            <HiOutlineArrowPath className="mr-2 h-4 w-4" /> RELOAD_PAGE
+            <ArrowPath className="mr-2 h-4 w-4" /> RELOAD_PAGE
           </Button>
           <Link href="/">
             <Button
               variant="outline"
               className="font-mono border-primary/50 hover:bg-primary/10"
             >
-              <HiOutlineHome className="mr-2 h-4 w-4" /> HOME_BASE
+              <Home className="mr-2 h-4 w-4" /> HOME_BASE
             </Button>
           </Link>
         </div>

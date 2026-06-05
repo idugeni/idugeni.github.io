@@ -91,7 +91,7 @@ export function ShortlinkForm({ shortlink, mode }: ShortlinkFormProps) {
         },
         (error) => {
           if (error) {
-            console.error("QR Code generation error", error);
+            setError("QR preview could not be generated. Adjust the shortlink code or QR colors and try again.");
             return;
           }
           if (formData.qr_logo_text && canvasRef.current) {
@@ -155,7 +155,6 @@ export function ShortlinkForm({ shortlink, mode }: ShortlinkFormProps) {
         ai_generated: true,
       }));
     } catch (err: any) {
-      console.error(err);
       setError(err.message || "Failed to auto-scrape and generate AI content");
     } finally {
       setIsScraping(false);

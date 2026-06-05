@@ -288,7 +288,7 @@ export function BlogDetailClient({
   useEffect(() => {
     if (!viewTracked.current) {
       viewTracked.current = true;
-      trackArticleView(article.id).catch(console.error);
+      trackArticleView(article.id).catch(() => undefined);
     }
   }, [article.id]);
 

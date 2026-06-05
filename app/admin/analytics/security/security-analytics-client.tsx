@@ -30,18 +30,20 @@ export default function SecurityAnalyticsDashboard() {
   const [isScanning, setIsScanning] = useState(false);
   const [auditData, setAuditData] = useState<SecurityAuditSummary | null>(null);
   const [anomaliesData, setAnomaliesData] = useState<SecurityAnomaliesReport | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const handleFetchData = async () => {
     setIsScanning(true);
     try {
+      setLoadError(null);
       const [audit, anomalies] = await Promise.all([
         getSecurityAuditSummary(),
         detectAccessAnomalies(),
       ]);
       setAuditData(audit);
       setAnomaliesData(anomalies);
-    } catch (err) {
-      console.error("Failed to load SecOps stats", err);
+    } catch {
+      setLoadError("Security analytics could not be refreshed. Verify your admin session and try again.");
     } finally {
       setIsScanning(false);
     }
@@ -101,6 +103,15 @@ export default function SecurityAnalyticsDashboard() {
           </Button>
         </div>
       </div>
+
+      {loadError && (
+        <Card className="rounded-none border-amber-500/30 bg-amber-500/10">
+          <CardContent className="flex items-center gap-3 pt-6 font-mono text-xs text-amber-200">
+            <AlertTriangle className="h-4 w-4 text-amber-400" />
+            <span>{loadError}</span>
+          </CardContent>
+        </Card>
+      )}
 
       {isScanning && !auditData ? (
         <div className="flex flex-col items-center justify-center py-24 space-y-4">
