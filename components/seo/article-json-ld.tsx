@@ -13,7 +13,7 @@ export function ArticleJsonLd({ article }: ArticleJsonLdProps) {
     description: article.ringkasan,
     image: article.thumbnailUrl
       ? article.thumbnailUrl
-      : `${siteConfig.url}/opengraph.jpg`,
+      : `${siteConfig.url}${siteConfig.seo.ogImage}`,
     author: {
       "@type": "Person",
       name: siteConfig.owner.name,

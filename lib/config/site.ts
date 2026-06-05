@@ -63,7 +63,7 @@ export const siteConfig = {
       "Frontend Developer",
       "Backend Developer",
     ],
-    ogImage: "/opengraph.jpg",
+    ogImage: "/opengraph-image.png",
     locale: "id_ID",
   },
 

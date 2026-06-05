@@ -13,7 +13,7 @@ export function JsonLd() {
       width: 512,
       height: 512,
     },
-    image: `${siteConfig.url}/opengraph.jpg`,
+    image: `${siteConfig.url}${siteConfig.seo.ogImage}`,
     description: siteConfig.seo.description,
     email: siteConfig.contact.email,
     telephone: siteConfig.contact.phone,
@@ -47,7 +47,7 @@ export function JsonLd() {
     "@id": `${siteConfig.url}/#person`,
     name: siteConfig.owner.name,
     url: siteConfig.url,
-    image: `${siteConfig.url}/opengraph.jpg`,
+    image: `${siteConfig.url}${siteConfig.seo.ogImage}`,
     jobTitle: siteConfig.owner.title,
     description: siteConfig.owner.bio,
     worksFor: {
@@ -154,7 +154,7 @@ export function JsonLd() {
     "@id": `${siteConfig.url}/#service`,
     name: siteConfig.name,
     url: siteConfig.url,
-    image: `${siteConfig.url}/opengraph.jpg`,
+    image: `${siteConfig.url}${siteConfig.seo.ogImage}`,
     description: siteConfig.seo.description,
     priceRange: "$$",
     address: {

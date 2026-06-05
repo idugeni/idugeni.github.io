@@ -12,7 +12,7 @@ export function ProjectJsonLd({ project }: ProjectJsonLdProps) {
     name: project.nama,
     description: project.deskripsi,
     url: project.liveUrl || `${siteConfig.url}/projects/${project.slug}`,
-    image: project.thumbnailUrl || `${siteConfig.url}/opengraph.jpg`,
+    image: project.thumbnailUrl || `${siteConfig.url}${siteConfig.seo.ogImage}`,
     author: {
       "@type": "Person",
       name: siteConfig.owner.name,
