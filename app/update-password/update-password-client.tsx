@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { GlitchText } from "@/components/ui/glitch-text";
@@ -18,11 +18,49 @@ export function UpdatePasswordClient() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [hasSession, setHasSession] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    async function verifyRecoverySession() {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getSession();
+
+        if (!active) return;
+
+        const sessionAvailable = Boolean(data.session?.user);
+        setHasSession(sessionAvailable);
+        if (!sessionAvailable) {
+          setError("RESET_SESSION_EXPIRED: Please request a new password reset link.");
+        }
+      } catch {
+        if (active) {
+          setHasSession(false);
+          setError("RESET_SESSION_UNAVAILABLE: Please reopen the reset link.");
+        }
+      } finally {
+        if (active) setCheckingSession(false);
+      }
+    }
+
+    void verifyRecoverySession();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
 
+    if (!hasSession) {
+      setError("RESET_SESSION_EXPIRED: Please request a new password reset link.");
+      return;
+    }
     if (password.length < 8) {
       setError("Password minimal 8 karakter");
       return;
@@ -33,16 +71,22 @@ export function UpdatePasswordClient() {
     }
 
     setLoading(true);
-    const supabase = createClient();
-    const { error: updateError } = await supabase.auth.updateUser({ password });
+    try {
+      const supabase = createClient();
+      const { error: updateError } = await supabase.auth.updateUser({ password });
 
-    if (updateError) {
-      setError(updateError.message);
-    } else {
+      if (updateError) {
+        setError(`PASSWORD_UPDATE_FAILED: ${updateError.message}`);
+        return;
+      }
+
       setSuccess(true);
-      setTimeout(() => router.push("/admin"), 2000);
+      setTimeout(() => router.replace("/login"), 2000);
+    } catch {
+      setError("PASSWORD_UPDATE_FAILED: Please retry with a fresh reset link.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -65,7 +109,7 @@ export function UpdatePasswordClient() {
                   PASSWORD_UPDATED
                 </h3>
                 <p className="font-mono text-sm text-muted-foreground">
-                  Redirecting ke dashboard...
+                  Redirecting ke login...
                 </p>
               </div>
             ) : (
@@ -90,6 +134,7 @@ export function UpdatePasswordClient() {
                     <Input
                       id="password"
                       type="password"
+                      autoComplete="new-password"
                       required
                       minLength={8}
                       className="bg-background/50 border-primary/30 focus:border-primary font-mono text-sm rounded-none h-12"
@@ -104,6 +149,7 @@ export function UpdatePasswordClient() {
                     <Input
                       id="confirm"
                       type="password"
+                      autoComplete="new-password"
                       required
                       minLength={8}
                       className="bg-background/50 border-primary/30 focus:border-primary font-mono text-sm rounded-none h-12"
@@ -115,9 +161,9 @@ export function UpdatePasswordClient() {
                   <Button
                     type="submit"
                     className="w-full font-mono bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-none tracking-widest"
-                    disabled={loading}
+                    disabled={loading || checkingSession || !hasSession}
                   >
-                    {loading ? "UPDATING..." : "UPDATE_PASSWORD"}
+                    {checkingSession ? "CHECKING_SESSION..." : loading ? "UPDATING..." : "UPDATE_PASSWORD"}
                   </Button>
                 </form>
               </>

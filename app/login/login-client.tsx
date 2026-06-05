@@ -36,6 +36,20 @@ export function LoginClient() {
         return;
       }
 
+      const statusResponse = await fetch("/api/auth/admin-status", {
+        method: "GET",
+        cache: "no-store",
+      });
+      const status = statusResponse.ok
+        ? ((await statusResponse.json()) as { isAdmin?: boolean })
+        : { isAdmin: false };
+
+      if (!status.isAdmin) {
+        await supabase.auth.signOut();
+        setError("ACCESS_DENIED: Admin access required");
+        return;
+      }
+
       router.replace("/admin");
       router.refresh();
     } catch {
