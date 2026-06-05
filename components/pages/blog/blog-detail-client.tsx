@@ -24,7 +24,7 @@ import {
   X,
 } from "@/lib/icons";
 import { useToast } from "@/hooks/use-toast";
-import { toggleBlogLike, createBlogComment, trackArticleView } from "@/actions/blog";
+import { toggleBlogLike, createBlogComment } from "@/actions/blog";
 import { createClient } from "@/lib/supabase/client";
 import type { BlogDetailClientProps } from "@/types/pages";
 import { getAspectRatioClass } from "@/lib/utils/aspect-ratio";
@@ -284,11 +284,15 @@ export function BlogDetailClient({
     [article.konten]
   );
 
-  // Track view once on mount
+  // Track view once on mount through a fail-silent route handler.
   useEffect(() => {
     if (!viewTracked.current) {
       viewTracked.current = true;
-      trackArticleView(article.id).catch(() => undefined);
+      fetch(`/api/blog/${article.id}/track-view`, {
+        method: "POST",
+        keepalive: true,
+        cache: "no-store",
+      }).catch(() => undefined);
     }
   }, [article.id]);
 
