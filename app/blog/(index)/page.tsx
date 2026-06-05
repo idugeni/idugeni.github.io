@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { BlogListClient } from "@/components/pages/blog/blog-list-client";
 import { getBlogIndexPageData } from "@/lib/data/public-content";
+import { BlogIndexSkeleton } from "@/components/ui/index-page-skeletons";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -46,11 +47,7 @@ export default function BlogPage({ searchParams }: BlogPageProps) {
   return (
     <PublicLayout>
       <Suspense
-        fallback={
-          <div className="sr-only" role="status" aria-live="polite">
-            Memuat artikel...
-          </div>
-        }
+        fallback={<BlogIndexSkeleton />}
       >
         <BlogContent searchParams={searchParams} />
       </Suspense>

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { ProjectsListClient } from "@/components/pages/projects/projects-list-client";
 import { getProjectsIndexPageData } from "@/lib/data/public-content";
+import { ProjectsIndexSkeleton } from "@/components/ui/index-page-skeletons";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -50,11 +51,7 @@ export default function ProjectsPage({ searchParams }: ProjectsPageProps) {
   return (
     <PublicLayout>
       <Suspense
-        fallback={
-          <div className="sr-only" role="status" aria-live="polite">
-            Memuat proyek...
-          </div>
-        }
+        fallback={<ProjectsIndexSkeleton />}
       >
         <ProjectsContent searchParams={searchParams} />
       </Suspense>
