@@ -49,7 +49,13 @@ async function ProjectsContent({ searchParams }: ProjectsPageProps) {
 export default function ProjectsPage({ searchParams }: ProjectsPageProps) {
   return (
     <PublicLayout>
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          <div className="sr-only" role="status" aria-live="polite">
+            Memuat proyek...
+          </div>
+        }
+      >
         <ProjectsContent searchParams={searchParams} />
       </Suspense>
     </PublicLayout>

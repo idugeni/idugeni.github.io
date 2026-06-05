@@ -45,7 +45,13 @@ async function BlogContent({ searchParams }: BlogPageProps) {
 export default function BlogPage({ searchParams }: BlogPageProps) {
   return (
     <PublicLayout>
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          <div className="sr-only" role="status" aria-live="polite">
+            Memuat artikel...
+          </div>
+        }
+      >
         <BlogContent searchParams={searchParams} />
       </Suspense>
     </PublicLayout>
