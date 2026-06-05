@@ -252,3 +252,38 @@ export function PublicRedirectSkeleton({ label = "Resolving destination" }: { la
     </PublicPageSkeleton>
   );
 }
+
+export function PublicNavigationSkeletonOverlay() {
+  return (
+    <div
+      className="fixed inset-0 z-[60] overflow-hidden bg-background/92 text-foreground backdrop-blur-xl"
+      role="status"
+      aria-live="polite"
+      aria-label="Loading next page"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(0,229,255,0.16),transparent_30%),radial-gradient(circle_at_85%_10%,rgba(139,92,246,0.14),transparent_32%),linear-gradient(180deg,rgba(2,6,23,0.15),transparent)]" />
+      <div className="container relative mx-auto flex min-h-screen items-center px-4 py-20">
+        <div className="mx-auto w-full max-w-5xl space-y-8">
+          <div className="space-y-4 text-center">
+            <SkeletonBlock className="mx-auto h-5 w-36 rounded-full" />
+            <SkeletonBlock className="mx-auto h-12 w-full max-w-2xl" />
+            <SkeletonBlock className="mx-auto h-4 w-full max-w-xl" />
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-3">
+            <SkeletonBlock className="h-44 rounded-2xl" />
+            <SkeletonBlock className="h-44 rounded-2xl" />
+            <SkeletonBlock className="h-44 rounded-2xl" />
+          </div>
+
+          <div className="flex items-center justify-center gap-2 pt-2 font-mono text-[11px] uppercase tracking-[0.28em] text-primary/80">
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:120ms]" />
+            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:240ms]" />
+            <span className="ml-2">Loading interface</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
