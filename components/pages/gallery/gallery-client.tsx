@@ -50,10 +50,32 @@ function getYouTubeThumbnailUrl(url: string): string | null {
   return null;
 }
 
+function isImageLikeUrl(url: string): boolean {
+  if (url.startsWith("data:image/")) return true;
+
+  try {
+    const parsed = new URL(url, "https://irnk.codes");
+    const pathname = parsed.pathname.toLowerCase();
+    return /\.(avif|gif|jpe?g|png|svg|webp)$/.test(pathname);
+  } catch {
+    return false;
+  }
+}
+
+function getSafeImageSource(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (isYouTubeUrl(url)) return getYouTubeThumbnailUrl(url);
+  return isImageLikeUrl(url) ? url : null;
+}
+
 function getGalleryPreviewImage(item: GalleryItem): string | null {
-  if (item.thumbnailUrl) return item.thumbnailUrl;
-  if (isYouTubeUrl(item.fileUrl)) return getYouTubeThumbnailUrl(item.fileUrl);
-  return item.tipe === "foto" ? item.fileUrl : null;
+  const thumbnailSource = getSafeImageSource(item.thumbnailUrl);
+  if (thumbnailSource) return thumbnailSource;
+
+  const filePreview = getSafeImageSource(item.fileUrl);
+  if (filePreview) return filePreview;
+
+  return null;
 }
 
 export function GalleryClient({ items }: GalleryClientProps) {
