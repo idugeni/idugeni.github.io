@@ -50,13 +50,11 @@ function getYouTubeThumbnailUrl(url: string): string | null {
   return null;
 }
 
-function isImageLikeUrl(url: string): boolean {
-  if (url.startsWith("data:image/")) return true;
-
+function isVideoLikeUrl(url: string): boolean {
   try {
     const parsed = new URL(url, "https://irnk.codes");
     const pathname = parsed.pathname.toLowerCase();
-    return /\.(avif|gif|jpe?g|png|svg|webp)$/.test(pathname);
+    return /\.(m3u8|mov|mp4|mpeg|mpg|ogv|webm)$/.test(pathname);
   } catch {
     return false;
   }
@@ -65,7 +63,7 @@ function isImageLikeUrl(url: string): boolean {
 function getSafeImageSource(url: string | null | undefined): string | null {
   if (!url) return null;
   if (isYouTubeUrl(url)) return getYouTubeThumbnailUrl(url);
-  return isImageLikeUrl(url) ? url : null;
+  return isVideoLikeUrl(url) ? null : url;
 }
 
 function getGalleryPreviewImage(item: GalleryItem): string | null {
