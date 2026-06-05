@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { GalleryClient } from "@/components/pages/gallery/gallery-client";
 import { getGalleryIndexData } from "@/lib/data/public-content";
@@ -24,7 +25,9 @@ export default async function GalleryPage() {
 
   return (
     <PublicLayout>
-      <GalleryClient items={items} />
+      <Suspense fallback={null}>
+        <GalleryClient items={items} />
+      </Suspense>
     </PublicLayout>
   );
 }

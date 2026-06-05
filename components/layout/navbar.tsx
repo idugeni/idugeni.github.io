@@ -107,7 +107,7 @@ export function Navbar() {
                   <div className="bg-background/95 backdrop-blur-xl border border-primary/20 shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-4">
                     <div className="grid grid-cols-2 gap-1">
                       {link.megaMenu.map((item) => (
-                        <Link key={item.label} href={item.href}>
+                        <Link key={item.label} href={item.href} prefetch={false}>
                           <div className="flex items-start gap-3 p-3 rounded-sm hover:bg-primary/5 transition-colors group cursor-pointer">
                             <div className="w-9 h-9 rounded bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
                               <item.icon className="w-4 h-4 text-primary" />
@@ -170,7 +170,7 @@ export function Navbar() {
                 {link.megaMenu && (
                   <div className="pl-4 space-y-1 mb-2">
                     {link.megaMenu.map((item) => (
-                      <Link key={item.label} href={item.href}>
+                      <Link key={item.label} href={item.href} prefetch={false}>
                         <span
                           className="block font-mono text-xs text-muted-foreground/70 p-2 hover:text-primary transition-colors"
                           onClick={() => setIsOpen(false)}

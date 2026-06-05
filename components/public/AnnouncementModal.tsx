@@ -2,67 +2,36 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import type { Announcement } from "@/actions/announcements";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, CheckCircle, Info, X } from "@/lib/icons";
+import {
+  dismissAnnouncement,
+  usePublicAnnouncement,
+} from "@/components/public/use-public-announcements";
 
 export function AnnouncementModal() {
   const pathname = usePathname();
-  const [modal, setModal] = useState<Announcement | null>(null);
+  const modal = usePublicAnnouncement("modal", pathname);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
-    const fetchAndFilterModal = async () => {
-      try {
-        const response = await fetch("/api/announcements", {
-          cache: "force-cache",
-        });
-
-        const announcements = response.ok
-          ? ((await response.json()) as Announcement[])
-          : [];
-        
-        // Find first active modal matching pathname
-        const matchingModal = announcements.find((item) => {
-          if (item.placement !== "modal") return false;
-          
-          if (item.target_page === "*") return true;
-          return pathname === item.target_page;
-        });
-
-        if (matchingModal) {
-          const dismissedList = JSON.parse(localStorage.getItem("dismissed_announcements") || "[]");
-          if (!dismissedList.includes(matchingModal.id)) {
-            setModal(matchingModal);
-            // Open modal shortly after mount for premium feeling
-            timer = setTimeout(() => setIsOpen(true), 1500);
-          }
-        }
-      } catch {
-        setIsOpen(false);
-      }
-    };
-
-    if (pathname?.startsWith("/admin")) {
+    if (modal) {
+      timer = setTimeout(() => setIsOpen(true), 1500);
+    } else {
       setIsOpen(false);
-      return;
     }
-
-    fetchAndFilterModal();
 
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [pathname]);
+  }, [modal]);
 
   const handleClose = () => {
     setIsOpen(false);
     if (modal && modal.dismissible) {
-      const dismissedList = JSON.parse(localStorage.getItem("dismissed_announcements") || "[]");
-      dismissedList.push(modal.id);
-      localStorage.setItem("dismissed_announcements", JSON.stringify(dismissedList));
+      dismissAnnouncement(modal.id);
     }
   };
 

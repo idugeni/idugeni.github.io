@@ -2,66 +2,27 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import type { Announcement } from "@/actions/announcements";
 import { AlertTriangle, CheckCircle, Info, X } from "@/lib/icons";
+import {
+  dismissAnnouncement,
+  usePublicAnnouncement,
+} from "@/components/public/use-public-announcements";
 
 export function AnnouncementBanner() {
   const pathname = usePathname();
-  const [banner, setBanner] = useState<Announcement | null>(null);
+  const banner = usePublicAnnouncement("banner", pathname);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const fetchAndFilterBanner = async () => {
-      try {
-        const response = await fetch("/api/announcements", {
-          cache: "force-cache",
-        });
-
-        const announcements = response.ok
-          ? ((await response.json()) as Announcement[])
-          : [];
-        
-        // Find first active banner matching current pathname
-        const matchingBanner = announcements.find((item) => {
-          if (item.placement !== "banner") return false;
-          
-          // Route targeting logic
-          if (item.target_page === "*") return true;
-          return pathname === item.target_page;
-        });
-
-        if (matchingBanner) {
-          // Check if user dismissed this banner before
-          const dismissedList = JSON.parse(localStorage.getItem("dismissed_announcements") || "[]");
-          if (!dismissedList.includes(matchingBanner.id)) {
-            setBanner(matchingBanner);
-            setIsVisible(true);
-          }
-        } else {
-          setIsVisible(false);
-        }
-      } catch {
-        setIsVisible(false);
-      }
-    };
-
-    // Skip banner rendering inside admin pages completely to avoid double visual noise!
-    if (pathname?.startsWith("/admin")) {
-      setIsVisible(false);
-      return;
-    }
-
-    fetchAndFilterBanner();
-  }, [pathname]);
+    setIsVisible(Boolean(banner));
+  }, [banner]);
 
   const handleDismiss = () => {
     if (!banner) return;
     setIsVisible(false);
 
     if (banner.dismissible) {
-      const dismissedList = JSON.parse(localStorage.getItem("dismissed_announcements") || "[]");
-      dismissedList.push(banner.id);
-      localStorage.setItem("dismissed_announcements", JSON.stringify(dismissedList));
+      dismissAnnouncement(banner.id);
     }
   };
 

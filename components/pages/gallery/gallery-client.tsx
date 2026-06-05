@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { NeonBorder } from "@/components/ui/neon-border";
 import { getAspectRatioClass } from "@/lib/utils/aspect-ratio";
@@ -18,7 +19,15 @@ import {
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
 } from "react-icons/hi2";
-import type { GalleryClientProps } from "@/types/pages";
+import type { GalleryClientProps, GalleryItem } from "@/types/pages";
+
+type GalleryFilter = "semua" | "foto" | "video" | string;
+
+const MEDIA_FILTERS = new Set(["semua", "foto", "video"]);
+
+function normalizeFilter(value: string | null): GalleryFilter {
+  return value?.trim().toLowerCase() || "semua";
+}
 
 // Helper to detect YouTube URLs
 function isYouTubeUrl(url: string): boolean {
@@ -38,19 +47,37 @@ function getYouTubeThumbnailUrl(url: string): string | null {
       return `https://i.ytimg.com/vi_webp/${match[1]}/sddefault.webp`;
     }
   }
-
   return null;
 }
 
+function getGalleryPreviewImage(item: GalleryItem): string | null {
+  if (item.thumbnailUrl) return item.thumbnailUrl;
+  if (isYouTubeUrl(item.fileUrl)) return getYouTubeThumbnailUrl(item.fileUrl);
+  return item.tipe === "foto" ? item.fileUrl : null;
+}
 
 export function GalleryClient({ items }: GalleryClientProps) {
-  const [filter, setFilter] = useState<"semua" | "foto" | "video">("semua");
+  const searchParams = useSearchParams();
+  const [filter, setFilter] = useState<GalleryFilter>(() =>
+    normalizeFilter(searchParams.get("filter"))
+  );
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  const filteredItems = items.filter((item) => {
+  useEffect(() => {
+    setFilter(normalizeFilter(searchParams.get("filter")));
+    setSelectedIndex(null);
+  }, [searchParams]);
+
+  const categories = useMemo(
+    () => [...new Set(items.map((item) => item.kategori).filter(Boolean))] as string[],
+    [items]
+  );
+
+  const filteredItems = useMemo(() => items.filter((item) => {
     if (filter === "semua") return true;
-    return item.tipe === filter;
-  });
+    if (MEDIA_FILTERS.has(filter)) return item.tipe === filter;
+    return item.kategori?.toLowerCase() === filter;
+  }), [filter, items]);
 
   const selectedItem = selectedIndex !== null ? filteredItems[selectedIndex] : null;
 
@@ -82,10 +109,6 @@ export function GalleryClient({ items }: GalleryClientProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedIndex, goNext, goPrev, closeLightbox]);
 
-  const categories = [
-    ...new Set(items.map((item) => item.kategori).filter(Boolean)),
-  ];
-
   const filterButtons = [
     { key: "semua", label: "ALL", icon: HiOutlineSquares2X2 },
     { key: "foto", label: "PHOTO", icon: HiOutlinePhoto },
@@ -109,7 +132,10 @@ export function GalleryClient({ items }: GalleryClientProps) {
             {filterButtons.map((f) => (
               <button
                 key={f.key}
-                onClick={() => setFilter(f.key)}
+                onClick={() => {
+                  setFilter(f.key);
+                  setSelectedIndex(null);
+                }}
                 className={cn(
                   "inline-flex items-center gap-2 px-5 py-2.5 font-mono text-xs uppercase transition-all duration-300 border",
                   filter === f.key
@@ -170,13 +196,19 @@ export function GalleryClient({ items }: GalleryClientProps) {
                 >
                   {isYouTubeUrl(item.fileUrl) ? (
                     <>
-                      <Image
-                        src={item.thumbnailUrl || getYouTubeThumbnailUrl(item.fileUrl) || item.fileUrl}
-                        alt={item.judul}
-                        fill
-                        className="object-cover opacity-75 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
-                        sizes="(max-width: 768px) 50vw, 300px"
-                      />
+                      {getGalleryPreviewImage(item) ? (
+                        <Image
+                          src={getGalleryPreviewImage(item)!}
+                          alt={item.judul}
+                          fill
+                          className="object-cover opacity-75 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                          sizes="(max-width: 768px) 50vw, 300px"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-background to-secondary/60 text-primary">
+                          <HiOutlinePlay className="h-10 w-10" />
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
                     </>
                   ) : item.tipe === "video" && !item.thumbnailUrl ? (
@@ -187,14 +219,19 @@ export function GalleryClient({ items }: GalleryClientProps) {
                       className="w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
                     />
                   ) : (
-                    <Image
-                      src={item.thumbnailUrl || item.fileUrl}
-                      alt={item.judul}
-                      fill
-                      className="object-cover opacity-75 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
-                      sizes="(max-width: 768px) 50vw, 300px"
-                    />
-                  )}
+                    getGalleryPreviewImage(item) ? (
+                      <Image
+                        src={getGalleryPreviewImage(item)!}
+                        alt={item.judul}
+                        fill
+                        className="object-cover opacity-75 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                        sizes="(max-width: 768px) 50vw, 300px"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-secondary/60 text-muted-foreground">
+                        <HiOutlinePhoto className="h-10 w-10" />
+                      </div>
+                    ))}
 
                   {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">

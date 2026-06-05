@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { BackToTop } from "@/components/ui/back-to-top";
 import { CustomCursor } from "@/components/ui/custom-cursor";
@@ -35,9 +35,13 @@ function trackPageView(pathname: string) {
 
 export function PublicLayoutClient() {
   const pathname = usePathname();
+  const lastTrackedPathRef = useRef<string | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+
+    if (lastTrackedPathRef.current === pathname) return;
+    lastTrackedPathRef.current = pathname;
     trackPageView(pathname);
   }, [pathname]);
 

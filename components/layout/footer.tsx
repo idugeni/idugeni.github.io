@@ -39,13 +39,13 @@ export function Footer() {
           <div>
             <h4 className="font-orbitron text-xs font-bold text-foreground mb-4 tracking-wider">NAVIGATION</h4>
             <ul className="space-y-2.5 font-mono text-xs">
-              <li><Link href="/" className="text-muted-foreground hover:text-primary transition-colors">Home</Link></li>
-              <li><Link href="/about" className="text-muted-foreground hover:text-primary transition-colors">About</Link></li>
-              <li><Link href="/projects" className="text-muted-foreground hover:text-primary transition-colors">Projects</Link></li>
-              <li><Link href="/blog" className="text-muted-foreground hover:text-primary transition-colors">Blog</Link></li>
-              <li><Link href="/gallery" className="text-muted-foreground hover:text-primary transition-colors">Gallery</Link></li>
-              <li><Link href="/resume" className="text-muted-foreground hover:text-primary transition-colors">Resume</Link></li>
-              <li><Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</Link></li>
+              <li><Link href="/" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Home</Link></li>
+              <li><Link href="/about" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">About</Link></li>
+              <li><Link href="/projects" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Projects</Link></li>
+              <li><Link href="/blog" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Blog</Link></li>
+              <li><Link href="/gallery" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Gallery</Link></li>
+              <li><Link href="/resume" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Resume</Link></li>
+              <li><Link href="/contact" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Contact</Link></li>
             </ul>
           </div>
 
@@ -53,12 +53,12 @@ export function Footer() {
           <div>
             <h4 className="font-orbitron text-xs font-bold text-foreground mb-4 tracking-wider">SERVICES</h4>
             <ul className="space-y-2.5 font-mono text-xs">
-              <li><Link href="/services" className="text-muted-foreground hover:text-primary transition-colors">Web Development</Link></li>
-              <li><Link href="/services" className="text-muted-foreground hover:text-primary transition-colors">AI &amp; ML Integration</Link></li>
-              <li><Link href="/services" className="text-muted-foreground hover:text-primary transition-colors">UI/UX Design</Link></li>
-              <li><Link href="/services" className="text-muted-foreground hover:text-primary transition-colors">Mobile Development</Link></li>
-              <li><Link href="/services" className="text-muted-foreground hover:text-primary transition-colors">DevOps &amp; Cloud</Link></li>
-              <li><Link href="/services" className="text-muted-foreground hover:text-primary transition-colors">Technical Consulting</Link></li>
+              <li><Link href="/services" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Web Development</Link></li>
+              <li><Link href="/services" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">AI &amp; ML Integration</Link></li>
+              <li><Link href="/services" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">UI/UX Design</Link></li>
+              <li><Link href="/services" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Mobile Development</Link></li>
+              <li><Link href="/services" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">DevOps &amp; Cloud</Link></li>
+              <li><Link href="/services" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Technical Consulting</Link></li>
             </ul>
           </div>
 
@@ -66,15 +66,15 @@ export function Footer() {
           <div>
             <h4 className="font-orbitron text-xs font-bold text-foreground mb-4 tracking-wider">CONTACT</h4>
             <ul className="space-y-2.5 font-mono text-xs">
-              <li><Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">Send Message</Link></li>
+              <li><Link href="/contact" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Send Message</Link></li>
               <li><span className="text-muted-foreground">{siteConfig.contact.address}</span></li>
               <li><a href={`mailto:${siteConfig.contact.email}`} className="text-muted-foreground hover:text-primary transition-colors">{siteConfig.contact.email}</a></li>
             </ul>
             <h4 className="font-orbitron text-xs font-bold text-foreground mb-3 mt-6 tracking-wider">LEGAL</h4>
             <ul className="space-y-2.5 font-mono text-xs">
-              <li><Link href="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link></li>
-              <li><Link href="/sitemap" className="text-muted-foreground hover:text-primary transition-colors">Sitemap</Link></li>
+              <li><Link href="/privacy" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link></li>
+              <li><Link href="/sitemap" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Sitemap</Link></li>
               <li><a href="/feed.xml" className="text-muted-foreground hover:text-primary transition-colors">RSS Feed</a></li>
             </ul>
           </div>
