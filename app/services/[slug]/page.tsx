@@ -67,11 +67,8 @@ async function getServiceDetailData(slug: string) {
 
 function ServiceDetailFallback() {
   return (
-    <div className="flex min-h-[60vh] items-center justify-center px-4">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">LOADING_SERVICE</p>
-      </div>
+    <div className="sr-only" role="status" aria-live="polite">
+      Memuat detail layanan...
     </div>
   );
 }

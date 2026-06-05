@@ -1,19 +1,27 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { unsubscribeNewsletter } from "@/actions/newsletter";
-import { AlertTriangle, CheckCircle, Loader2Icon } from "@/lib/icons";
+import { AlertTriangle, CheckCircle } from "@/lib/icons";
 
 type UnsubscribeSearchParams = Promise<{ token?: string | string[] }>;
 
 function UnsubscribeFallback() {
   return (
-    <div className="mx-auto max-w-md border border-border/40 bg-secondary/5 p-8 text-center backdrop-blur-md">
-      <h1 className="font-orbitron text-xl font-bold text-foreground mb-4 uppercase tracking-widest">
+    <div
+      className="mx-auto max-w-md border border-border/40 bg-secondary/5 p-8 text-center backdrop-blur-md"
+      role="status"
+      aria-live="polite"
+    >
+      <h1 className="mb-4 font-orbitron text-xl font-bold uppercase tracking-widest text-foreground">
         NEWSLETTER_UNSUBSCRIBE
       </h1>
       <div className="flex flex-col items-center justify-center py-6 space-y-3">
-        <Loader2Icon className="h-8 w-8 animate-spin text-primary" />
-        <p className="font-mono text-xs text-muted-foreground">Memproses permohonan Anda...</p>
+        <div className="rounded-full border border-primary/25 bg-primary/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.24em] text-primary">
+          VALIDATING_REQUEST
+        </div>
+        <p className="font-mono text-xs text-muted-foreground">
+          Memvalidasi token unsubscribe Anda...
+        </p>
       </div>
     </div>
   );

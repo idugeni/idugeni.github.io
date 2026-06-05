@@ -96,12 +96,22 @@ async function ShortlinkContent({ params }: { params: Promise<{ code: string }> 
 
 function ShortlinkLoading() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="flex gap-2">
-        <span className="h-3 w-3 animate-bounce rounded-full bg-primary" style={{ animationDelay: "0ms" }} />
-        <span className="h-3 w-3 animate-bounce rounded-full bg-primary" style={{ animationDelay: "150ms" }} />
-        <span className="h-3 w-3 animate-bounce rounded-full bg-primary" style={{ animationDelay: "300ms" }} />
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-16 text-foreground">
+      <section
+        className="w-full max-w-sm border border-primary/25 bg-card/80 p-6 text-center shadow-[0_0_70px_rgba(0,255,255,0.08)] backdrop-blur"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 bg-primary/10 font-mono text-xs font-bold text-primary">
+          SAFE
+        </div>
+        <h1 className="mb-2 font-orbitron text-lg font-bold uppercase tracking-widest text-foreground">
+          Memeriksa Link
+        </h1>
+        <p className="font-mono text-xs leading-relaxed text-muted-foreground">
+          Memvalidasi tujuan dan kebijakan keamanan sebelum mengarahkan Anda.
+        </p>
+      </section>
     </div>
   );
 }
