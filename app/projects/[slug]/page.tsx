@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache/tags";
@@ -113,6 +114,8 @@ function ProjectDetailFallback() {
 }
 
 async function ProjectDetailContent({ params }: Props) {
+  await connection();
+
   const { slug } = await params;
   const detail = await getProjectDetailData(slug);
 
