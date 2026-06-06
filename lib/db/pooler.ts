@@ -14,6 +14,7 @@ export function getPool() {
       max: 1, // Optimized for serverless environments (each function instance runs sequentially)
       idleTimeoutMillis: 15000, // Close idle clients after 15 seconds to free up connections quickly
       connectionTimeoutMillis: 5000, // Return an error after 5 seconds if connection could not be established
+      ssl: { rejectUnauthorized: false }
     });
 
     // Handle pool errors
