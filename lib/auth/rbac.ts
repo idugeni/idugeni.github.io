@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
  * @param timeoutMs Timeout in milliseconds
  * @param errorMessage Error message to throw on timeout
  */
-function withTimeout<T>(
+export function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
   errorMessage: string

@@ -5,7 +5,7 @@ import { getBlogStats } from "./blog";
 import { getProjectStats } from "./projects";
 import { getAnalyticsSummary, getTopPages } from "./analytics";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/auth/rbac";
+import { requireAdmin, withTimeout } from "@/lib/auth/rbac";
 import { rateLimit } from "@/lib/rate-limit";
 
 const adminLoginSchema = z.object({
@@ -70,18 +70,24 @@ export async function getAdminDashboardOverview() {
   await requireAdmin();
 
   const supabase = await createClient();
-  const [stats, analytics, topPages, latestMessages, latestArticles, latestProjects, newsletter, testimonials, services, gallery] = await Promise.all([
-    getDashboardStats(),
-    getAnalyticsSummary(),
-    getTopPages(5),
-    supabase.from("contact_messages").select("id,nama,email,subjek,dibaca,dibalas,created_at").order("created_at", { ascending: false }).limit(5),
-    supabase.from("blog_artikel").select("id,judul,slug,status,featured,created_at,published_at,jumlah_view").order("created_at", { ascending: false }).limit(5),
-    supabase.from("projects").select("id,nama,slug,status,featured,created_at,thumbnail_url").order("created_at", { ascending: false }).limit(5),
-    supabase.from("newsletter_subscribers").select("aktif,subscribed_at"),
-    supabase.from("testimonials").select("tampil,featured,rating"),
-    supabase.from("services").select("aktif"),
-    supabase.from("gallery").select("id"),
-  ]);
+  
+  // Wrap all queries with 30-second timeout to prevent hanging
+  const [stats, analytics, topPages, latestMessages, latestArticles, latestProjects, newsletter, testimonials, services, gallery] = await withTimeout(
+    Promise.all([
+      getDashboardStats(),
+      getAnalyticsSummary(),
+      getTopPages(5),
+      supabase.from("contact_messages").select("id,nama,email,subjek,dibaca,dibalas,created_at").order("created_at", { ascending: false }).limit(5),
+      supabase.from("blog_artikel").select("id,judul,slug,status,featured,created_at,published_at,jumlah_view").order("created_at", { ascending: false }).limit(5),
+      supabase.from("projects").select("id,nama,slug,status,featured,created_at,thumbnail_url").order("created_at", { ascending: false }).limit(5),
+      supabase.from("newsletter_subscribers").select("aktif,subscribed_at"),
+      supabase.from("testimonials").select("tampil,featured,rating"),
+      supabase.from("services").select("aktif"),
+      supabase.from("gallery").select("id"),
+    ]),
+    30000,
+    "Dashboard queries timeout: Failed to load admin dashboard data within 30 seconds"
+  );
 
   const newsletterRows = newsletter.data ?? [];
   const testimonialRows = testimonials.data ?? [];
