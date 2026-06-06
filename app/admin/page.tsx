@@ -15,7 +15,26 @@ function ago(value: string | null | undefined) {
 }
 
 export default async function Dashboard() {
-  const overview = await getAdminDashboardOverview();
+  // Add comprehensive error handling - always render even if data fails
+  let overview;
+  try {
+    overview = await getAdminDashboardOverview();
+  } catch (error) {
+    console.error("Dashboard data loading failed:", error);
+    // Provide fallback empty data structure so page always renders
+    overview = {
+      stats: { blog: { total: 0, published: 0, draft: 0 }, projects: { total: 0, active: 0, inactive: 0 }, messages: { total: 0, unread: 0 }, subscribers: 0 },
+      analytics: { totalViews: 0, viewsThisMonth: 0, viewsPreviousMonth: 0, viewsThisWeek: 0, viewsToday: 0, growthPercent: 0, avgPerDay: 0, mostVisitedPage: "/", mostVisitedPageViews: 0 },
+      topPages: [],
+      latestMessages: [],
+      latestArticles: [],
+      latestProjects: [],
+      newsletter: { total: 0, active: 0, inactive: 0 },
+      testimonials: { total: 0, visible: 0, featured: 0, averageRating: 0 },
+      services: { total: 0, active: 0, inactive: 0 },
+      gallery: { total: 0 },
+    };
+  }
   const cards = [
     { label: "TOTAL_VIEWS", value: compact(overview.analytics.totalViews), icon: Eye, tone: "text-primary" },
     { label: "TODAY", value: compact(overview.analytics.viewsToday), icon: Activity, tone: "text-emerald-400" },
