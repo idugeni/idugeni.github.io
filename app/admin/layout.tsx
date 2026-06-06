@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
-import { redirect } from "next/navigation";
 import { AdminLayout } from "@/components/layout/admin-layout";
-import { requireAdmin } from "@/lib/auth/rbac";
 
 export const metadata: Metadata = {
   title: {
@@ -37,16 +35,6 @@ function AdminRouteFallback() {
   );
 }
 
-async function AdminAuthorizedLayout({ children }: { children: ReactNode }) {
-  try {
-    await requireAdmin();
-  } catch {
-    redirect("/login?error=admin_required");
-  }
-
-  return <AdminLayout>{children}</AdminLayout>;
-}
-
 export default function AdminRootLayout({
   children,
 }: {
@@ -54,7 +42,7 @@ export default function AdminRootLayout({
 }) {
   return (
     <Suspense fallback={<AdminRouteFallback />}>
-      <AdminAuthorizedLayout>{children}</AdminAuthorizedLayout>
+      <AdminLayout>{children}</AdminLayout>
     </Suspense>
   );
 }

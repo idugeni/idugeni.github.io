@@ -46,9 +46,18 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/admin")) {
     const { user } = await getProxyUser(request, response);
 
+    // Check authentication
     if (!user) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Check authorization (admin whitelist)
+    const adminEmails = process.env.ADMIN_EMAILS?.split(",").map(email => email.trim()) || [];
+    if (adminEmails.length === 0 || !adminEmails.includes(user.email || "")) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("error", "admin_required");
       return NextResponse.redirect(loginUrl);
     }
   }
