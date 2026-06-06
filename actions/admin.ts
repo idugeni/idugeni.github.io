@@ -48,12 +48,18 @@ export async function getDashboardStats() {
   await requireAdmin();
 
   const supabase = await createClient();
-  const [blogStats, projectStats, messages, subscribers] = await Promise.all([
-    getBlogStats(),
-    getProjectStats(),
-    supabase.from("contact_messages").select("dibaca"),
-    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("aktif", true),
-  ]);
+  
+  // Wrap with 20-second timeout for nested queries
+  const [blogStats, projectStats, messages, subscribers] = await withTimeout(
+    Promise.all([
+      getBlogStats(),
+      getProjectStats(),
+      supabase.from("contact_messages").select("dibaca"),
+      supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("aktif", true),
+    ]),
+    20000,
+    "Dashboard stats timeout: Failed to load stats within 20 seconds"
+  );
 
   const messagesCount = messages.data?.length ?? 0;
   const unreadMessages = messages.data?.filter((m) => !m.dibaca).length ?? 0;

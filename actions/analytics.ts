@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { requireAdmin } from "@/lib/auth/rbac";
+import { requireAdmin, withTimeout } from "@/lib/auth/rbac";
 import { queryPooler } from "@/lib/db/pooler";
 
 type PageViewRow = { halaman: string; referrer: string | null; created_at: string };
@@ -63,14 +63,18 @@ export async function getAnalyticsSummary() {
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
   const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-  const [total, monthCount, previousMonth, weekCount, todayCount, topRows] = await Promise.all([
-    supabase.from("page_views").select("*", { count: "exact", head: true }),
-    supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", month),
-    supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", previousMonthStart).lt("created_at", previousMonthEnd),
-    supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", week),
-    supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", today),
-    supabase.from("page_views").select("halaman").order("created_at", { ascending: false }).limit(2000),
-  ]);
+  const [total, monthCount, previousMonth, weekCount, todayCount, topRows] = await withTimeout(
+    Promise.all([
+      supabase.from("page_views").select("*", { count: "exact", head: true }),
+      supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", month),
+      supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", previousMonthStart).lt("created_at", previousMonthEnd),
+      supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", week),
+      supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", today),
+      supabase.from("page_views").select("halaman").order("created_at", { ascending: false }).limit(2000),
+    ]),
+    20000,
+    "Analytics summary timeout: Failed to load analytics within 20 seconds"
+  );
 
   const topPage = aggregateCounts((topRows.data ?? []).map((row) => row.halaman))[0];
   const currentMonth = monthCount.count ?? 0;
