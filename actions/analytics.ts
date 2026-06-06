@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { requireAdmin, withTimeout } from "@/lib/auth/rbac";
 import { queryPooler } from "@/lib/db/pooler";
+import { cookies } from "next/headers";
 
 type PageViewRow = { halaman: string; referrer: string | null; created_at: string };
 
@@ -54,8 +55,8 @@ export async function trackPageView(data: { halaman: string; referrer?: string |
 
 export async function getAnalyticsSummary() {
   await requireAdmin();
+  await cookies(); // Explicitly register dynamic request context before accessing current time
 
-  const supabase = await createClient();
   const now = new Date();
   const today = startOfDay(now).toISOString();
   const week = startOfWeek(now).toISOString();
@@ -63,34 +64,52 @@ export async function getAnalyticsSummary() {
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
   const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-  const [total, monthCount, previousMonth, weekCount, todayCount, topRows] = await withTimeout(
-    Promise.all([
-      supabase.from("page_views").select("*", { count: "exact", head: true }),
-      supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", month),
-      supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", previousMonthStart).lt("created_at", previousMonthEnd),
-      supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", week),
-      supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", today),
-      supabase.from("page_views").select("halaman").order("created_at", { ascending: false }).limit(2000),
+  // Run all counts and aggregations in a single highly-optimized query using connection pooler
+  const results = await withTimeout(
+    queryPooler(`
+      SELECT
+        (SELECT COUNT(*)::integer FROM page_views) as total_views,
+        (SELECT COUNT(*)::integer FROM page_views WHERE created_at >= $1) as views_this_month,
+        (SELECT COUNT(*)::integer FROM page_views WHERE created_at >= $2 AND created_at < $3) as views_prev_month,
+        (SELECT COUNT(*)::integer FROM page_views WHERE created_at >= $4) as views_this_week,
+        (SELECT COUNT(*)::integer FROM page_views WHERE created_at >= $5) as views_today,
+        (SELECT halaman FROM page_views GROUP BY halaman ORDER BY COUNT(*) DESC LIMIT 1) as most_visited_page,
+        (SELECT COUNT(*)::integer FROM page_views WHERE halaman = (SELECT halaman FROM page_views GROUP BY halaman ORDER BY COUNT(*) DESC LIMIT 1)) as most_visited_page_views
+    `, [
+      month,
+      previousMonthStart,
+      previousMonthEnd,
+      week,
+      today
     ]),
-    20000,
-    "Analytics summary timeout: Failed to load analytics within 20 seconds"
+    6000,
+    "Analytics summary timeout: Failed to load analytics within 6 seconds"
   );
 
-  const topPage = aggregateCounts((topRows.data ?? []).map((row) => row.halaman))[0];
-  const currentMonth = monthCount.count ?? 0;
-  const previous = previousMonth.count ?? 0;
+  const summary = results[0] || {
+    total_views: 0,
+    views_this_month: 0,
+    views_prev_month: 0,
+    views_this_week: 0,
+    views_today: 0,
+    most_visited_page: "/",
+    most_visited_page_views: 0
+  };
+
+  const currentMonth = summary.views_this_month;
+  const previous = summary.views_prev_month;
   const growth = previous > 0 ? ((currentMonth - previous) / previous) * 100 : currentMonth > 0 ? 100 : 0;
 
   return {
-    totalViews: total.count ?? 0,
+    totalViews: summary.total_views,
     viewsThisMonth: currentMonth,
     viewsPreviousMonth: previous,
-    viewsThisWeek: weekCount.count ?? 0,
-    viewsToday: todayCount.count ?? 0,
+    viewsThisWeek: summary.views_this_week,
+    viewsToday: summary.views_today,
     growthPercent: Number(growth.toFixed(1)),
     avgPerDay: now.getDate() > 0 ? currentMonth / now.getDate() : 0,
-    mostVisitedPage: topPage?.[0] ?? "/",
-    mostVisitedPageViews: topPage?.[1] ?? 0,
+    mostVisitedPage: summary.most_visited_page ?? "/",
+    mostVisitedPageViews: summary.most_visited_page_views ?? 0,
   };
 }
 
@@ -126,55 +145,125 @@ export async function getPageViewsChart() {
 export async function getTopPages(limit = 10) {
   await requireAdmin();
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("page_views")
-    .select("halaman")
-    .order("created_at", { ascending: false })
-    .limit(3000);
-  if (error) throw error;
+  // Run aggregated count in database using connection pooler for speed
+  const rows = await withTimeout(
+    queryPooler(`
+      WITH recent_views AS (
+        SELECT halaman
+        FROM page_views
+        ORDER BY created_at DESC
+        LIMIT 3000
+      ),
+      aggregated_views AS (
+        SELECT halaman, COUNT(*)::integer as views
+        FROM recent_views
+        GROUP BY halaman
+      ),
+      total_count AS (
+        SELECT COUNT(*)::integer as total FROM recent_views
+      )
+      SELECT 
+        halaman, 
+        views,
+        ROUND((views::numeric / NULLIF(total, 0) * 100), 1)::float as share
+      FROM aggregated_views, total_count
+      ORDER BY views DESC
+      LIMIT $1
+    `, [limit]),
+    6000,
+    "Top pages query timeout: Failed to load top pages"
+  );
 
-  const rows = data ?? [];
-  const total = rows.length || 1;
-  return aggregateCounts(rows.map((row) => row.halaman))
-    .slice(0, limit)
-    .map(([halaman, views]) => ({ halaman, views, share: Number(((views / total) * 100).toFixed(1)) }));
+  return rows;
 }
 
 export async function getTopReferrers(limit = 8) {
   await requireAdmin();
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("page_views")
-    .select("referrer")
-    .order("created_at", { ascending: false })
-    .limit(3000);
-  if (error) throw error;
+  // Normalize referrer in SQL: if empty or null -> Direct, else extract host
+  const rows = await withTimeout(
+    queryPooler(`
+      WITH recent_views AS (
+        SELECT referrer
+        FROM page_views
+        ORDER BY created_at DESC
+        LIMIT 3000
+      ),
+      normalized_views AS (
+        SELECT 
+          CASE 
+            WHEN referrer IS NULL OR referrer = '' THEN 'Direct'
+            ELSE 
+              substring(regexp_replace(referrer, '^https?://(www\\.)?', '') from '^([^/]+)')
+          END as normalized_referrer
+        FROM recent_views
+      ),
+      aggregated_referrers AS (
+        SELECT normalized_referrer as referrer, COUNT(*)::integer as views
+        FROM normalized_views
+        GROUP BY normalized_referrer
+      ),
+      total_count AS (
+        SELECT COUNT(*)::integer as total FROM recent_views
+      )
+      SELECT 
+        referrer, 
+        views,
+        ROUND((views::numeric / NULLIF(total, 0) * 100), 1)::float as share
+      FROM aggregated_referrers, total_count
+      ORDER BY views DESC
+      LIMIT $1
+    `, [limit]),
+    6000,
+    "Top referrers query timeout: Failed to load top referrers"
+  );
 
-  const rows = data ?? [];
-  const total = rows.length || 1;
-  return aggregateCounts(rows.map((row) => normalizeReferrer(row.referrer)))
-    .slice(0, limit)
-    .map(([referrer, views]) => ({ referrer, views, share: Number(((views / total) * 100).toFixed(1)) }));
+  return rows;
 }
 
 export async function getRouteSegments() {
   await requireAdmin();
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("page_views")
-    .select("halaman")
-    .order("created_at", { ascending: false })
-    .limit(3000);
-  if (error) throw error;
+  // Extract first route segment in SQL
+  const rows = await withTimeout(
+    queryPooler(`
+      WITH recent_views AS (
+        SELECT halaman
+        FROM page_views
+        ORDER BY created_at DESC
+        LIMIT 3000
+      ),
+      normalized_segments AS (
+        SELECT 
+          CASE 
+            WHEN halaman = '/' THEN 'Home'
+            ELSE 
+              -- Extract first segment
+              concat('/', split_part(ltrim(split_part(halaman, '?', 1), '/'), '/', 1))
+          END as segment
+        FROM recent_views
+      ),
+      aggregated_segments AS (
+        SELECT segment, COUNT(*)::integer as views
+        FROM normalized_segments
+        GROUP BY segment
+      ),
+      total_count AS (
+        SELECT COUNT(*)::integer as total FROM recent_views
+      )
+      SELECT 
+        segment, 
+        views,
+        ROUND((views::numeric / NULLIF(total, 0) * 100), 1)::float as share
+      FROM aggregated_segments, total_count
+      ORDER BY views DESC
+      LIMIT 8
+    `),
+    6000,
+    "Route segments query timeout: Failed to load route segments"
+  );
 
-  const rows = data ?? [];
-  const total = rows.length || 1;
-  return aggregateCounts(rows.map((row) => routeSegment(row.halaman)))
-    .slice(0, 8)
-    .map(([segment, views]) => ({ segment, views, share: Number(((views / total) * 100).toFixed(1)) }));
+  return rows;
 }
 
 export async function getRecentPageViews(limit = 8) {

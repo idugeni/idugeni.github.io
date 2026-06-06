@@ -49,7 +49,7 @@ export async function getDashboardStats() {
 
   const supabase = await createClient();
   
-  // Wrap with 20-second timeout for nested queries
+  // Wrap with 6-second timeout for nested queries
   const [blogStats, projectStats, messages, subscribers] = await withTimeout(
     Promise.all([
       getBlogStats(),
@@ -57,8 +57,8 @@ export async function getDashboardStats() {
       supabase.from("contact_messages").select("dibaca"),
       supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("aktif", true),
     ]),
-    20000,
-    "Dashboard stats timeout: Failed to load stats within 20 seconds"
+    6000,
+    "Dashboard stats timeout: Failed to load stats within 6 seconds"
   );
 
   const messagesCount = messages.data?.length ?? 0;
@@ -77,7 +77,7 @@ export async function getAdminDashboardOverview() {
 
   const supabase = await createClient();
   
-  // Wrap all queries with 30-second timeout to prevent hanging
+  // Wrap all queries with 8-second timeout to prevent hanging
   const [stats, analytics, topPages, latestMessages, latestArticles, latestProjects, newsletter, testimonials, services, gallery] = await withTimeout(
     Promise.all([
       getDashboardStats(),
@@ -91,8 +91,8 @@ export async function getAdminDashboardOverview() {
       supabase.from("services").select("aktif"),
       supabase.from("gallery").select("id"),
     ]),
-    30000,
-    "Dashboard queries timeout: Failed to load admin dashboard data within 30 seconds"
+    8000,
+    "Dashboard queries timeout: Failed to load admin dashboard data within 8 seconds"
   );
 
   const newsletterRows = newsletter.data ?? [];

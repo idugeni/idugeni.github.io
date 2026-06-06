@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { cache } from "react";
 
 /**
  * Timeout helper to prevent promises from hanging indefinitely.
@@ -44,14 +45,16 @@ export function withTimeout<T>(
  * 
  * @returns The authenticated admin user
  * @throws Error if not authenticated or not an admin
+ * 
+ * Wrapped in React cache() for request-bound memoization.
  */
-export async function requireAdmin() {
+export const requireAdmin = cache(async () => {
   const supabase = await createClient();
   
-  // Wrap auth check with 10-second timeout to prevent hanging
+  // Wrap auth check with 5-second timeout to prevent hanging
   const { data: { user }, error } = await withTimeout(
     supabase.auth.getUser(),
-    10000,
+    5000,
     "Auth check timeout: Supabase connection may be unavailable"
   );
 
@@ -74,7 +77,8 @@ export async function requireAdmin() {
   }
 
   return user;
-}
+});
+
 
 /**
  * Checks if the current user is authenticated and has admin privileges.

@@ -1,13 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 /**
  * Creates a Supabase server client with cookie-based auth.
  * Falls back to a basic client if cookies() is unavailable.
  * Based on Supabase SSR docs for Next.js 16 (May 2026).
+ * 
+ * Wrapped in React cache() for request-bound memoization.
  */
-export async function createClient() {
+export const createClient = cache(async () => {
   let cookieStore;
   try {
     cookieStore = await cookies();
@@ -40,4 +43,4 @@ export async function createClient() {
       },
     },
   );
-}
+});
