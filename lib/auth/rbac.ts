@@ -1,6 +1,25 @@
 import { createClient } from "@/lib/supabase/server";
 
 /**
+ * Timeout helper to prevent promises from hanging indefinitely.
+ * @param promise The promise to wrap with timeout
+ * @param timeoutMs Timeout in milliseconds
+ * @param errorMessage Error message to throw on timeout
+ */
+function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  errorMessage: string
+): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
+    ),
+  ]);
+}
+
+/**
  * RBAC (Role-Based Access Control) utilities for authorization.
  * 
  * IMPORTANT: This implementation assumes you have an admin role system.
@@ -28,7 +47,13 @@ import { createClient } from "@/lib/supabase/server";
  */
 export async function requireAdmin() {
   const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  // Wrap auth check with 10-second timeout to prevent hanging
+  const { data: { user }, error } = await withTimeout(
+    supabase.auth.getUser(),
+    10000,
+    "Auth check timeout: Supabase connection may be unavailable"
+  );
 
   // Check authentication
   if (error || !user) {
