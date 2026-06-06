@@ -215,21 +215,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [isLogoutPending, setIsLogoutPending] = useState(false);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) router.push("/login");
-      else setIsAdmin(true);
-      setIsLoading(false);
-    };
-    checkAuth();
-  }, [router]);
 
   useEffect(() => {
     const segments = pathname
@@ -266,15 +254,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center dark bg-background">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!isAdmin) return null;
 
   return (
     <div className="dark min-h-[100dvh] bg-background text-foreground">
