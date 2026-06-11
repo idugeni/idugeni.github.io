@@ -261,7 +261,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       <div className="fixed inset-0 -z-10 bg-[linear-gradient(to_right,hsl(var(--border)/0.18)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.14)_1px,transparent_1px)] bg-[size:48px_48px] opacity-30" />
 
       <div className="flex min-h-[100dvh]">
-        <aside className="sticky top-0 hidden h-[100dvh] w-80 shrink-0 border-r border-sidebar-border/60 bg-sidebar/92 backdrop-blur-xl md:block">
+        <aside className="fixed inset-y-0 left-0 hidden h-[100dvh] w-80 border-r border-sidebar-border/60 bg-sidebar/92 backdrop-blur-xl md:block">
           <SidebarContent pathname={pathname} onNavigate={() => setIsMobileMenuOpen(false)} onLogout={() => setIsLogoutDialogOpen(true)} />
         </aside>
 
@@ -276,7 +276,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
         {isMobileMenuOpen && <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden" onClick={() => setIsMobileMenuOpen(false)} />}
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col md:pl-[320px]">
           <AdminShellHeader pathname={pathname} onMenuClick={() => setIsMobileMenuOpen(true)} />
           <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">
             <div className="mx-auto w-full max-w-[1600px]">
