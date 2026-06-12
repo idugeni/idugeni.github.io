@@ -29,7 +29,6 @@ import {
   X,
 } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConfirmActionDialog } from "@/components/admin/ConfirmActionDialog";
 
 const navGroups = [
@@ -165,7 +164,7 @@ function SidebarContent({ pathname, onNavigate, onLogout }: { pathname: string; 
         </div>
       </div>
 
-      <ScrollArea className="flex-1 px-3 py-4">
+      <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-4">
         <nav className="space-y-5">
           {navGroups.map((group) => (
             <div key={group.label}>
@@ -196,7 +195,7 @@ function SidebarContent({ pathname, onNavigate, onLogout }: { pathname: string; 
             </div>
           ))}
         </nav>
-      </ScrollArea>
+      </div>
 
       <div className="border-t border-sidebar-border/60 p-4">
         <div className="mb-3 rounded-none border border-border/50 bg-background/35 p-3 font-mono text-[10px] text-muted-foreground">
