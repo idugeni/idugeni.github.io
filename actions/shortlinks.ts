@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/rbac";
+import { isPrivateOrBlockedUrl } from "@/lib/security/url-validation";
 import { nanoid } from "nanoid";
 import QRCode from "qrcode";
 
@@ -329,6 +330,10 @@ export async function createShortlink(input: CreateShortlinkInput) {
     throw new Error("Destination URL must start with http:// or https://");
   }
 
+  if (isPrivateOrBlockedUrl(input.destination_url)) {
+    throw new Error("Destination URL cannot point to internal or private networks");
+  }
+
   let code = input.code;
   if (code) {
     const existing = await queryPoolerSingle<{ code: string }>(
@@ -501,6 +506,15 @@ export async function updateShortlink(id: string, updates: UpdateShortlinkInput)
     "is_active", "expires_at", "activates_at", "click_limit",
     "qr_fg_color", "qr_bg_color", "qr_logo_text", "splash_title", "splash_timer",
   ];
+
+  if (updates.destination_url !== undefined) {
+    if (!updates.destination_url.match(/^https?:\/\//)) {
+      throw new Error("Destination URL must start with http:// or https://");
+    }
+    if (isPrivateOrBlockedUrl(updates.destination_url)) {
+      throw new Error("Destination URL cannot point to internal or private networks");
+    }
+  }
 
   for (const key of simpleFields) {
     const value = updates[key];

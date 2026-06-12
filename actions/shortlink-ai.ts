@@ -1,6 +1,7 @@
 "use server";
 
 import { requireAdmin } from "@/lib/auth/rbac";
+import { isPrivateOrBlockedUrl } from "@/lib/security/url-validation";
 import { z } from "zod";
 
 const GEMINI_API_VERSION = "v1beta";
@@ -67,6 +68,9 @@ async function scrapeUrlMetadata(url: string): Promise<{
   textContent: string;
   headings: string[];
 }> {
+  if (isPrivateOrBlockedUrl(url)) {
+    throw new Error("URL points to a restricted internal address");
+  }
   try {
     const res = await fetch(url, {
       headers: {

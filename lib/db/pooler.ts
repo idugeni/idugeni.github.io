@@ -1,37 +1,69 @@
 import { Pool } from "pg";
 
-// Singleton pool instance
 let pool: Pool | null = null;
 
-export function getPool() {
-  if (!pool) {
-    if (!process.env.DATABASE_URL) {
-      throw new Error("DATABASE_URL environment variable is not set");
-    }
-
-    pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      max: 1, // Optimized for serverless environments (each function instance runs sequentially)
-      idleTimeoutMillis: 15000, // Close idle clients after 15 seconds to free up connections quickly
-      connectionTimeoutMillis: 5000, // Return an error after 5 seconds if connection could not be established
-      ssl: { rejectUnauthorized: false }
-    });
-
-    // Handle pool errors
-    pool.on("error", (err: Error) => {
-      console.error("Unexpected error on idle client", err);
-    });
+function createPool(): Pool {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL environment variable is not set");
   }
+
+  const p = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 5,
+    min: 0,
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 5_000,
+    statement_timeout: 10_000,
+    query_timeout: 10_000,
+    ssl: { rejectUnauthorized: false },
+  });
+
+  p.on("error", (err: Error) => {
+    console.error("[pooler] Unexpected idle client error:", err.message);
+    pool = null; // Force recreation on next access
+  });
+
+  return p;
+}
+
+export function getPool(): Pool {
+  if (pool) {
+    return pool;
+  }
+  pool = createPool();
   return pool;
 }
 
 export async function queryPooler<T = any>(
   query: string,
-  params?: any[]
+  params?: any[],
+  retries = 1
 ): Promise<T[]> {
-  const pool = getPool();
-  const result = await pool.query(query, params);
-  return result.rows as T[];
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const p = getPool();
+      const result = await p.query(query, params);
+      return result.rows as T[];
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      console.error(
+        `[pooler] Query failed (attempt ${attempt + 1}/${retries + 1}):`,
+        lastError.message
+      );
+      // Invalidate pool on failure so next attempt gets a fresh one
+      if (pool) {
+        pool.end().catch(() => {});
+        pool = null;
+      }
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, 200 * (attempt + 1)));
+      }
+    }
+  }
+
+  throw lastError ?? new Error("Query failed after retries");
 }
 
 export async function queryPoolerSingle<T = any>(

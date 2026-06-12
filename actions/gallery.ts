@@ -214,21 +214,19 @@ export async function deleteGalleryItem(id: string) {
 export async function getGalleryStats() {
   const [row] = await queryPooler<{
     total: number;
-    total_size: number;
     images: number;
     videos: number;
   }>(`
     SELECT
       COUNT(*)::int AS total,
-      COALESCE(SUM(file_size), 0)::bigint AS total_size,
-      COUNT(*) FILTER (WHERE file_type LIKE 'image/%')::int AS images,
-      COUNT(*) FILTER (WHERE file_type LIKE 'video/%')::int AS videos
+      COUNT(*) FILTER (WHERE tipe::text LIKE 'image/%')::int AS images,
+      COUNT(*) FILTER (WHERE tipe::text LIKE 'video/%')::int AS videos
     FROM gallery
   `);
 
   return {
     total: row.total,
-    totalSize: row.total_size,
+    totalSize: 0,
     images: row.images,
     videos: row.videos,
   };
