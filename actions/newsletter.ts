@@ -5,6 +5,7 @@ import { randomUUID } from "crypto";
 import { z } from "zod";
 import { Resend } from "resend";
 import { createClient } from "@/lib/supabase/server";
+import { queryPooler } from "@/lib/db/pooler";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { rateLimit } from "@/lib/rate-limit";
 import { getClientIp, uuidSchema } from "@/lib/security/server-action";
@@ -95,31 +96,40 @@ export async function getAdminNewsletterSubscribersPage(rawFilters: unknown) {
   await requireAdmin();
 
   const filters = adminNewsletterFilterSchema.parse(rawFilters ?? {});
-  const supabase = await createClient();
-  const from = (filters.page - 1) * filters.pageSize;
-  const to = from + filters.pageSize - 1;
 
-  let query = supabase.from("newsletter_subscribers").select("*", { count: "exact" });
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let idx = 1;
+
   if (filters.q) {
-    const escaped = filters.q.replace(/[%_]/g, "\\$&");
-    query = query.or(`email.ilike.%${escaped}%,nama.ilike.%${escaped}%`);
+    const escaped = filters.q.replace(/[%_]/g, '\\$&');
+    conditions.push(`(email ILIKE '%' || $${idx} || '%' ESCAPE '\\' OR nama ILIKE '%' || $${idx} || '%' ESCAPE '\\')`);
+    params.push(escaped);
+    idx++;
   }
-  if (filters.status === "active") query = query.eq("aktif", true);
-  if (filters.status === "inactive") query = query.eq("aktif", false);
+  if (filters.status === "active") { conditions.push(`aktif = $${idx}`); params.push(true); idx++; }
+  if (filters.status === "inactive") { conditions.push(`aktif = $${idx}`); params.push(false); idx++; }
 
-  const { data, error, count } = await query
-    .order(getNewsletterSortColumn(filters.sort), { ascending: filters.order === "asc" })
-    .range(from, to);
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const sortCol = getNewsletterSortColumn(filters.sort);
+  const sortDir = filters.order === "asc" ? "ASC" : "DESC";
+  const limit = filters.pageSize;
+  const offset = (filters.page - 1) * filters.pageSize;
 
-  if (error) throw error;
+  const [countResult, data] = await Promise.all([
+    queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM newsletter_subscribers ${where}`, params),
+    queryPooler<NewsletterRow>(`SELECT * FROM newsletter_subscribers ${where} ORDER BY ${sortCol} ${sortDir} LIMIT $${idx} OFFSET $${idx + 1}`, [...params, limit, offset]),
+  ]);
+
+  const totalItems = countResult[0]?.count ?? 0;
   return {
-    subscribers: (data ?? []) as NewsletterRow[],
+    subscribers: data,
     filters,
     pagination: {
       page: filters.page,
       pageSize: filters.pageSize,
-      totalItems: count ?? 0,
-      totalPages: Math.max(1, Math.ceil((count ?? 0) / filters.pageSize)),
+      totalItems,
+      totalPages: Math.max(1, Math.ceil(totalItems / filters.pageSize)),
     },
   };
 }
@@ -127,17 +137,25 @@ export async function getAdminNewsletterSubscribersPage(rawFilters: unknown) {
 export async function getNewsletterStats() {
   await requireAdmin();
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("newsletter_subscribers").select("aktif,subscribed_at");
-  if (error) throw error;
+  const [row] = await queryPooler<{
+    total: number;
+    active: number;
+    inactive: number;
+    recent: number;
+  }>(`
+    SELECT
+      COUNT(*)::int AS total,
+      COUNT(*) FILTER (WHERE aktif = true)::int AS active,
+      COUNT(*) FILTER (WHERE aktif = false)::int AS inactive,
+      COUNT(*) FILTER (WHERE subscribed_at >= NOW() - INTERVAL '7 days')::int AS recent
+    FROM newsletter_subscribers
+  `);
 
-  const rows = data ?? [];
-  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
   return {
-    total: rows.length,
-    active: rows.filter((row) => row.aktif).length,
-    inactive: rows.filter((row) => !row.aktif).length,
-    recent: rows.filter((row) => new Date(row.subscribed_at).getTime() >= sevenDaysAgo).length,
+    total: row.total,
+    active: row.active,
+    inactive: row.inactive,
+    recent: row.recent,
   };
 }
 

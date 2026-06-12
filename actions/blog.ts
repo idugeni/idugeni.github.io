@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { queryPooler } from "@/lib/db/pooler";
 import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { toSnakeCase } from "@/lib/utils/case";
 import { z } from "zod";
@@ -89,51 +90,88 @@ export async function getAdminBlogArticlesPage(filters: Record<string, unknown> 
   }
 
   const page = parsePositiveInt(parsed.data.page, 1);
-  const { from, to } = getPaginationRange(page, ADMIN_BLOG_PAGE_SIZE);
-  const sortColumn = {
+  const { from } = getPaginationRange(page, ADMIN_BLOG_PAGE_SIZE);
+  const ALLOWED_SORT_COLUMNS: Record<string, string> = {
     date: "created_at",
     views: "jumlah_view",
     likes: "jumlah_like",
     title: "judul",
-  }[parsed.data.sort ?? "date"];
+  };
+  const sortColumn = ALLOWED_SORT_COLUMNS[parsed.data.sort ?? "date"] ?? "created_at";
+  const sortDirection = (parsed.data.order ?? "desc") === "asc" ? "ASC" : "DESC";
 
-  const supabase = await createClient();
-  let query = supabase
-    .from("blog_artikel")
-    .select(`
-      id,
-      judul,
-      slug,
-      ringkasan,
-      konten,
-      thumbnail_url,
-      status,
-      featured,
-      jumlah_view,
-      jumlah_like,
-      waktu_baca,
-      published_at,
-      created_at,
-      kategori (id, nama, warna)
-    `, { count: "exact" })
-    .order(sortColumn, { ascending: (parsed.data.order ?? "desc") === "asc" });
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let idx = 1;
 
-  if (parsed.data.q) query = query.ilike("judul", `%${parsed.data.q}%`);
-  if (parsed.data.status) query = query.eq("status", parsed.data.status);
-  if (parsed.data.category) query = query.eq("kategori_id", parsed.data.category);
-  if (parsed.data.featured === "true") query = query.eq("featured", true);
+  if (parsed.data.q) {
+    conditions.push(`a.judul ILIKE $${idx++}`);
+    params.push(`%${parsed.data.q}%`);
+  }
+  if (parsed.data.status) {
+    conditions.push(`a.status = $${idx++}`);
+    params.push(parsed.data.status);
+  }
+  if (parsed.data.category) {
+    conditions.push(`a.kategori_id = $${idx++}`);
+    params.push(parsed.data.category);
+  }
+  if (parsed.data.featured === "true") {
+    conditions.push(`a.featured = true`);
+  }
 
-  const { data, error, count } = await query.range(from, to);
-  if (error) throw error;
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const countResult = await queryPooler<{ count: number }>(
+    `SELECT COUNT(*)::int AS count FROM blog_artikel a ${whereClause}`,
+    params,
+  );
+  const totalItems = countResult[0]?.count ?? 0;
+
+  const limitIdx = idx++;
+  const offsetIdx = idx++;
+  const dataParams = [...params, ADMIN_BLOG_PAGE_SIZE, from];
+
+  const articles = await queryPooler<{
+    id: string;
+    judul: string;
+    slug: string;
+    ringkasan: string;
+    konten: string;
+    thumbnail_url: string | null;
+    status: "draft" | "published";
+    featured: boolean;
+    jumlah_view: number;
+    jumlah_like: number;
+    waktu_baca: number;
+    published_at: string | null;
+    created_at: string;
+    kategori: { id: string; nama: string; warna: string | null } | null;
+  }>(
+    `SELECT
+      a.id, a.judul, a.slug, a.ringkasan, a.konten, a.thumbnail_url,
+      a.status, a.featured, a.jumlah_view, a.jumlah_like, a.waktu_baca,
+      a.published_at, a.created_at,
+      CASE WHEN k.id IS NOT NULL
+        THEN json_build_object('id', k.id, 'nama', k.nama, 'warna', k.warna)
+        ELSE NULL
+      END AS kategori
+    FROM blog_artikel a
+    LEFT JOIN kategori k ON a.kategori_id = k.id
+    ${whereClause}
+    ORDER BY a.${sortColumn} ${sortDirection}
+    LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+    dataParams,
+  );
 
   return {
-    articles: data ?? [],
+    articles: articles ?? [],
     filters: parsed.data,
     pagination: {
       page,
       pageSize: ADMIN_BLOG_PAGE_SIZE,
-      totalItems: count ?? 0,
-      totalPages: getTotalPages(count ?? 0, ADMIN_BLOG_PAGE_SIZE),
+      totalItems,
+      totalPages: getTotalPages(totalItems, ADMIN_BLOG_PAGE_SIZE),
     },
   };
 }
@@ -448,14 +486,25 @@ export async function createBlogComment(data: Record<string, unknown>) {
 }
 
 export async function getBlogStats() {
-  const supabase = await createClient();
-  // Optimized: 1 query instead of separate count queries
-  const { data: articles } = await supabase.from("blog_artikel").select("status, featured");
-  const total = articles?.length ?? 0;
-  const published = articles?.filter(a => a.status === "published").length ?? 0;
-  const draft = articles?.filter(a => a.status === "draft").length ?? 0;
-  const featured = articles?.filter(a => a.featured).length ?? 0;
-  return { total, published, draft, featured };
+  const [row] = await queryPooler<{
+    total: number;
+    published: number;
+    draft: number;
+    featured: number;
+  }>(
+    `SELECT
+      COUNT(*)::int AS total,
+      COUNT(*) FILTER (WHERE status = 'published')::int AS published,
+      COUNT(*) FILTER (WHERE status = 'draft')::int AS draft,
+      COUNT(*) FILTER (WHERE featured = true)::int AS featured
+    FROM blog_artikel`,
+  );
+  return {
+    total: row?.total ?? 0,
+    published: row?.published ?? 0,
+    draft: row?.draft ?? 0,
+    featured: row?.featured ?? 0,
+  };
 }
 
 export async function trackArticleView(articleId: string) {

@@ -1,12 +1,13 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { queryPooler } from "@/lib/db/pooler";
 import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { toSnakeCase } from "@/lib/utils/case";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { uuidArraySchema } from "@/lib/security/server-action";
-import { getPaginationRange, getTotalPages, parsePositiveInt } from "@/lib/utils/pagination";
+import { getTotalPages, parsePositiveInt } from "@/lib/utils/pagination";
 import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
 
 const servicePayloadSchema = z.object({
@@ -99,37 +100,44 @@ export async function getAdminServicesPage(filters: Record<string, unknown> = {}
   }
 
   const page = parsePositiveInt(parsed.data.page, 1);
-  const { from, to } = getPaginationRange(page, ADMIN_SERVICE_PAGE_SIZE);
-  const sortColumn = {
+  const sortColumn = ({
     date: "created_at",
     name: "nama",
     order: "urutan",
     status: "aktif",
-  }[parsed.data.sort ?? "order"];
+  } as const)[parsed.data.sort ?? "order"] ?? "urutan";
+  const sortDir = (parsed.data.order ?? "asc") === "asc" ? "ASC" : "DESC";
 
-  const supabase = await createClient();
-  let query = supabase
-    .from("services")
-    .select(SERVICE_COLUMNS, { count: "exact" })
-    .order(sortColumn, { ascending: (parsed.data.order ?? "asc") === "asc" });
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let idx = 1;
 
   if (parsed.data.q) {
-    query = query.or(`nama.ilike.%${parsed.data.q}%,deskripsi_pendek.ilike.%${parsed.data.q}%`);
+    const escaped = parsed.data.q.replace(/[%_]/g, '\\$&');
+    conditions.push(`(nama ILIKE '%' || $${idx} || '%' ESCAPE '\\' OR deskripsi_pendek ILIKE '%' || $${idx} || '%' ESCAPE '\\')`);
+    params.push(escaped);
+    idx++;
   }
-  if (parsed.data.status === "active") query = query.eq("aktif", true);
-  if (parsed.data.status === "inactive") query = query.eq("aktif", false);
+  if (parsed.data.status === "active") { conditions.push(`aktif = $${idx}`); params.push(true); idx++; }
+  if (parsed.data.status === "inactive") { conditions.push(`aktif = $${idx}`); params.push(false); idx++; }
 
-  const { data, error, count } = await query.range(from, to);
-  if (error) throw error;
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const offset = (page - 1) * ADMIN_SERVICE_PAGE_SIZE;
 
+  const [countResult, data] = await Promise.all([
+    queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM services ${where}`, params),
+    queryPooler(`SELECT * FROM services ${where} ORDER BY ${sortColumn} ${sortDir} LIMIT $${idx} OFFSET $${idx + 1}`, [...params, ADMIN_SERVICE_PAGE_SIZE, offset]),
+  ]);
+
+  const totalItems = countResult[0]?.count ?? 0;
   return {
     services: data ?? [],
     filters: parsed.data,
     pagination: {
       page,
       pageSize: ADMIN_SERVICE_PAGE_SIZE,
-      totalItems: count ?? 0,
-      totalPages: getTotalPages(count ?? 0, ADMIN_SERVICE_PAGE_SIZE),
+      totalItems,
+      totalPages: getTotalPages(totalItems, ADMIN_SERVICE_PAGE_SIZE),
     },
   };
 }
@@ -137,16 +145,26 @@ export async function getAdminServicesPage(filters: Record<string, unknown> = {}
 export async function getServiceStats() {
   await requireAdmin();
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("services").select("aktif,harga_mulai");
-  if (error) throw error;
+  const [row] = await queryPooler<{
+    total: number;
+    active: number;
+    inactive: number;
+    priced: number;
+  }>(`
+    SELECT
+      COUNT(*)::int AS total,
+      COUNT(*) FILTER (WHERE aktif = true)::int AS active,
+      COUNT(*) FILTER (WHERE aktif = false)::int AS inactive,
+      COUNT(*) FILTER (WHERE harga_mulai IS NOT NULL AND harga_mulai != '')::int AS priced
+    FROM services
+  `);
 
-  const total = data?.length ?? 0;
-  const active = data?.filter((service) => service.aktif).length ?? 0;
-  const inactive = total - active;
-  const priced = data?.filter((service) => Boolean(service.harga_mulai)).length ?? 0;
-
-  return { total, active, inactive, priced };
+  return {
+    total: row.total,
+    active: row.active,
+    inactive: row.inactive,
+    priced: row.priced,
+  };
 }
 
 export async function getService(id: string) {

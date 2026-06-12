@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { queryPooler } from "@/lib/db/pooler";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { rateLimit } from "@/lib/rate-limit";
@@ -145,37 +146,71 @@ export async function getAdminContactMessagesPage(rawFilters: unknown) {
   await requireAdmin();
 
   const filters = adminMessagesFilterSchema.parse(rawFilters ?? {});
-  const supabase = await createClient();
   const from = (filters.page - 1) * filters.pageSize;
-  const to = from + filters.pageSize - 1;
 
-  let dataQuery = supabase.from("contact_messages").select("*", { count: "exact" });
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let idx = 1;
 
   if (filters.q) {
     const escaped = filters.q.replace(/[%_]/g, "\\$&");
-    dataQuery = dataQuery.or(`nama.ilike.%${escaped}%,email.ilike.%${escaped}%,subjek.ilike.%${escaped}%,pesan.ilike.%${escaped}%`);
+    const ilikePattern = `%${escaped}%`;
+    conditions.push(`(
+      cm.nama ILIKE $${idx} ESCAPE '\\'
+      OR cm.email ILIKE $${idx} ESCAPE '\\'
+      OR cm.subjek ILIKE $${idx} ESCAPE '\\'
+      OR cm.pesan ILIKE $${idx} ESCAPE '\\'
+    )`);
+    params.push(ilikePattern);
+    idx++;
   }
-  if (filters.read === "read") dataQuery = dataQuery.eq("dibaca", true);
-  if (filters.read === "unread") dataQuery = dataQuery.eq("dibaca", false);
-  if (filters.replied === "replied") dataQuery = dataQuery.eq("dibalas", true);
-  if (filters.replied === "unreplied") dataQuery = dataQuery.eq("dibalas", false);
-  if (filters.resend) dataQuery = dataQuery.eq("resend_admin_status", filters.resend);
-  if (filters.service) dataQuery = dataQuery.eq("layanan", filters.service);
+  if (filters.read === "read") {
+    conditions.push(`cm.dibaca = true`);
+  }
+  if (filters.read === "unread") {
+    conditions.push(`cm.dibaca = false`);
+  }
+  if (filters.replied === "replied") {
+    conditions.push(`cm.dibalas = true`);
+  }
+  if (filters.replied === "unreplied") {
+    conditions.push(`cm.dibalas = false`);
+  }
+  if (filters.resend) {
+    conditions.push(`cm.resend_admin_status = $${idx++}`);
+    params.push(filters.resend);
+  }
+  if (filters.service) {
+    conditions.push(`cm.layanan = $${idx++}`);
+    params.push(filters.service);
+  }
 
-  dataQuery = dataQuery
-    .order(getSortColumn(filters.sort), { ascending: filters.order === "asc" })
-    .range(from, to);
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const sortColumn = getSortColumn(filters.sort);
+  const sortDirection = filters.order === "asc" ? "ASC" : "DESC";
 
-  const { data, error, count } = await dataQuery;
-  if (error) throw error;
+  const countResult = await queryPooler<{ count: number }>(
+    `SELECT COUNT(*)::int AS count FROM contact_messages cm ${whereClause}`,
+    params,
+  );
+  const totalItems = countResult[0]?.count ?? 0;
+
+  const limitIdx = idx++;
+  const offsetIdx = idx++;
+  const dataParams = [...params, filters.pageSize, from];
+
+  const data = await queryPooler<ContactMessageRow>(
+    `SELECT * FROM contact_messages cm ${whereClause} ORDER BY cm.${sortColumn} ${sortDirection} LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+    dataParams,
+  );
 
   return {
     messages: (data ?? []) as ContactMessageRow[],
     pagination: {
       page: filters.page,
       pageSize: filters.pageSize,
-      totalItems: count ?? 0,
-      totalPages: Math.max(1, Math.ceil((count ?? 0) / filters.pageSize)),
+      totalItems,
+      totalPages: Math.max(1, Math.ceil(totalItems / filters.pageSize)),
     },
     filters,
   };
@@ -184,37 +219,44 @@ export async function getAdminContactMessagesPage(rawFilters: unknown) {
 export async function getContactMessageStats() {
   await requireAdmin();
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("contact_messages")
-    .select("dibaca,dibalas,resend_admin_status");
-
-  if (error) throw error;
-  const rows = data ?? [];
+  const [row] = await queryPooler<{
+    total: number;
+    unread: number;
+    unreplied: number;
+    replied: number;
+    resend_sent: number;
+    resend_failed: number;
+    resend_skipped: number;
+  }>(
+    `SELECT
+      COUNT(*)::int AS total,
+      COUNT(*) FILTER (WHERE NOT dibaca)::int AS unread,
+      COUNT(*) FILTER (WHERE NOT dibalas)::int AS unreplied,
+      COUNT(*) FILTER (WHERE dibalas)::int AS replied,
+      COUNT(*) FILTER (WHERE resend_admin_status = 'sent')::int AS resend_sent,
+      COUNT(*) FILTER (WHERE resend_admin_status = 'failed')::int AS resend_failed,
+      COUNT(*) FILTER (WHERE resend_admin_status = 'skipped')::int AS resend_skipped
+    FROM contact_messages`,
+  );
 
   return {
-    total: rows.length,
-    unread: rows.filter((row) => !row.dibaca).length,
-    unreplied: rows.filter((row) => !row.dibalas).length,
-    replied: rows.filter((row) => row.dibalas).length,
-    resendSent: rows.filter((row) => row.resend_admin_status === "sent").length,
-    resendFailed: rows.filter((row) => row.resend_admin_status === "failed").length,
-    resendSkipped: rows.filter((row) => row.resend_admin_status === "skipped").length,
+    total: row?.total ?? 0,
+    unread: row?.unread ?? 0,
+    unreplied: row?.unreplied ?? 0,
+    replied: row?.replied ?? 0,
+    resendSent: row?.resend_sent ?? 0,
+    resendFailed: row?.resend_failed ?? 0,
+    resendSkipped: row?.resend_skipped ?? 0,
   };
 }
 
 export async function getContactMessageServices() {
   await requireAdmin();
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("contact_messages")
-    .select("layanan")
-    .not("layanan", "is", null)
-    .order("layanan", { ascending: true });
-
-  if (error) throw error;
-  return Array.from(new Set((data ?? []).map((row) => row.layanan).filter(Boolean))) as string[];
+  const rows = await queryPooler<{ layanan: string }>(
+    `SELECT DISTINCT layanan FROM contact_messages WHERE layanan IS NOT NULL ORDER BY layanan ASC`,
+  );
+  return rows.map((row) => row.layanan) as string[];
 }
 
 export async function markMessageRead(id: string) {

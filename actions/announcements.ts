@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
-import { createClient } from "@/lib/supabase/server";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 
 // ─── Types & Schemas ──────────────────────────────────────────────────────────

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { queryPooler } from "@/lib/db/pooler";
 import { requireAdmin } from "@/lib/auth/rbac";
 import type { Database } from "@/lib/supabase/types";
 
@@ -94,34 +95,43 @@ export async function getAdminTestimonialsPage(rawFilters: unknown) {
   await requireAdmin();
 
   const filters = adminTestimonialsFilterSchema.parse(rawFilters ?? {});
-  const supabase = await createClient();
-  const from = (filters.page - 1) * filters.pageSize;
-  const to = from + filters.pageSize - 1;
 
-  let query = supabase.from("testimonials").select("*", { count: "exact" });
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let idx = 1;
+
   if (filters.q) {
-    const escaped = filters.q.replace(/[%_]/g, "\\$&");
-    query = query.or(`nama.ilike.%${escaped}%,jabatan.ilike.%${escaped}%,perusahaan.ilike.%${escaped}%,isi.ilike.%${escaped}%`);
+    const escaped = filters.q.replace(/[%_]/g, '\\$&');
+    conditions.push(`(nama ILIKE '%' || $${idx} || '%' ESCAPE '\\' OR jabatan ILIKE '%' || $${idx} || '%' ESCAPE '\\' OR perusahaan ILIKE '%' || $${idx} || '%' ESCAPE '\\' OR isi ILIKE '%' || $${idx} || '%' ESCAPE '\\')`);
+    params.push(escaped);
+    idx++;
   }
-  if (filters.visibility === "visible") query = query.eq("tampil", true);
-  if (filters.visibility === "hidden") query = query.eq("tampil", false);
-  if (filters.featured === "true") query = query.eq("featured", true);
-  if (filters.featured === "false") query = query.eq("featured", false);
-  if (filters.rating) query = query.eq("rating", filters.rating);
+  if (filters.visibility === "visible") { conditions.push(`tampil = $${idx}`); params.push(true); idx++; }
+  if (filters.visibility === "hidden") { conditions.push(`tampil = $${idx}`); params.push(false); idx++; }
+  if (filters.featured === "true") { conditions.push(`featured = $${idx}`); params.push(true); idx++; }
+  if (filters.featured === "false") { conditions.push(`featured = $${idx}`); params.push(false); idx++; }
+  if (filters.rating) { conditions.push(`rating = $${idx}`); params.push(filters.rating); idx++; }
 
-  const { data, error, count } = await query
-    .order(getTestimonialSortColumn(filters.sort), { ascending: filters.order === "asc" })
-    .range(from, to);
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const sortCol = getTestimonialSortColumn(filters.sort);
+  const sortDir = filters.order === "asc" ? "ASC" : "DESC";
+  const limit = filters.pageSize;
+  const offset = (filters.page - 1) * filters.pageSize;
 
-  if (error) throw error;
+  const [countResult, data] = await Promise.all([
+    queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM testimonials ${where}`, params),
+    queryPooler<TestimonialRow>(`SELECT * FROM testimonials ${where} ORDER BY ${sortCol} ${sortDir} LIMIT $${idx} OFFSET $${idx + 1}`, [...params, limit, offset]),
+  ]);
+
+  const totalItems = countResult[0]?.count ?? 0;
   return {
-    testimonials: (data ?? []) as TestimonialRow[],
+    testimonials: data,
     filters,
     pagination: {
       page: filters.page,
       pageSize: filters.pageSize,
-      totalItems: count ?? 0,
-      totalPages: Math.max(1, Math.ceil((count ?? 0) / filters.pageSize)),
+      totalItems,
+      totalPages: Math.max(1, Math.ceil(totalItems / filters.pageSize)),
     },
   };
 }
@@ -129,18 +139,28 @@ export async function getAdminTestimonialsPage(rawFilters: unknown) {
 export async function getTestimonialStats() {
   await requireAdmin();
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("testimonials").select("rating,featured,tampil");
-  if (error) throw error;
+  const [row] = await queryPooler<{
+    total: number;
+    visible: number;
+    hidden: number;
+    featured: number;
+    average_rating: number;
+  }>(`
+    SELECT
+      COUNT(*)::int AS total,
+      COUNT(*) FILTER (WHERE tampil = true)::int AS visible,
+      COUNT(*) FILTER (WHERE tampil = false)::int AS hidden,
+      COUNT(*) FILTER (WHERE featured = true)::int AS featured,
+      COALESCE(ROUND(AVG(rating)::numeric, 1), 0)::float AS average_rating
+    FROM testimonials
+  `);
 
-  const rows = data ?? [];
-  const ratingSum = rows.reduce((sum, row) => sum + row.rating, 0);
   return {
-    total: rows.length,
-    visible: rows.filter((row) => row.tampil).length,
-    hidden: rows.filter((row) => !row.tampil).length,
-    featured: rows.filter((row) => row.featured).length,
-    averageRating: rows.length ? Number((ratingSum / rows.length).toFixed(1)) : 0,
+    total: row.total,
+    visible: row.visible,
+    hidden: row.hidden,
+    featured: row.featured,
+    averageRating: row.average_rating,
   };
 }
 

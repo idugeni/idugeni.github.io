@@ -4,6 +4,7 @@ import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { createClient } from "@/lib/supabase/server";
+import { queryPooler } from "@/lib/db/pooler";
 import { toSnakeCase } from "@/lib/utils/case";
 
 function slugify(value: string) {
@@ -53,13 +54,15 @@ async function createUniqueGallerySlug(baseValue: string, excludeId?: string) {
 }
 
 export async function getGallery(filters?: { tipe?: string; kategori?: string }) {
-  const supabase = await createClient();
-  let query = supabase.from("gallery").select("*").order("urutan");
-  if (filters?.tipe) query = query.eq("tipe", filters.tipe);
-  if (filters?.kategori) query = query.eq("kategori", filters.kategori);
-  const { data, error } = await query;
-  if (error) throw error;
-  return data;
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let idx = 1;
+
+  if (filters?.tipe) { conditions.push(`tipe = $${idx}`); params.push(filters.tipe); idx++; }
+  if (filters?.kategori) { conditions.push(`kategori = $${idx}`); params.push(filters.kategori); idx++; }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  return queryPooler(`SELECT * FROM gallery ${where} ORDER BY urutan`, params);
 }
 
 export async function getGalleryItem(id: string) {
@@ -185,15 +188,26 @@ export async function deleteGalleryItem(id: string) {
 }
 
 export async function getGalleryStats() {
-  const supabase = await createClient();
-  const { data: items } = await supabase.from("gallery").select("fileType, fileSize");
-  
-  const total = items?.length ?? 0;
-  const totalSize = items?.reduce((sum, item) => sum + (item.fileSize || 0), 0) ?? 0;
-  const images = items?.filter(item => item.fileSize && item.fileType?.startsWith("image/")).length ?? 0;
-  const videos = items?.filter(item => item.fileSize && item.fileType?.startsWith("video/")).length ?? 0;
-  
-  return { total, totalSize, images, videos };
+  const [row] = await queryPooler<{
+    total: number;
+    total_size: number;
+    images: number;
+    videos: number;
+  }>(`
+    SELECT
+      COUNT(*)::int AS total,
+      COALESCE(SUM(file_size), 0)::bigint AS total_size,
+      COUNT(*) FILTER (WHERE file_type LIKE 'image/%')::int AS images,
+      COUNT(*) FILTER (WHERE file_type LIKE 'video/%')::int AS videos
+    FROM gallery
+  `);
+
+  return {
+    total: row.total,
+    totalSize: row.total_size,
+    images: row.images,
+    videos: row.videos,
+  };
 }
 
 export async function bulkDeleteGalleryItems(ids: string[]) {

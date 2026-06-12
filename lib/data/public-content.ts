@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache/tags";
 import { createPublicClient } from "@/lib/supabase/public";
+import { queryPooler } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
 import type { BlogArticle, BlogCategory, GalleryItem, Project, Service, Testimonial } from "@/types/pages";
 
@@ -126,34 +127,40 @@ export async function getBlogIndexPageData({ category, page = 1 }: BlogIndexPage
   const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
   const safeCategory = category?.trim() || undefined;
   const from = (safePage - 1) * BLOG_PAGE_SIZE;
-  const to = from + BLOG_PAGE_SIZE - 1;
-  const supabase = createPublicClient();
 
-  let articlesQuery = supabase
-    .from("blog_artikel")
-    .select(BLOG_CARD_COLUMNS, { count: "exact" })
-    .eq("status", "published")
-    .order("created_at", { ascending: false })
-    .range(from, to);
+  const conditions: string[] = [`a.status = 'published'`];
+  const params: unknown[] = [];
+  let idx = 1;
 
   if (safeCategory) {
-    articlesQuery = articlesQuery.eq("kategori_id", safeCategory);
+    conditions.push(`a.kategori_id = $${idx++}`);
+    params.push(safeCategory);
   }
 
-  const [articlesResult, categoriesResult] = await Promise.all([
-    articlesQuery,
-    supabase
-      .from("kategori")
-      .select(BLOG_CATEGORY_COLUMNS)
-      .order("nama"),
+  const whereClause = `WHERE ${conditions.join(" AND ")}`;
+  const limitIdx = idx + 1;
+  const offsetIdx = idx + 2;
+
+  const [countResult, articlesResult, categoriesResult] = await Promise.all([
+    queryPooler<{ count: number }>(
+      `SELECT COUNT(*)::int AS count FROM blog_artikel a ${whereClause}`,
+      params,
+    ),
+    queryPooler<Record<string, unknown>>(
+      `SELECT ${BLOG_CARD_COLUMNS} FROM blog_artikel a ${whereClause} ORDER BY a.created_at DESC LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+      [...params, BLOG_PAGE_SIZE, from],
+    ),
+    queryPooler<Record<string, unknown>>(
+      `SELECT ${BLOG_CATEGORY_COLUMNS} FROM kategori ORDER BY nama ASC`,
+    ),
   ]);
 
-  const totalItems = articlesResult.count ?? 0;
+  const totalItems = countResult[0]?.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / BLOG_PAGE_SIZE));
 
   return {
-    articles: toCamelCase<BlogArticle[]>(articlesResult.data ?? []),
-    categories: toCamelCase<BlogCategory[]>(categoriesResult.data ?? []),
+    articles: toCamelCase<BlogArticle[]>(articlesResult ?? []),
+    categories: toCamelCase<BlogCategory[]>(categoriesResult ?? []),
     pagination: {
       page: safePage,
       pageSize: BLOG_PAGE_SIZE,
@@ -163,7 +170,7 @@ export async function getBlogIndexPageData({ category, page = 1 }: BlogIndexPage
       hasNextPage: safePage < totalPages,
     },
     activeCategory: safeCategory,
-    error: articlesResult.error || categoriesResult.error,
+    error: null,
   };
 }
 

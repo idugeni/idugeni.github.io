@@ -1,12 +1,13 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { toSnakeCase } from "@/lib/utils/case";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { uuidArraySchema } from "@/lib/security/server-action";
-import { getPaginationRange, getTotalPages, parsePositiveInt } from "@/lib/utils/pagination";
+import { getTotalPages, parsePositiveInt } from "@/lib/utils/pagination";
 import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
 
 // Validation schemas
@@ -71,51 +72,44 @@ export async function getAdminProjectsPage(filters: Record<string, unknown> = {}
   }
 
   const page = parsePositiveInt(parsed.data.page, 1);
-  const { from, to } = getPaginationRange(page, ADMIN_PROJECT_PAGE_SIZE);
-  const sortColumn = {
+  const sortColumn = ({
     date: "created_at",
     name: "nama",
     status: "status",
-  }[parsed.data.sort ?? "date"];
+  } as const)[parsed.data.sort ?? "date"] ?? "created_at";
+  const sortDir = (parsed.data.order ?? "desc") === "asc" ? "ASC" : "DESC";
 
-  const supabase = await createClient();
-  let query = supabase
-    .from("projects")
-    .select(`
-      id,
-      nama,
-      slug,
-      deskripsi,
-      kategori,
-      status,
-      tech_stack,
-      thumbnail_url,
-      klien,
-      tanggal_mulai,
-      tanggal_selesai,
-      github_url,
-      live_url,
-      featured,
-      created_at
-    `, { count: "exact" })
-    .order(sortColumn, { ascending: (parsed.data.order ?? "desc") === "asc" });
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let idx = 1;
 
-  if (parsed.data.q) query = query.ilike("nama", `%${parsed.data.q}%`);
-  if (parsed.data.status) query = query.eq("status", parsed.data.status);
-  if (parsed.data.category) query = query.eq("kategori", parsed.data.category);
-  if (parsed.data.featured === "true") query = query.eq("featured", true);
+  if (parsed.data.q) {
+    const escaped = parsed.data.q.replace(/[%_]/g, '\\$&');
+    conditions.push(`nama ILIKE '%' || $${idx} || '%' ESCAPE '\\'`);
+    params.push(escaped);
+    idx++;
+  }
+  if (parsed.data.status) { conditions.push(`status = $${idx}`); params.push(parsed.data.status); idx++; }
+  if (parsed.data.category) { conditions.push(`kategori = $${idx}`); params.push(parsed.data.category); idx++; }
+  if (parsed.data.featured === "true") { conditions.push(`featured = $${idx}`); params.push(true); idx++; }
 
-  const { data, error, count } = await query.range(from, to);
-  if (error) throw error;
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const offset = (page - 1) * ADMIN_PROJECT_PAGE_SIZE;
 
+  const [countResult, data] = await Promise.all([
+    queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM projects ${where}`, params),
+    queryPooler(`SELECT * FROM projects ${where} ORDER BY ${sortColumn} ${sortDir} LIMIT $${idx} OFFSET $${idx + 1}`, [...params, ADMIN_PROJECT_PAGE_SIZE, offset]),
+  ]);
+
+  const totalItems = countResult[0]?.count ?? 0;
   return {
     projects: data ?? [],
     filters: parsed.data,
     pagination: {
       page,
       pageSize: ADMIN_PROJECT_PAGE_SIZE,
-      totalItems: count ?? 0,
-      totalPages: getTotalPages(count ?? 0, ADMIN_PROJECT_PAGE_SIZE),
+      totalItems,
+      totalPages: getTotalPages(totalItems, ADMIN_PROJECT_PAGE_SIZE),
     },
   };
 }
@@ -135,21 +129,32 @@ export async function getProjectBySlug(slug: string) {
     throw new Error("Invalid project slug");
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("projects").select("*").eq("slug", parsed.data).single();
-  if (error) throw error;
-  return data;
+  const project = await queryPoolerSingle(`SELECT * FROM projects WHERE slug = $1`, [parsed.data]);
+  if (!project) throw new Error("Project not found");
+  return project;
 }
 
 export async function getProjectStats() {
-  const supabase = await createClient();
-  // Optimized: 1 query instead of 4 separate count queries
-  const { data: projects } = await supabase.from("projects").select("status, featured");
-  const total = projects?.length ?? 0;
-  const completed = projects?.filter(p => p.status === "completed").length ?? 0;
-  const ongoing = projects?.filter(p => p.status === "ongoing").length ?? 0;
-  const featured = projects?.filter(p => p.featured === true).length ?? 0;
-  return { total, completed, ongoing, featured };
+  const [row] = await queryPooler<{
+    total: number;
+    completed: number;
+    ongoing: number;
+    featured: number;
+  }>(`
+    SELECT
+      COUNT(*)::int AS total,
+      COUNT(*) FILTER (WHERE status = 'completed')::int AS completed,
+      COUNT(*) FILTER (WHERE status = 'ongoing')::int AS ongoing,
+      COUNT(*) FILTER (WHERE featured = true)::int AS featured
+    FROM projects
+  `);
+
+  return {
+    total: row.total,
+    completed: row.completed,
+    ongoing: row.ongoing,
+    featured: row.featured,
+  };
 }
 
 export async function createProject(data: Record<string, unknown>) {
