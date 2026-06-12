@@ -119,7 +119,7 @@ async function OverviewStats() {
         <Card className="rounded-none border-border/50 bg-card/80">
           <CardHeader><CardTitle className="font-orbitron text-primary">RECENT_MESSAGES</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {overview.latestMessages.length === 0 ? <p className="font-mono text-sm text-muted-foreground">NO_MESSAGES</p> : overview.latestMessages.map((msg) => (
+            {overview.latestMessages.length === 0 ? <p className="font-mono text-sm text-muted-foreground">NO_MESSAGES</p> : overview.latestMessages.map((msg: { id: string; nama: string; subjek: string; dibaca: boolean; created_at: string }) => (
               <Link key={msg.id} href="/admin/messages" className="block border border-border/50 p-3 transition-colors hover:border-primary/40">
                 <div className="flex justify-between gap-3 font-mono text-xs"><span className="break-words font-medium">{msg.subjek}</span><span className={msg.dibaca ? "text-muted-foreground" : "text-amber-400"}>{msg.dibaca ? "READ" : "UNREAD"}</span></div>
                 <p className="mt-1 break-words font-mono text-xs text-muted-foreground">{msg.nama} · {ago(msg.created_at)}</p>
@@ -130,7 +130,7 @@ async function OverviewStats() {
         <Card className="rounded-none border-border/50 bg-card/80">
           <CardHeader><CardTitle className="font-orbitron text-primary">LATEST_ARTICLES</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {overview.latestArticles.map((article) => (
+            {overview.latestArticles.map((article: { id: string; judul: string; slug: string; status: string; jumlah_view: number; created_at: string }) => (
               <Link key={article.id} href={`/admin/blog/${article.slug}/edit`} className="block border border-border/50 p-3 hover:border-primary/40">
                 <div className="flex items-start gap-2 font-mono text-xs"><FileText className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span className="break-words font-medium">{article.judul}</span></div>
                 <p className="mt-1 font-mono text-xs text-muted-foreground">{article.status.toUpperCase()} · {compact(article.jumlah_view)} views · {ago(article.created_at)}</p>
@@ -141,7 +141,7 @@ async function OverviewStats() {
         <Card className="rounded-none border-border/50 bg-card/80">
           <CardHeader><CardTitle className="font-orbitron text-primary">LATEST_PROJECTS</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {overview.latestProjects.map((project) => (
+            {overview.latestProjects.map((project: { id: string; nama: string; slug: string; status: string; created_at: string }) => (
               <Link key={project.id} href={`/admin/projects/${project.id}/edit`} className="block border border-border/50 p-3 hover:border-primary/40">
                 <div className="flex items-start gap-2 font-mono text-xs"><Briefcase className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span className="break-words font-medium">{project.nama}</span></div>
                 <p className="mt-1 font-mono text-xs text-muted-foreground">{project.status} · {ago(project.created_at)}</p>

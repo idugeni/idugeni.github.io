@@ -7,6 +7,7 @@ import { getAnalyticsSummary, getTopPages } from "./analytics";
 import { z } from "zod";
 import { requireAdmin, withTimeout } from "@/lib/auth/rbac";
 import { rateLimit } from "@/lib/rate-limit";
+import { queryPooler } from "@/lib/db/pooler";
 
 const adminLoginSchema = z.object({
   email: z.string().email().max(255),
@@ -48,8 +49,7 @@ export async function getDashboardStats() {
   await requireAdmin();
 
   const supabase = await createClient();
-  
-  // Wrap with 6-second timeout for nested queries
+
   const [blogStats, projectStats, messages, subscribers] = await withTimeout(
     Promise.all([
       getBlogStats(),
@@ -75,56 +75,154 @@ export async function getDashboardStats() {
 export async function getAdminDashboardOverview() {
   await requireAdmin();
 
-  const supabase = await createClient();
-  
-  // Wrap all queries with 8-second timeout to prevent hanging
-  const [stats, analytics, topPages, latestMessages, latestArticles, latestProjects, newsletter, testimonials, services, gallery] = await withTimeout(
-    Promise.all([
-      getDashboardStats(),
-      getAnalyticsSummary(),
-      getTopPages(5),
-      supabase.from("contact_messages").select("id,nama,email,subjek,dibaca,dibalas,created_at").order("created_at", { ascending: false }).limit(5),
-      supabase.from("blog_artikel").select("id,judul,slug,status,featured,created_at,published_at,jumlah_view").order("created_at", { ascending: false }).limit(5),
-      supabase.from("projects").select("id,nama,slug,status,featured,created_at,thumbnail_url").order("created_at", { ascending: false }).limit(5),
-      supabase.from("newsletter_subscribers").select("aktif,subscribed_at"),
-      supabase.from("testimonials").select("tampil,featured,rating"),
-      supabase.from("services").select("aktif"),
-      supabase.from("gallery").select("id"),
-    ]),
-    5000,
-    "Dashboard queries timeout: Failed to load admin dashboard data within 5 seconds"
+  const results = await withTimeout(
+    queryPooler<{
+      blog_total: number;
+      blog_published: number;
+      blog_draft: number;
+      project_total: number;
+      project_completed: number;
+      project_ongoing: number;
+      msg_total: number;
+      msg_unread: number;
+      sub_active: number;
+      total_views: number;
+      views_today: number;
+      views_this_week: number;
+      views_this_month: number;
+      views_prev_month: number;
+      most_visited_page: string;
+      most_visited_page_views: number;
+      recent_messages: string;
+      recent_articles: string;
+      recent_projects: string;
+      newsletter_total: number;
+      newsletter_active: number;
+      testimonial_total: number;
+      testimonial_visible: number;
+      testimonial_featured: number;
+      testimonial_avg_rating: number;
+      service_total: number;
+      service_active: number;
+      gallery_total: number;
+    }>(`
+      WITH 
+      blog_stats AS (
+        SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status='published')::int AS published, COUNT(*) FILTER (WHERE status='draft')::int AS draft FROM blog_artikel
+      ),
+      project_stats AS (
+        SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status='completed')::int AS completed, COUNT(*) FILTER (WHERE status='ongoing')::int AS ongoing FROM projects
+      ),
+      msg_stats AS (
+        SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE dibaca=false)::int AS unread FROM contact_messages
+      ),
+      sub_stats AS (
+        SELECT COUNT(*)::int AS active FROM newsletter_subscribers WHERE aktif=true
+      ),
+      analytics AS (
+        SELECT
+          (SELECT COUNT(*)::int FROM page_views) AS total_views,
+          (SELECT COUNT(*)::int FROM page_views WHERE created_at >= CURRENT_DATE) AS views_today,
+          (SELECT COUNT(*)::int FROM page_views WHERE created_at >= CURRENT_DATE - INTERVAL '7 days') AS views_this_week,
+          (SELECT COUNT(*)::int FROM page_views WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE)) AS views_this_month,
+          (SELECT COUNT(*)::int FROM page_views WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month' AND created_at < DATE_TRUNC('month', CURRENT_DATE)) AS views_prev_month
+      ),
+      top_page AS (
+        SELECT COALESCE(halaman, '/') AS page, COUNT(*)::int AS views
+        FROM page_views GROUP BY halaman ORDER BY COUNT(*) DESC LIMIT 1
+      ),
+      recent_msg AS (
+        SELECT json_agg(json_build_object('id',id,'nama',nama,'subjek',subjek,'dibaca',dibaca,'created_at',created_at) ORDER BY created_at DESC) AS items FROM (SELECT id,nama,subjek,dibaca,created_at FROM contact_messages ORDER BY created_at DESC LIMIT 5) sub
+      ),
+      recent_art AS (
+        SELECT json_agg(json_build_object('id',id,'judul',judul,'slug',slug,'status',status,'jumlah_view',jumlah_view,'created_at',created_at) ORDER BY created_at DESC) AS items FROM (SELECT id,judul,slug,status,jumlah_view,created_at FROM blog_artikel ORDER BY created_at DESC LIMIT 5) sub
+      ),
+      recent_proj AS (
+        SELECT json_agg(json_build_object('id',id,'nama',nama,'slug',slug,'status',status,'created_at',created_at) ORDER BY created_at DESC) AS items FROM (SELECT id,nama,slug,status,created_at FROM projects ORDER BY created_at DESC LIMIT 5) sub
+      ),
+      nl_stats AS (
+        SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE aktif=true)::int AS active FROM newsletter_subscribers
+      ),
+      test_stats AS (
+        SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE tampil=true)::int AS visible, COUNT(*) FILTER (WHERE featured=true)::int AS featured, COALESCE(ROUND(AVG(rating)::numeric,1),0)::float AS avg_rating FROM testimonials
+      ),
+      svc_stats AS (
+        SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE aktif=true)::int AS active FROM services
+      ),
+      gal_stats AS (
+        SELECT COUNT(*)::int AS total FROM gallery
+      )
+      SELECT
+        b.blog_total, b.blog_published, b.blog_draft,
+        p.project_total, p.project_completed, p.project_ongoing,
+        m.msg_total, m.msg_unread,
+        s.sub_active,
+        a.total_views, a.views_today, a.views_this_week, a.views_this_month, a.views_prev_month,
+        tp.page AS most_visited_page, tp.views AS most_visited_page_views,
+        rm.items AS recent_messages,
+        ra.items AS recent_articles,
+        rp.items AS recent_projects,
+        nl.total AS newsletter_total, nl.active AS newsletter_active,
+        t.testimonial_total, t.testimonial_visible, t.testimonial_featured, t.avg_rating AS testimonial_avg_rating,
+        sv.service_total, sv.service_active,
+        g.gallery_total
+      FROM blog_stats b, project_stats p, msg_stats m, sub_stats s, analytics a, top_page tp,
+           recent_msg rm, recent_art ra, recent_proj rp,
+           nl_stats nl, test_stats t, svc_stats sv, gal_stats g
+    `),
+    8000,
+    "Dashboard queries timeout"
   );
 
-  const newsletterRows = newsletter.data ?? [];
-  const testimonialRows = testimonials.data ?? [];
-  const serviceRows = services.data ?? [];
+  const r = results[0] || ({} as any);
+
+  const topPagesQuery = await withTimeout(
+    queryPooler<{ halaman: string; views: number; share: number }>(`
+      WITH recent AS (SELECT halaman FROM page_views ORDER BY created_at DESC LIMIT 3000),
+           agg AS (SELECT halaman, COUNT(*)::int AS views FROM recent GROUP BY halaman),
+           total AS (SELECT COUNT(*)::int AS t FROM recent)
+      SELECT halaman, views, ROUND((views::numeric / NULLIF(t,0) * 100),1)::float AS share
+      FROM agg, total ORDER BY views DESC LIMIT 5
+    `),
+    4000,
+    "Top pages timeout"
+  );
+
+  const recentMessages = typeof r.recent_messages === "string" ? JSON.parse(r.recent_messages) : (r.recent_messages ?? []);
+  const recentArticles = typeof r.recent_articles === "string" ? JSON.parse(r.recent_articles) : (r.recent_articles ?? []);
+  const recentProjects = typeof r.recent_projects === "string" ? JSON.parse(r.recent_projects) : (r.recent_projects ?? []);
+
+  const currentMonth = r.views_this_month ?? 0;
+  const previousMonth = r.views_prev_month ?? 0;
+  const growthPercent = previousMonth > 0 ? Number((((currentMonth - previousMonth) / previousMonth) * 100).toFixed(1)) : currentMonth > 0 ? 100 : 0;
+  const avgPerDay = new Date().getDate() > 0 ? currentMonth / new Date().getDate() : 0;
 
   return {
-    stats,
-    analytics,
-    topPages,
-    latestMessages: latestMessages.data ?? [],
-    latestArticles: latestArticles.data ?? [],
-    latestProjects: latestProjects.data ?? [],
-    newsletter: {
-      total: newsletterRows.length,
-      active: newsletterRows.filter((row) => row.aktif).length,
-      inactive: newsletterRows.filter((row) => !row.aktif).length,
+    stats: {
+      blog: { total: r.blog_total ?? 0, published: r.blog_published ?? 0, draft: r.blog_draft ?? 0 },
+      projects: { total: r.project_total ?? 0, completed: r.project_completed ?? 0, ongoing: r.project_ongoing ?? 0 },
+      messages: { total: r.msg_total ?? 0, unread: r.msg_unread ?? 0 },
+      subscribers: r.sub_active ?? 0,
     },
-    testimonials: {
-      total: testimonialRows.length,
-      visible: testimonialRows.filter((row) => row.tampil).length,
-      featured: testimonialRows.filter((row) => row.featured).length,
-      averageRating: testimonialRows.length ? Number((testimonialRows.reduce((sum, row) => sum + row.rating, 0) / testimonialRows.length).toFixed(1)) : 0,
+    analytics: {
+      totalViews: r.total_views ?? 0,
+      viewsToday: r.views_today ?? 0,
+      viewsPreviousMonth: previousMonth,
+      viewsThisWeek: r.views_this_week ?? 0,
+      viewsThisMonth: currentMonth,
+      growthPercent,
+      avgPerDay: Number(avgPerDay.toFixed(1)),
+      mostVisitedPage: r.most_visited_page ?? "/",
+      mostVisitedPageViews: r.most_visited_page_views ?? 0,
     },
-    services: {
-      total: serviceRows.length,
-      active: serviceRows.filter((row) => row.aktif).length,
-      inactive: serviceRows.filter((row) => !row.aktif).length,
-    },
-    gallery: {
-      total: gallery.data?.length ?? 0,
-    },
+    topPages: topPagesQuery,
+    latestMessages: recentMessages,
+    latestArticles: recentArticles,
+    latestProjects: recentProjects,
+    newsletter: { total: r.newsletter_total ?? 0, active: r.newsletter_active ?? 0, inactive: (r.newsletter_total ?? 0) - (r.newsletter_active ?? 0) },
+    testimonials: { total: r.testimonial_total ?? 0, visible: r.testimonial_visible ?? 0, featured: r.testimonial_featured ?? 0, averageRating: r.testimonial_avg_rating ?? 0 },
+    services: { total: r.service_total ?? 0, active: r.service_active ?? 0, inactive: (r.service_total ?? 0) - (r.service_active ?? 0) },
+    gallery: { total: r.gallery_total ?? 0 },
   };
 }
 
