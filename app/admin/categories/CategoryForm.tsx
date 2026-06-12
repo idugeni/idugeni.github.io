@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save, Tag } from "@/lib/icons";
 import { createBlogCategory, updateBlogCategory } from "@/actions/blog";
+import { slugify } from "@/lib/utils/slug";
 
 interface BlogCategoryFormData {
   id: string;
@@ -23,16 +24,6 @@ interface BlogCategoryFormData {
 interface CategoryFormProps {
   mode: "create" | "edit";
   category?: BlogCategoryFormData;
-}
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/-{2,}/g, "-");
 }
 
 export function CategoryForm({ mode, category }: CategoryFormProps) {

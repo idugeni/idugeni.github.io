@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, FileText, ImageIcon, Save, Send, Sparkles, Target } from "@/lib/icons";
+import { slugify } from "@/lib/utils/slug";
 
 const galleryCategoryOptions = [
   { value: "portfolio", label: "PORTFOLIO", description: "Project showcase, case study visual, atau hasil kerja utama." },
@@ -21,10 +22,6 @@ const galleryCategoryOptions = [
   { value: "brand", label: "BRAND", description: "Visual branding, identity, campaign, atau creative asset." },
   { value: "other", label: "OTHER", description: "Media lain yang belum masuk kategori utama." },
 ] as const;
-
-function slugify(value: string) {
-  return value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 200) || "gallery-media";
-}
 
 function formatBytes(size: number) {
   if (!size) return "0 B";

@@ -2,6 +2,7 @@ import "server-only";
 
 import { codeToHtml } from "shiki";
 import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
+import { slugify } from "@/lib/utils/slug";
 
 const HEADING_ID_OFFSET_CLASS = "scroll-mt-24";
 const HTML_TAG_PATTERN = /<([a-z][\w:-]*)(?:\s[^>]*)?>/i;
@@ -25,15 +26,6 @@ function decodeHtml(value: string) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&amp;/g, "&");
-}
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim();
 }
 
 export function richHtmlToPlainText(content: string | null | undefined) {

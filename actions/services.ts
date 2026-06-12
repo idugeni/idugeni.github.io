@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/auth/rbac";
 import { uuidArraySchema } from "@/lib/security/server-action";
 import { getTotalPages, parsePositiveInt } from "@/lib/utils/pagination";
 import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
+import { slugify } from "@/lib/utils/slug";
 
 const servicePayloadSchema = z.object({
   nama: z.string().min(1).max(200).trim(),
@@ -42,14 +43,6 @@ const uuidSchema = z.string().uuid();
 const slugSchema = z.string().min(1).max(220).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const ADMIN_SERVICE_PAGE_SIZE = 20;
 const SERVICE_COLUMNS = "id,nama,slug,deskripsi_pendek,deskripsi_panjang,icon,harga_mulai,fitur,urutan,aktif,created_at,updated_at";
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 function normalizeServicePayload(data: z.infer<typeof updateServiceSchema>) {
   const deskripsiPendek = data.deskripsiPendek ?? data.deskripsi_pendek;

@@ -4,8 +4,8 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { CreateProjectBodyStatus } from "@/actions/hooks";
-import { useCreateProject } from "@/actions/hooks";
+import type { CreateProjectBodyStatus } from "@/actions/hooks/use-projects";
+import { useCreateProject } from "@/actions/hooks/use-projects";
 import { uploadProjectThumbnail } from "@/actions/blog-media";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
@@ -16,15 +16,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import dynamic from "next/dynamic";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Calendar, FileText, ImageIcon, Save, Send, Sparkles, Target } from "@/lib/icons";
+import { slugify } from "@/lib/utils/slug";
 
 const TiptapEditor = dynamic(() => import("@/components/editor/tiptap-editor").then((mod) => mod.TiptapEditor), {
   ssr: false,
   loading: () => <div className="min-h-[320px] animate-pulse rounded-none border border-primary/30 bg-secondary/30" />,
 });
-
-function slugify(value: string) {
-  return value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 200);
-}
 
 function stripHtml(html: string) {
   return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();

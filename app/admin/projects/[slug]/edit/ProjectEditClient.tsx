@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import dynamic from "next/dynamic";
 import { ArrowLeft, FileText, ImageIcon, Save, Send, Sparkles, Target } from "@/lib/icons";
+import { slugify } from "@/lib/utils/slug";
 
 const TiptapEditor = dynamic(() => import("@/components/editor/tiptap-editor").then((mod) => mod.TiptapEditor), {
   ssr: false,
@@ -33,10 +34,6 @@ interface ProjectRecord {
   status: ProjectStatus;
   featured: boolean;
   urutan: number;
-}
-
-function slugify(value: string) {
-  return value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 200);
 }
 
 function stripHtml(html: string) {

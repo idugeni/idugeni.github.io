@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, FileText, ImageIcon, Save, Send, Sparkles, Target } from "@/lib/icons";
+import { slugify } from "@/lib/utils/slug";
 
 const galleryCategoryOptions = [
   { value: "portfolio", label: "PORTFOLIO", description: "Project showcase, case study visual, atau hasil kerja utama." },
@@ -32,10 +33,6 @@ interface GalleryItem {
   tipe: "foto" | "video";
   kategori: string | null;
   urutan: number | null;
-}
-
-function slugify(value: string) {
-  return value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 200) || "gallery-media";
 }
 
 function formatBytes(size: number) {

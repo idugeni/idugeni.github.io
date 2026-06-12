@@ -8,6 +8,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
 import { getClientIp, uuidArraySchema, uuidSchema } from "@/lib/security/server-action";
 import { getPaginationRange, getTotalPages, parsePositiveInt } from "@/lib/utils/pagination";
+import { slugify as createSlug } from "@/lib/utils/slug";
 
 // Validation schemas
 const createBlogArticleSchema = z.object({
@@ -54,16 +55,6 @@ const blogCategorySchema = z.object({
   warna: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Color must be a valid hex value").optional().or(z.literal("")),
 });
 const blogCategoryUpdateSchema = blogCategorySchema.partial();
-
-function createSlug(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/-{2,}/g, "-");
-}
 
 export async function getBlogArticles(filters?: { kategori?: string; search?: string; status?: string }) {
   const conditions: string[] = [];

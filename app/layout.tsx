@@ -9,6 +9,7 @@ import { ZoomLock } from "@/components/layout/ZoomLock";
 import { AnnouncementBanner } from "@/components/public/AnnouncementBanner";
 import { AnnouncementModal } from "@/components/public/AnnouncementModal";
 import { siteConfig } from "@/lib/config/site";
+import "@/lib/env";
 import "./globals.css";
 
 const inter = Inter({

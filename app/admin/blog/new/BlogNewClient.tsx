@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import type { CreateBlogBodyStatus } from "@/actions/hooks";
-import { useCreateBlogArticle, useGenerateBlogArticleWithAi, useGenerateBlogSeoPlanWithAi } from "@/actions/hooks";
+import type { CreateBlogBodyStatus } from "@/actions/hooks/use-blog";
+import { useCreateBlogArticle, useGenerateBlogArticleWithAi, useGenerateBlogSeoPlanWithAi } from "@/actions/hooks/use-blog";
 import { uploadBlogThumbnail } from "@/actions/blog-media";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import dynamic from "next/dynamic";
 import { ArrowLeft, Copy, FileText, ImageIcon, Save, Send, Sparkles, Target } from "@/lib/icons";
 import { SeoAuditorPanel } from "@/components/admin/SeoAuditorPanel";
+import { slugify } from "@/lib/utils/slug";
 
 const TiptapEditor = dynamic(() => import("@/components/editor/tiptap-editor").then((mod) => mod.TiptapEditor), {
   ssr: false,
@@ -56,10 +57,6 @@ const intentOptions: Array<SelectOption<AiIntent>> = [
 ];
 
 interface BlogNewClientProps { categories: BlogCategory[] }
-
-function slugify(value: string) {
-  return value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 200);
-}
 
 function stripHtml(html: string) {
   return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().toLowerCase();

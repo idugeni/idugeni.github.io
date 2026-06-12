@@ -5,16 +5,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { createClient } from "@/lib/supabase/server";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 200) || "gallery-media";
-}
+import { slugify } from "@/lib/utils/slug";
 
 const slugSchema = z.string().min(1).max(220).transform(slugify).pipe(z.string().min(1).max(200));
 

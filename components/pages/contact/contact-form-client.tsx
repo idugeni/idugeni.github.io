@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSendContactMessage } from "@/actions/hooks";
+import { useSendContactMessage } from "@/actions/hooks/use-contact";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

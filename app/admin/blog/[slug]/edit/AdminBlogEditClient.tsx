@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { CreateBlogBodyStatus } from "@/actions/hooks";
-import { useGetBlogArticle, useGetBlogCategories, useUpdateBlogArticle } from "@/actions/hooks";
+import type { CreateBlogBodyStatus } from "@/actions/hooks/use-blog";
+import { useGetBlogArticle, useGetBlogCategories, useUpdateBlogArticle } from "@/actions/hooks/use-blog";
 import { uploadBlogThumbnail } from "@/actions/blog-media";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import dynamicImport from "next/dynamic";
 import { ArrowLeft, FileText, ImageIcon, Save, Send, Sparkles, Target } from "@/lib/icons";
 import { SeoAuditorPanel } from "@/components/admin/SeoAuditorPanel";
+import { slugify } from "@/lib/utils/slug";
 
 const TiptapEditor = dynamicImport(() => import("@/components/editor/tiptap-editor").then((mod) => mod.TiptapEditor), {
   ssr: false,
@@ -26,10 +27,6 @@ type BlogCategory = { id: string; nama: string; warna: string | null };
 type AdminBlogEditClientProps = {
   slug: string;
 };
-
-function slugify(value: string) {
-  return value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 200);
-}
 
 function estimateReadingTime(html: string) {
   const words = html.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;

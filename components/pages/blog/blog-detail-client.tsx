@@ -32,24 +32,15 @@ import {
   getSafeImageSource,
   shouldBypassImageOptimization,
 } from "@/lib/utils/image-source";
+import { slugify } from "@/lib/utils/slug";
 
 // --- Constants ---
 const SCROLL_OFFSET = 96; // Match scroll-mt-24 (24 * 4px) for consistent heading detection and scrolling
 
-// --- TOC Types & Utilities ---
 interface TocHeading {
   id: string;
   text: string;
   level: 2 | 3;
-}
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim();
 }
 
 function extractHeadings(content: string): TocHeading[] {
