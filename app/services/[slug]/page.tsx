@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { ServiceDetailClient } from "@/components/pages/services/service-detail-client";
 import { CACHE_TAGS } from "@/lib/cache/tags";
-import { createPublicClient } from "@/lib/supabase/public";
+import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
 import type { Service } from "@/types/pages";
 
@@ -22,15 +22,10 @@ async function getServiceMetadata(slug: string) {
   cacheLife(SERVICE_DETAIL_CACHE_LIFE);
   cacheTag(CACHE_TAGS.services);
 
-  const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("services")
-    .select("nama, deskripsi_pendek")
-    .eq("slug", slug)
-    .eq("aktif", true)
-    .single();
-
-  return data;
+  return await queryPoolerSingle<{ nama: string; deskripsi_pendek: string }>(
+    `SELECT nama, deskripsi_pendek FROM services WHERE slug=$1 AND aktif=true`,
+    [slug]
+  );
 }
 
 async function getServiceDetailData(slug: string) {
@@ -38,30 +33,24 @@ async function getServiceDetailData(slug: string) {
   cacheLife(SERVICE_DETAIL_CACHE_LIFE);
   cacheTag(CACHE_TAGS.services);
 
-  const supabase = createPublicClient();
-  const { data: rawService, error } = await supabase
-    .from("services")
-    .select("*")
-    .eq("slug", slug)
-    .eq("aktif", true)
-    .single();
+  const rawService = await queryPoolerSingle<Record<string, unknown>>(
+    `SELECT * FROM services WHERE slug=$1 AND aktif=true`,
+    [slug]
+  );
 
-  if (error || !rawService) {
+  if (!rawService) {
     return null;
   }
 
   const service = toCamelCase<Service>(rawService);
-  const { data: rawRelated } = await supabase
-    .from("services")
-    .select("*")
-    .eq("aktif", true)
-    .neq("id", service.id)
-    .order("urutan")
-    .limit(3);
+  const rawRelated = await queryPooler<Record<string, unknown>>(
+    `SELECT * FROM services WHERE aktif=true AND id != $1 ORDER BY urutan LIMIT 3`,
+    [service.id as string]
+  );
 
   return {
     service,
-    relatedServices: toCamelCase<Service[]>(rawRelated ?? []),
+    relatedServices: toCamelCase<Service[]>(rawRelated),
   };
 }
 

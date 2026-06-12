@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache/tags";
-import { createPublicClient } from "@/lib/supabase/public";
+import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { BlogDetailClient } from "@/components/pages/blog/blog-detail-client";
@@ -23,21 +23,10 @@ async function getBlogSlugs() {
   cacheLife(BLOG_DETAIL_CACHE_LIFE);
   cacheTag(CACHE_TAGS.blog);
 
-  const supabase = createPublicClient();
-  const { data, error } = await supabase
-    .from("blog_artikel")
-    .select("slug")
-    .eq("status", "published")
-    .not("slug", "is", null)
-    .order("published_at", { ascending: false });
-
-  if (error) {
-    throw error;
-  }
-
-  return (data ?? [])
-    .map((article) => article.slug)
-    .filter((slug): slug is string => Boolean(slug));
+  const rows = await queryPooler<{ slug: string }>(
+    `SELECT slug FROM blog_artikel WHERE status='published' AND slug IS NOT NULL ORDER BY published_at DESC`
+  );
+  return rows.map((r) => r.slug).filter(Boolean);
 }
 
 async function getBlogDetailData(slug: string) {
@@ -45,64 +34,36 @@ async function getBlogDetailData(slug: string) {
   cacheLife(BLOG_DETAIL_CACHE_LIFE);
   cacheTag(CACHE_TAGS.blog);
 
-  const supabase = createPublicClient();
-
-  const { data: rawArticle, error: articleError } = await supabase
-    .from("blog_artikel")
-    .select("*")
-    .eq("slug", slug)
-    .eq("status", "published")
-    .maybeSingle();
-
-  if (articleError) {
-    throw articleError;
-  }
+  const rawArticle = await queryPoolerSingle<Record<string, unknown>>(
+    `SELECT * FROM blog_artikel WHERE slug=$1 AND status='published'`,
+    [slug]
+  );
 
   if (!rawArticle) {
     return null;
   }
 
-  const [{ data: rawComments, error: commentsError }, { data: rawRelated, error: relatedError }] =
-    await Promise.all([
-      supabase
-        .from("blog_komentar")
-        .select("*")
-        .eq("artikel_id", rawArticle.id)
-        .eq("approved", true)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("blog_artikel")
-        .select("*")
-        .eq("status", "published")
-        .neq("id", rawArticle.id)
-        .order("created_at", { ascending: false })
-        .limit(3),
-    ]);
-
-  if (commentsError) {
-    throw commentsError;
-  }
-
-  if (relatedError) {
-    throw relatedError;
-  }
+  const [rawComments, rawRelated] = await Promise.all([
+    queryPooler<Record<string, unknown>>(
+      `SELECT * FROM blog_komentar WHERE artikel_id=$1 AND approved=true ORDER BY created_at DESC`,
+      [rawArticle.id as string]
+    ),
+    queryPooler<Record<string, unknown>>(
+      `SELECT * FROM blog_artikel WHERE status='published' AND id != $1 ORDER BY created_at DESC LIMIT 3`,
+      [rawArticle.id as string]
+    ),
+  ]);
 
   const article = toCamelCase<BlogArticle>(rawArticle);
-  const comments = toCamelCase<BlogComment[]>(rawComments ?? []);
-  const relatedArticles = toCamelCase<BlogArticle[]>(rawRelated ?? []);
+  const comments = toCamelCase<BlogComment[]>(rawComments);
+  const relatedArticles = toCamelCase<BlogArticle[]>(rawRelated);
   const processedContent = await renderRichHtml(article.konten);
 
-  return {
-    article,
-    comments,
-    relatedArticles,
-    processedContent,
-  };
+  return { article, comments, relatedArticles, processedContent };
 }
 
 export async function generateStaticParams() {
   const slugs = await getBlogSlugs();
-
   return slugs.map((slug) => ({ slug }));
 }
 

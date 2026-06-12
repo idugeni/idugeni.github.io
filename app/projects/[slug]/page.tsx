@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache/tags";
-import { createPublicClient } from "@/lib/supabase/public";
+import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { ProjectDetailClient } from "@/components/pages/projects/project-detail-client";
@@ -23,20 +23,10 @@ async function getProjectSlugs() {
   cacheLife(PROJECT_DETAIL_CACHE_LIFE);
   cacheTag(CACHE_TAGS.projects);
 
-  const supabase = createPublicClient();
-  const { data, error } = await supabase
-    .from("projects")
-    .select("slug")
-    .not("slug", "is", null)
-    .order("urutan");
-
-  if (error) {
-    throw error;
-  }
-
-  return (data ?? [])
-    .map((project) => project.slug)
-    .filter((slug): slug is string => Boolean(slug));
+  const rows = await queryPooler<{ slug: string }>(
+    `SELECT slug FROM projects WHERE slug IS NOT NULL ORDER BY urutan`
+  );
+  return rows.map((r) => r.slug).filter(Boolean);
 }
 
 async function getProjectDetailData(slug: string) {
@@ -44,47 +34,29 @@ async function getProjectDetailData(slug: string) {
   cacheLife(PROJECT_DETAIL_CACHE_LIFE);
   cacheTag(CACHE_TAGS.projects);
 
-  const supabase = createPublicClient();
-
-  const { data: rawProject, error: projectError } = await supabase
-    .from("projects")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
-
-  if (projectError) {
-    throw projectError;
-  }
+  const rawProject = await queryPoolerSingle<Record<string, unknown>>(
+    `SELECT * FROM projects WHERE slug=$1`,
+    [slug]
+  );
 
   if (!rawProject) {
     return null;
   }
 
   const project = toCamelCase<Project>(rawProject);
-  const { data: rawRelatedProjects, error: relatedError } = await supabase
-    .from("projects")
-    .select("*")
-    .eq("kategori", project.kategori)
-    .neq("id", project.id)
-    .limit(3);
+  const rawRelatedProjects = await queryPooler<Record<string, unknown>>(
+    `SELECT * FROM projects WHERE kategori=$1 AND id != $2 LIMIT 3`,
+    [project.kategori as string, project.id as string]
+  );
 
-  if (relatedError) {
-    throw relatedError;
-  }
-
-  const relatedProjects = toCamelCase<Project[]>(rawRelatedProjects ?? []);
+  const relatedProjects = toCamelCase<Project[]>(rawRelatedProjects);
   const processedDescription = await renderRichHtml(project.deskripsi);
 
-  return {
-    project,
-    relatedProjects,
-    processedDescription,
-  };
+  return { project, relatedProjects, processedDescription };
 }
 
 export async function generateStaticParams() {
   const slugs = await getProjectSlugs();
-
   return slugs.map((slug) => ({ slug }));
 }
 
