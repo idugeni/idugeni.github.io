@@ -2,7 +2,6 @@
 
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -10,6 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 interface ConfirmActionDialogProps {
   open: boolean;
@@ -47,8 +47,12 @@ export function ConfirmActionDialog({
           <AlertDialogCancel className="rounded-none font-mono" disabled={isPending}>
             {cancelLabel}
           </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
+          <Button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onConfirm();
+            }}
             disabled={isPending}
             className={
               variant === "destructive"
@@ -57,7 +61,7 @@ export function ConfirmActionDialog({
             }
           >
             {isPending ? "PROCESSING..." : confirmLabel}
-          </AlertDialogAction>
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -264,6 +264,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       await supabase.auth.signOut();
       setIsLogoutDialogOpen(false);
       router.replace("/login");
+    } catch {
+      setIsLogoutDialogOpen(false);
+      router.replace("/login");
     } finally {
       setIsLogoutPending(false);
     }
