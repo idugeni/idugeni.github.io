@@ -1,29 +1,21 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache/tags";
-import { createPublicClient } from "@/lib/supabase/public";
 import { queryPooler } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
 import type { BlogArticle, BlogCategory, GalleryItem, Project, Service, Testimonial } from "@/types/pages";
 
-const HOME_PROJECT_COLUMNS = "id,nama,slug,deskripsi,kategori,status,featured,thumbnail_url,thumbnail_aspect_ratio,github_url,live_url,tech_stack,urutan,created_at,updated_at";
-const HOME_SERVICE_COLUMNS = "id,nama,slug,deskripsi_pendek,deskripsi_panjang,icon,harga_mulai,fitur,aktif,urutan,created_at,updated_at";
-const HOME_TESTIMONIAL_COLUMNS = "id,nama,jabatan,perusahaan,isi,rating,avatar_url,avatar_aspect_ratio,featured,tampil,created_at";
-const BLOG_CARD_COLUMNS = "id,judul,slug,ringkasan,thumbnail_url,thumbnail_aspect_ratio,kategori_id,status,featured,published_at,jumlah_like,jumlah_view,waktu_baca,created_at,updated_at";
-const BLOG_CATEGORY_COLUMNS = "id,nama,slug,created_at";
-const GALLERY_CARD_COLUMNS = "id,judul,deskripsi,file_url,thumbnail_url,tipe,kategori,aspect_ratio,urutan,created_at";
 const PUBLIC_CONTENT_CACHE_LIFE = {
   stale: 300,
   revalidate: 300,
   expire: 3_600,
 } as const;
 const BLOG_PAGE_SIZE = 9;
+const PROJECT_PAGE_SIZE = 9;
 
 export interface BlogIndexPageParams {
   category?: string;
   page?: number;
 }
-
-const PROJECT_PAGE_SIZE = 9;
 
 export interface ProjectsIndexPageParams {
   category?: string;
@@ -48,49 +40,21 @@ export async function getHomeData() {
     CACHE_TAGS.gallery,
   );
 
-  const supabase = createPublicClient();
-
-  const [projectsResult, servicesResult, testimonialsResult, articlesResult, galleryResult] =
-    await Promise.all([
-      supabase
-        .from("projects")
-        .select(HOME_PROJECT_COLUMNS)
-        .eq("featured", true)
-        .order("urutan")
-        .limit(6),
-      supabase
-        .from("services")
-        .select(HOME_SERVICE_COLUMNS)
-        .eq("aktif", true)
-        .order("urutan")
-        .limit(9),
-      supabase
-        .from("testimonials")
-        .select(HOME_TESTIMONIAL_COLUMNS)
-        .eq("tampil", true)
-        .eq("featured", true)
-        .order("created_at", { ascending: false })
-        .limit(6),
-      supabase
-        .from("blog_artikel")
-        .select(BLOG_CARD_COLUMNS)
-        .eq("status", "published")
-        .order("created_at", { ascending: false })
-        .limit(3),
-      supabase
-        .from("gallery")
-        .select(GALLERY_CARD_COLUMNS)
-        .order("urutan")
-        .limit(8),
-    ]);
+  const [projects, services, testimonials, articles, galleryItems] = await Promise.all([
+    queryPooler<any>(`SELECT id,nama,slug,deskripsi,kategori,status,featured,thumbnail_url,thumbnail_aspect_ratio,github_url,live_url,tech_stack,urutan,created_at,updated_at FROM projects WHERE featured=true ORDER BY urutan LIMIT 6`),
+    queryPooler<any>(`SELECT id,nama,slug,deskripsi_pendek,deskripsi_panjang,icon,harga_mulai,fitur,aktif,urutan,created_at,updated_at FROM services WHERE aktif=true ORDER BY urutan LIMIT 9`),
+    queryPooler<any>(`SELECT id,nama,jabatan,perusahaan,isi,rating,avatar_url,avatar_aspect_ratio,featured,tampil,created_at FROM testimonials WHERE tampil=true AND featured=true ORDER BY created_at DESC LIMIT 6`),
+    queryPooler<any>(`SELECT id,judul,slug,ringkasan,thumbnail_url,thumbnail_aspect_ratio,kategori_id,status,featured,published_at,jumlah_like,jumlah_view,waktu_baca,created_at,updated_at FROM blog_artikel WHERE status='published' ORDER BY created_at DESC LIMIT 3`),
+    queryPooler<any>(`SELECT id,judul,deskripsi,file_url,thumbnail_url,tipe,kategori,aspect_ratio,urutan,created_at FROM gallery ORDER BY urutan LIMIT 8`),
+  ]);
 
   return {
-    projects: toCamelCase<Project[]>(projectsResult.data ?? []),
-    services: toCamelCase<Service[]>(servicesResult.data ?? []),
-    testimonials: toCamelCase<Testimonial[]>(testimonialsResult.data ?? []),
-    articles: toCamelCase<BlogArticle[]>(articlesResult.data ?? []),
-    galleryItems: toCamelCase<GalleryItem[]>(galleryResult.data ?? []),
-    error: projectsResult.error || servicesResult.error || testimonialsResult.error || articlesResult.error || galleryResult.error,
+    projects: toCamelCase<Project[]>(projects),
+    services: toCamelCase<Service[]>(services),
+    testimonials: toCamelCase<Testimonial[]>(testimonials),
+    articles: toCamelCase<BlogArticle[]>(articles),
+    galleryItems: toCamelCase<GalleryItem[]>(galleryItems),
+    error: null,
   };
 }
 
@@ -98,25 +62,15 @@ export async function getBlogIndexData() {
   "use cache";
   applyPublicContentCacheTags(CACHE_TAGS.blog);
 
-  const supabase = createPublicClient();
-
-  const [articlesResult, categoriesResult] = await Promise.all([
-    supabase
-      .from("blog_artikel")
-      .select(BLOG_CARD_COLUMNS)
-      .eq("status", "published")
-      .order("created_at", { ascending: false })
-      .limit(24),
-    supabase
-      .from("kategori")
-      .select(BLOG_CATEGORY_COLUMNS)
-      .order("nama"),
+  const [articles, categories] = await Promise.all([
+    queryPooler<any>(`SELECT id,judul,slug,ringkasan,thumbnail_url,thumbnail_aspect_ratio,kategori_id,status,featured,published_at,jumlah_like,jumlah_view,waktu_baca,created_at,updated_at FROM blog_artikel WHERE status='published' ORDER BY created_at DESC LIMIT 24`),
+    queryPooler<any>(`SELECT id,nama,slug,created_at FROM kategori ORDER BY nama`),
   ]);
 
   return {
-    articles: toCamelCase<BlogArticle[]>(articlesResult.data ?? []),
-    categories: toCamelCase<BlogCategory[]>(categoriesResult.data ?? []),
-    error: articlesResult.error || categoriesResult.error,
+    articles: toCamelCase<BlogArticle[]>(articles),
+    categories: toCamelCase<BlogCategory[]>(categories),
+    error: null,
   };
 }
 
@@ -128,12 +82,12 @@ export async function getBlogIndexPageData({ category, page = 1 }: BlogIndexPage
   const safeCategory = category?.trim() || undefined;
   const from = (safePage - 1) * BLOG_PAGE_SIZE;
 
-  const conditions: string[] = [`a.status = 'published'`];
+  const conditions: string[] = [`status = 'published'`];
   const params: unknown[] = [];
   let idx = 1;
 
   if (safeCategory) {
-    conditions.push(`a.kategori_id = $${idx++}`);
+    conditions.push(`kategori_id = $${idx++}`);
     params.push(safeCategory);
   }
 
@@ -143,15 +97,15 @@ export async function getBlogIndexPageData({ category, page = 1 }: BlogIndexPage
 
   const [countResult, articlesResult, categoriesResult] = await Promise.all([
     queryPooler<{ count: number }>(
-      `SELECT COUNT(*)::int AS count FROM blog_artikel a ${whereClause}`,
+      `SELECT COUNT(*)::int AS count FROM blog_artikel ${whereClause}`,
       params,
     ),
     queryPooler<Record<string, unknown>>(
-      `SELECT ${BLOG_CARD_COLUMNS} FROM blog_artikel a ${whereClause} ORDER BY a.created_at DESC LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+      `SELECT id,judul,slug,ringkasan,thumbnail_url,thumbnail_aspect_ratio,kategori_id,status,featured,published_at,jumlah_like,jumlah_view,waktu_baca,created_at,updated_at FROM blog_artikel ${whereClause} ORDER BY created_at DESC LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
       [...params, BLOG_PAGE_SIZE, from],
     ),
     queryPooler<Record<string, unknown>>(
-      `SELECT ${BLOG_CATEGORY_COLUMNS} FROM kategori ORDER BY nama ASC`,
+      `SELECT id,nama,slug,created_at FROM kategori ORDER BY nama ASC`,
     ),
   ]);
 
@@ -178,14 +132,11 @@ export async function getProjectsIndexData() {
   "use cache";
   applyPublicContentCacheTags(CACHE_TAGS.projects);
 
-  const supabase = createPublicClient();
-  const { data, error } = await supabase
-    .from("projects")
-    .select(HOME_PROJECT_COLUMNS)
-    .order("urutan")
-    .limit(48);
+  const projects = await queryPooler<any>(
+    `SELECT id,nama,slug,deskripsi,kategori,status,featured,thumbnail_url,thumbnail_aspect_ratio,github_url,live_url,tech_stack,urutan,created_at,updated_at FROM projects ORDER BY urutan LIMIT 48`
+  );
 
-  return { projects: toCamelCase<Project[]>(data ?? []), error };
+  return { projects: toCamelCase<Project[]>(projects), error: null };
 }
 
 export async function getProjectsIndexPageData({ category, status, tech, page = 1 }: ProjectsIndexPageParams = {}) {
@@ -197,58 +148,41 @@ export async function getProjectsIndexPageData({ category, status, tech, page = 
   const safeStatus = status?.trim() || undefined;
   const safeTech = tech?.trim() || undefined;
   const from = (safePage - 1) * PROJECT_PAGE_SIZE;
-  const to = from + PROJECT_PAGE_SIZE - 1;
-  const supabase = createPublicClient();
 
-  let projectsQuery = supabase
-    .from("projects")
-    .select(HOME_PROJECT_COLUMNS, { count: "exact" })
-    .order("urutan")
-    .range(from, to);
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let idx = 1;
 
-  if (safeCategory) projectsQuery = projectsQuery.eq("kategori", safeCategory);
-  if (safeStatus) projectsQuery = projectsQuery.eq("status", safeStatus);
-  if (safeTech) projectsQuery = projectsQuery.contains("tech_stack", [safeTech]);
+  if (safeCategory) { conditions.push(`kategori = $${idx++}`); params.push(safeCategory); }
+  if (safeStatus) { conditions.push(`status = $${idx++}`); params.push(safeStatus); }
+  if (safeTech) { conditions.push(`tech_stack @> $${idx++}::jsonb`); params.push(JSON.stringify([safeTech])); }
 
-  const [projectsResult, filterOptionsResult] = await Promise.all([
-    projectsQuery,
-    supabase
-      .from("projects")
-      .select("kategori,status,tech_stack")
-      .order("urutan")
-      .limit(200),
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const limitIdx = idx + 1;
+  const offsetIdx = idx + 2;
+
+  const [countResult, projectsResult, filterResult] = await Promise.all([
+    queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM projects ${whereClause}`, params),
+    queryPooler<any>(`SELECT id,nama,slug,deskripsi,kategori,status,featured,thumbnail_url,thumbnail_aspect_ratio,github_url,live_url,tech_stack,urutan,created_at,updated_at FROM projects ${whereClause} ORDER BY urutan LIMIT $${limitIdx} OFFSET $${offsetIdx}`, [...params, PROJECT_PAGE_SIZE, from]),
+    queryPooler<{ kategori: string | null; status: string | null; tech_stack: string[] | null }>(`SELECT DISTINCT kategori, status, tech_stack FROM projects ORDER BY urutan LIMIT 200`),
   ]);
 
-  const filterProjects = toCamelCase<Project[]>(filterOptionsResult.data ?? []);
-  const categories = Array.from(
-    new Set(filterProjects.map((project) => project.kategori).filter((category): category is string => Boolean(category)))
-  ).sort();
-  const statuses = Array.from(
-    new Set(filterProjects.map((project) => project.status).filter(Boolean))
-  ).sort();
-  const techStack = Array.from(
-    new Set(filterProjects.flatMap((project) => project.techStack ?? []).filter((tech): tech is string => Boolean(tech)))
-  ).sort();
-  const totalItems = projectsResult.count ?? 0;
+  const totalItems = countResult[0]?.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / PROJECT_PAGE_SIZE));
 
+  const categories = Array.from(new Set(filterResult.map((r) => r.kategori).filter(Boolean))).sort() as string[];
+  const statuses = Array.from(new Set(filterResult.map((r) => r.status).filter(Boolean))).sort() as string[];
+  const techStack = Array.from(new Set(filterResult.flatMap((r) => r.tech_stack ?? []).filter(Boolean))).sort() as string[];
+
   return {
-    projects: toCamelCase<Project[]>(projectsResult.data ?? []),
+    projects: toCamelCase<Project[]>(projectsResult ?? []),
     filters: { categories, statuses, techStack },
-    activeFilters: {
-      category: safeCategory,
-      status: safeStatus,
-      tech: safeTech,
-    },
+    activeFilters: { category: safeCategory, status: safeStatus, tech: safeTech },
     pagination: {
-      page: safePage,
-      pageSize: PROJECT_PAGE_SIZE,
-      totalItems,
-      totalPages,
-      hasPreviousPage: safePage > 1,
-      hasNextPage: safePage < totalPages,
+      page: safePage, pageSize: PROJECT_PAGE_SIZE, totalItems, totalPages,
+      hasPreviousPage: safePage > 1, hasNextPage: safePage < totalPages,
     },
-    error: projectsResult.error || filterOptionsResult.error,
+    error: null,
   };
 }
 
@@ -256,27 +190,20 @@ export async function getServicesIndexData() {
   "use cache";
   applyPublicContentCacheTags(CACHE_TAGS.services);
 
-  const supabase = createPublicClient();
-  const { data, error } = await supabase
-    .from("services")
-    .select(HOME_SERVICE_COLUMNS)
-    .eq("aktif", true)
-    .order("urutan")
-    .limit(24);
+  const services = await queryPooler<any>(
+    `SELECT id,nama,slug,deskripsi_pendek,deskripsi_panjang,icon,harga_mulai,fitur,aktif,urutan,created_at,updated_at FROM services WHERE aktif=true ORDER BY urutan LIMIT 24`
+  );
 
-  return { services: toCamelCase<Service[]>(data ?? []), error };
+  return { services: toCamelCase<Service[]>(services), error: null };
 }
 
 export async function getGalleryIndexData() {
   "use cache";
   applyPublicContentCacheTags(CACHE_TAGS.gallery);
 
-  const supabase = createPublicClient();
-  const { data, error } = await supabase
-    .from("gallery")
-    .select(GALLERY_CARD_COLUMNS)
-    .order("urutan")
-    .limit(48);
+  const items = await queryPooler<any>(
+    `SELECT id,judul,deskripsi,file_url,thumbnail_url,tipe,kategori,aspect_ratio,urutan,created_at FROM gallery ORDER BY urutan LIMIT 48`
+  );
 
-  return { items: toCamelCase<GalleryItem[]>(data ?? []), error };
+  return { items: toCamelCase<GalleryItem[]>(items), error: null };
 }

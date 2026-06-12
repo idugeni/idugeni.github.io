@@ -1,17 +1,12 @@
-import { createClient } from "@/lib/supabase/server";
+import { queryPooler } from "@/lib/db/pooler";
 import { siteConfig } from "@/lib/config/site";
 
 export async function GET() {
-  const supabase = await createClient();
+  const articles = await queryPooler<{ judul: string; slug: string; ringkasan: string; published_at: string | null; updated_at: string | null }>(
+    `SELECT judul, slug, ringkasan, published_at, updated_at FROM blog_artikel WHERE status='published' ORDER BY published_at DESC LIMIT 50`
+  );
 
-  const { data: articles } = await supabase
-    .from("blog_artikel")
-    .select("judul, slug, ringkasan, published_at, updated_at")
-    .eq("status", "published")
-    .order("published_at", { ascending: false })
-    .limit(50);
-
-  const items = (articles ?? [])
+  const items = articles
     .map(
       (article) => `
     <item>
@@ -19,7 +14,7 @@ export async function GET() {
       <link>${siteConfig.url}/blog/${article.slug}</link>
       <guid isPermaLink="true">${siteConfig.url}/blog/${article.slug}</guid>
       <description><![CDATA[${article.ringkasan}]]></description>
-      <pubDate>${new Date(article.published_at || article.updated_at).toUTCString()}</pubDate>
+      <pubDate>${new Date(article.published_at ?? article.updated_at ?? new Date()).toUTCString()}</pubDate>
       <author>${siteConfig.contact.email} (${siteConfig.owner.name})</author>
     </item>`
     )
