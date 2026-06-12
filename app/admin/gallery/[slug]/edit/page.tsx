@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { getGalleryItemBySlug } from "@/actions/gallery";
 import { GalleryEditClient } from "./GalleryEditClient";
 
@@ -13,6 +14,12 @@ export async function generateMetadata({ params }: { params: EditGalleryParams }
 
 export default async function AdminGalleryEdit({ params }: { params: EditGalleryParams }) {
   const { slug } = await params;
-  const item = await getGalleryItemBySlug(slug);
+  let item;
+  try {
+    item = await getGalleryItemBySlug(slug);
+  } catch {
+    notFound();
+  }
+  if (!item) notFound();
   return <GalleryEditClient item={item} />;
 }

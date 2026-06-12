@@ -1,29 +1,49 @@
+import { Suspense } from "react";
 import { getAdminProjectsPage, getProjectStats } from "@/actions/projects";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
-import { Plus } from "@/lib/icons";
+import { Plus, Loader2Icon } from "@/lib/icons";
 import Link from "next/link";
 import { ProjectListClient } from "./ProjectListClient";
 
 type AdminProjectsSearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-export default async function AdminProjects({ searchParams }: { searchParams: AdminProjectsSearchParams }) {
-  const params = await searchParams;
-  const [pageData, stats] = await Promise.all([
-    getAdminProjectsPage(params),
-    getProjectStats(),
-  ]);
+async function ProjectsContent({ searchParams }: { searchParams: AdminProjectsSearchParams }) {
+  let pageData = null;
+  let stats = null;
+  let categories: string[] = [];
+  let error: string | null = null;
 
-  const supabase = await createClient();
-  const { data: categoryRows } = await supabase
-    .from("projects")
-    .select("kategori")
-    .not("kategori", "is", null)
-    .order("kategori");
-  const categories = Array.from(new Set((categoryRows ?? []).map((row) => row.kategori).filter(Boolean) as string[]));
+  try {
+    const params = await searchParams;
+    const [pd, st] = await Promise.all([
+      getAdminProjectsPage(params),
+      getProjectStats(),
+    ]);
+    pageData = pd;
+    stats = st;
 
-  const transformedProjects = pageData.projects.map((project) => ({
+    const supabase = await createClient();
+    const { data: categoryRows } = await supabase
+      .from("projects")
+      .select("kategori")
+      .not("kategori", "is", null)
+      .order("kategori");
+    categories = Array.from(new Set((categoryRows ?? []).map((row) => row.kategori).filter(Boolean) as string[]));
+  } catch (err) {
+    error = err instanceof Error ? err.message : "Failed to load projects data";
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-none border border-red-500/30 bg-red-500/10 p-6">
+        <p className="font-mono text-sm text-red-400">{error}</p>
+      </div>
+    );
+  }
+
+  const transformedProjects = pageData!.projects.map((project) => ({
     id: project.id,
     nama: project.nama,
     slug: project.slug,
@@ -59,10 +79,27 @@ export default async function AdminProjects({ searchParams }: { searchParams: Ad
       <ProjectListClient
         initialProjects={transformedProjects}
         categories={categories}
-        stats={stats}
-        filters={pageData.filters}
-        pagination={pageData.pagination}
+        stats={stats!}
+        filters={pageData!.filters}
+        pagination={pageData!.pagination}
       />
     </div>
+  );
+}
+
+function ProjectsLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 space-y-4">
+      <Loader2Icon className="h-8 w-8 animate-spin text-primary" />
+      <p className="font-mono text-xs text-muted-foreground">Loading projects...</p>
+    </div>
+  );
+}
+
+export default function AdminProjects({ searchParams }: { searchParams: AdminProjectsSearchParams }) {
+  return (
+    <Suspense fallback={<ProjectsLoading />}>
+      <ProjectsContent searchParams={searchParams} />
+    </Suspense>
   );
 }

@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { getProjectBySlug } from "@/actions/projects";
 import { ProjectEditClient } from "./ProjectEditClient";
 
@@ -13,6 +14,12 @@ export async function generateMetadata({ params }: { params: EditProjectParams }
 
 export default async function AdminProjectEdit({ params }: { params: EditProjectParams }) {
   const { slug } = await params;
-  const project = await getProjectBySlug(slug);
+  let project;
+  try {
+    project = await getProjectBySlug(slug);
+  } catch {
+    notFound();
+  }
+  if (!project) notFound();
   return <ProjectEditClient project={project} />;
 }

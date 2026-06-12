@@ -10,7 +10,7 @@ export default async function AdminGallery() {
   const items = await getGallery();
   
   // Fetch unique aspect ratios
-  const aspectRatios = Array.from(new Set(items?.map(item => item.aspectRatio).filter(Boolean) as string[]));
+  const aspectRatios = Array.from(new Set(items?.map(item => item.aspect_ratio).filter(Boolean) as string[]));
   
   // Fetch statistics
   const stats = await getGalleryStats();

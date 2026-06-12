@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import {
   getAdminContactMessagesPage,
   getContactMessageServices,
   getContactMessageStats,
 } from "@/actions/contact";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { Loader2Icon } from "@/lib/icons";
 import { MessageListClient } from "./MessageListClient";
 
 type AdminMessagesSearchParams = Promise<{
@@ -31,13 +33,33 @@ function normalizeSearchParams(searchParams: Awaited<AdminMessagesSearchParams>)
   };
 }
 
-export default async function AdminMessages({ searchParams }: { searchParams: AdminMessagesSearchParams }) {
-  const filters = normalizeSearchParams(await searchParams);
-  const [pageData, stats, services] = await Promise.all([
-    getAdminContactMessagesPage(filters),
-    getContactMessageStats(),
-    getContactMessageServices(),
-  ]);
+async function MessagesContent({ searchParams }: { searchParams: AdminMessagesSearchParams }) {
+  let pageData = null;
+  let stats = null;
+  let services: string[] = [];
+  let error: string | null = null;
+
+  try {
+    const filters = normalizeSearchParams(await searchParams);
+    const [pd, st, sv] = await Promise.all([
+      getAdminContactMessagesPage(filters),
+      getContactMessageStats(),
+      getContactMessageServices(),
+    ]);
+    pageData = pd;
+    stats = st;
+    services = sv;
+  } catch (err) {
+    error = err instanceof Error ? err.message : "Failed to load messages data";
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-none border border-red-500/30 bg-red-500/10 p-6">
+        <p className="font-mono text-sm text-red-400">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -48,12 +70,29 @@ export default async function AdminMessages({ searchParams }: { searchParams: Ad
       />
 
       <MessageListClient
-        initialMessages={pageData.messages}
-        stats={stats}
-        filters={pageData.filters}
+        initialMessages={pageData!.messages}
+        stats={stats!}
+        filters={pageData!.filters}
         services={services}
-        pagination={pageData.pagination}
+        pagination={pageData!.pagination}
       />
     </div>
+  );
+}
+
+function MessagesLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 space-y-4">
+      <Loader2Icon className="h-8 w-8 animate-spin text-primary" />
+      <p className="font-mono text-xs text-muted-foreground">Loading messages...</p>
+    </div>
+  );
+}
+
+export default function AdminMessages({ searchParams }: { searchParams: AdminMessagesSearchParams }) {
+  return (
+    <Suspense fallback={<MessagesLoading />}>
+      <MessagesContent searchParams={searchParams} />
+    </Suspense>
   );
 }

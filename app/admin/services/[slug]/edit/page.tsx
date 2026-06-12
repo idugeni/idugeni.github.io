@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { getServiceBySlug } from "@/actions/services";
 import { ServiceForm } from "../../ServiceForm";
 
@@ -13,6 +14,12 @@ export async function generateMetadata({ params }: { params: EditServiceParams }
 
 export default async function AdminServiceEdit({ params }: { params: EditServiceParams }) {
   const { slug } = await params;
-  const service = await getServiceBySlug(slug);
+  let service;
+  try {
+    service = await getServiceBySlug(slug);
+  } catch {
+    notFound();
+  }
+  if (!service) notFound();
   return <ServiceForm mode="edit" service={service} />;
 }
