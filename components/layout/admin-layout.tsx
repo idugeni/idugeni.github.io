@@ -142,7 +142,7 @@ function AdminShellFooter() {
   );
 }
 
-function SidebarContent({ pathname, onNavigate, onLogout }: { pathname: string; onNavigate: () => void; onLogout: () => void }) {
+function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate: () => void }) {
   const activeItem = getActiveItem(pathname);
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -201,11 +201,31 @@ function SidebarContent({ pathname, onNavigate, onLogout }: { pathname: string; 
           <div className="mb-2 flex items-center gap-2 text-primary"><Lock className="h-3.5 w-3.5" /> AUTH_GUARD_ACTIVE</div>
           <div className="flex items-center gap-2"><Database className="h-3.5 w-3.5" /> Supabase session verified</div>
         </div>
-        <Button variant="ghost" className="w-full justify-start rounded-none border border-transparent font-mono text-muted-foreground hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive" onClick={onLogout}>
-          <LogOut className="mr-2 h-4 w-4" /> Logout
-        </Button>
+        <SidebarLogout />
       </div>
     </div>
+  );
+}
+
+function SidebarLogout() {
+  const router = useRouter();
+  const handleLogout = useCallback(() => {
+    if (!window.confirm("LOGOUT_ADMIN_SESSION — You are about to end the current admin session. Unsaved changes may be lost.")) return;
+    (async () => {
+      try {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+      } catch {
+        // signOut may fail but cookies might still be cleared
+      }
+      router.replace("/login");
+    })();
+  }, [router]);
+
+  return (
+    <Button variant="ghost" className="w-full justify-start rounded-none border border-transparent font-mono text-muted-foreground hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}>
+      <LogOut className="mr-2 h-4 w-4" /> Logout
+    </Button>
   );
 }
 
@@ -236,11 +256,8 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       .split("/")
       .filter(Boolean)
       .map(segment => {
-        // Filter out UUIDs
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment);
         if (isUUID) return "Detail";
-        
-        // Format to Title Case
         return segment
           .replace(/-/g, " ")
           .replace(/\b\w/g, char => char.toUpperCase());
@@ -254,19 +271,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     }
   }, [pathname]);
 
-  const handleLogout = useCallback(() => {
-    if (!window.confirm("LOGOUT_ADMIN_SESSION — You are about to end the current admin session. Unsaved changes may be lost.")) return;
-    (async () => {
-      try {
-        const supabase = createClient();
-        await supabase.auth.signOut();
-      } catch {
-        // signOut may fail but cookies might still be cleared
-      }
-      router.replace("/login");
-    })();
-  }, [router]);
-
 
   return (
     <div className="dark min-h-[100dvh] bg-background text-foreground">
@@ -275,7 +279,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
       <div className="flex min-h-[100dvh]">
         <aside className="fixed inset-y-0 left-0 hidden h-[100dvh] w-80 border-r border-sidebar-border/60 bg-sidebar/92 backdrop-blur-xl md:block">
-          <SidebarContent pathname={pathname} onNavigate={() => setIsMobileMenuOpen(false)} onLogout={handleLogout} />
+          <SidebarNav pathname={pathname} onNavigate={() => setIsMobileMenuOpen(false)} />
         </aside>
 
         <aside ref={mobileSidebarRef} className={cn("fixed inset-y-0 left-0 z-50 w-80 max-w-[86vw] border-r border-sidebar-border/60 bg-sidebar/96 backdrop-blur-xl transition-transform duration-300 md:hidden", isMobileMenuOpen ? "translate-x-0" : "-translate-x-full")} role="dialog" aria-modal="true" aria-label="Admin navigation">
@@ -284,7 +288,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
               <X className="h-5 w-5" />
             </Button>
           </div>
-          <SidebarContent pathname={pathname} onNavigate={closeMobileMenu} onLogout={handleLogout} />
+          <SidebarNav pathname={pathname} onNavigate={closeMobileMenu} />
         </aside>
 
         {isMobileMenuOpen && <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden" onClick={closeMobileMenu} aria-hidden="true" />}
