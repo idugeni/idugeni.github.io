@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import { queryPooler } from "@/lib/db/pooler";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
@@ -150,13 +149,19 @@ export async function submitContactMessage(data: { nama: string; email: string; 
 export async function getContactMessages(filters?: { dibaca?: boolean }) {
   await requireAdmin();
 
-  const supabase = await createClient();
-  let query = supabase.from("contact_messages").select("*").order("created_at", { ascending: false });
-  if (filters?.dibaca === false) query = query.eq("dibaca", false);
-  if (filters?.dibaca === true) query = query.eq("dibaca", true);
-  const { data, error } = await query.limit(100);
-  if (error) throw error;
-  return data;
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let idx = 1;
+  if (filters?.dibaca === false) {
+    conditions.push(`dibaca = $${idx++}`);
+    params.push(false);
+  }
+  if (filters?.dibaca === true) {
+    conditions.push(`dibaca = $${idx++}`);
+    params.push(true);
+  }
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  return await queryPooler(`SELECT * FROM contact_messages ${where} ORDER BY created_at DESC LIMIT 100`, params);
 }
 
 export async function getAdminContactMessagesPage(rawFilters: unknown) {

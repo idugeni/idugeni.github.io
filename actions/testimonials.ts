@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
 import { queryPooler } from "@/lib/db/pooler";
 import { requireAdmin } from "@/lib/auth/rbac";
 import type { Database } from "@/lib/supabase/types";
@@ -75,20 +74,19 @@ function getTestimonialSortColumn(sort: z.infer<typeof adminTestimonialsFilterSc
 }
 
 export async function getTestimonials(filters?: { featured?: boolean }) {
-  const supabase = await createClient();
-  let query = supabase.from("testimonials").select("*").eq("tampil", true).order("created_at", { ascending: false });
-  if (filters?.featured) query = query.eq("featured", true);
-  const { data, error } = await query;
-  if (error) throw error;
-  return data;
+  const conditions = ["tampil = $1"];
+  const params: unknown[] = [true];
+  let idx = 2;
+  if (filters?.featured) {
+    conditions.push(`featured = $${idx++}`);
+    params.push(true);
+  }
+  return await queryPooler(`SELECT * FROM testimonials WHERE ${conditions.join(" AND ")} ORDER BY created_at DESC`, params);
 }
 
 export async function getAllTestimonials() {
   await requireAdmin();
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("testimonials").select("*").order("created_at", { ascending: false });
-  if (error) throw error;
-  return data;
+  return await queryPooler(`SELECT * FROM testimonials ORDER BY created_at DESC`);
 }
 
 export async function getAdminTestimonialsPage(rawFilters: unknown) {
