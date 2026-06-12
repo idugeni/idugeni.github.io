@@ -1,9 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { queryPooler } from "@/lib/db/pooler";
+import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
-import { toSnakeCase } from "@/lib/utils/case";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { uuidArraySchema } from "@/lib/security/server-action";
@@ -72,23 +70,15 @@ function normalizeServicePayload(data: z.infer<typeof updateServiceSchema>) {
 }
 
 export async function getServices() {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("services")
-    .select(SERVICE_COLUMNS)
-    .eq("aktif", true)
-    .order("urutan");
-  if (error) throw error;
-  return data;
+  return queryPooler(
+    `SELECT ${SERVICE_COLUMNS} FROM services WHERE aktif = $1 ORDER BY urutan`,
+    [true]
+  );
 }
 
 export async function getAllServices() {
   await requireAdmin();
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("services").select(SERVICE_COLUMNS).order("urutan");
-  if (error) throw error;
-  return data;
+  return queryPooler(`SELECT ${SERVICE_COLUMNS} FROM services ORDER BY urutan`);
 }
 
 export async function getAdminServicesPage(filters: Record<string, unknown> = {}) {
@@ -175,14 +165,12 @@ export async function getService(id: string) {
     throw new Error("Invalid service ID: must be a valid UUID");
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("services")
-    .select(SERVICE_COLUMNS)
-    .eq("id", parsed.data)
-    .single();
-  if (error) throw error;
-  return data;
+  const service = await queryPoolerSingle(
+    `SELECT ${SERVICE_COLUMNS} FROM services WHERE id = $1`,
+    [parsed.data]
+  );
+  if (!service) throw new Error("Service not found");
+  return service;
 }
 
 export async function getServiceBySlug(slug: string) {
@@ -193,14 +181,12 @@ export async function getServiceBySlug(slug: string) {
     throw new Error("Invalid service slug");
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("services")
-    .select(SERVICE_COLUMNS)
-    .eq("slug", parsed.data)
-    .single();
-  if (error) throw error;
-  return data;
+  const service = await queryPoolerSingle(
+    `SELECT ${SERVICE_COLUMNS} FROM services WHERE slug = $1`,
+    [parsed.data]
+  );
+  if (!service) throw new Error("Service not found");
+  return service;
 }
 
 export async function createService(data: Record<string, unknown>) {
@@ -211,14 +197,32 @@ export async function createService(data: Record<string, unknown>) {
     throw new Error("Invalid service data: " + parsed.error.issues[0].message);
   }
 
-  const supabase = await createClient();
   const safeData = normalizeServicePayload(parsed.data);
-  const { data: service, error } = await supabase
-    .from("services")
-    .insert(toSnakeCase(safeData))
-    .select(SERVICE_COLUMNS)
-    .single();
-  if (error) throw error;
+
+  const columns = [
+    "nama", "slug", "deskripsi_pendek", "deskripsi_panjang",
+    "icon", "harga_mulai", "fitur", "aktif", "urutan",
+  ];
+
+  const values: unknown[] = [
+    safeData.nama ?? null,
+    safeData.slug ?? null,
+    safeData.deskripsiPendek ?? null,
+    safeData.deskripsiPanjang ?? null,
+    safeData.icon ?? null,
+    safeData.hargaMulai ?? null,
+    Array.isArray(safeData.fitur) ? JSON.stringify(safeData.fitur) : null,
+    safeData.aktif ?? true,
+    safeData.urutan ?? 0,
+  ];
+
+  const placeholders = columns.map((_, i) => `$${i + 1}`);
+  const service = await queryPoolerSingle(
+    `INSERT INTO services (${columns.join(", ")}) VALUES (${placeholders.join(", ")}) RETURNING ${SERVICE_COLUMNS}`,
+    values
+  );
+
+  if (!service) throw new Error("Failed to create service");
   updatePublicContent([CACHE_TAGS.services]);
   return service;
 }
@@ -236,15 +240,48 @@ export async function updateService(id: string, data: Record<string, unknown>) {
     throw new Error("Invalid service data: " + parsed.error.issues[0].message);
   }
 
-  const supabase = await createClient();
   const safeData = normalizeServicePayload(parsed.data);
-  const { data: service, error } = await supabase
-    .from("services")
-    .update(toSnakeCase(safeData))
-    .eq("id", parsedId.data)
-    .select(SERVICE_COLUMNS)
-    .single();
-  if (error) throw error;
+
+  const setClauses: string[] = [];
+  const values: unknown[] = [];
+  let paramIndex = 1;
+
+  const fieldMap: [string, unknown][] = [
+    ["nama", safeData.nama],
+    ["slug", safeData.slug],
+    ["deskripsi_pendek", safeData.deskripsiPendek],
+    ["deskripsi_panjang", safeData.deskripsiPanjang],
+    ["icon", safeData.icon],
+    ["harga_mulai", safeData.hargaMulai],
+    ["aktif", safeData.aktif],
+    ["urutan", safeData.urutan],
+  ];
+
+  for (const [col, val] of fieldMap) {
+    if (val !== undefined) {
+      setClauses.push(`${col} = $${paramIndex}`);
+      values.push(val === "" ? null : val);
+      paramIndex++;
+    }
+  }
+
+  if (Array.isArray(safeData.fitur)) {
+    setClauses.push(`fitur = $${paramIndex}`);
+    values.push(JSON.stringify(safeData.fitur));
+    paramIndex++;
+  }
+
+  if (setClauses.length === 0) {
+    throw new Error("No updates provided");
+  }
+
+  values.push(parsedId.data);
+  const service = await queryPoolerSingle(
+    `UPDATE services SET ${setClauses.join(", ")}, updated_at = now() WHERE id = $${paramIndex} RETURNING ${SERVICE_COLUMNS}`,
+    values
+  );
+
+  if (!service) throw new Error("Service not found");
   updatePublicContent([CACHE_TAGS.services]);
   return service;
 }
@@ -257,9 +294,7 @@ export async function deleteService(id: string) {
     throw new Error("Invalid service ID: must be a valid UUID");
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("services").delete().eq("id", parsed.data);
-  if (error) throw error;
+  await queryPooler(`DELETE FROM services WHERE id = $1`, [parsed.data]);
   updatePublicContent([CACHE_TAGS.services]);
   return { success: true };
 }
@@ -277,9 +312,15 @@ export async function bulkUpdateServices(ids: string[], updates: Partial<{ aktif
     throw new Error("Invalid service updates: " + parsedUpdates.error.issues[0].message);
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("services").update(parsedUpdates.data).in("id", parsedIds.data);
-  if (error) throw error;
+  if (parsedUpdates.data.aktif === undefined) {
+    throw new Error("No updates provided");
+  }
+
+  await queryPooler(
+    `UPDATE services SET aktif = $1, updated_at = now() WHERE id = ANY($2::uuid[])`,
+    [parsedUpdates.data.aktif, parsedIds.data]
+  );
+
   updatePublicContent([CACHE_TAGS.services]);
   return { success: true };
 }
@@ -292,9 +333,7 @@ export async function bulkDeleteServices(ids: string[]) {
     throw new Error("Invalid service IDs: " + parsedIds.error.issues[0].message);
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("services").delete().in("id", parsedIds.data);
-  if (error) throw error;
+  await queryPooler(`DELETE FROM services WHERE id = ANY($1::uuid[])`, [parsedIds.data]);
   updatePublicContent([CACHE_TAGS.services]);
   return { success: true };
 }
@@ -304,21 +343,30 @@ export async function duplicateService(id: string) {
 
   const original = await getService(id);
   const timestamp = Date.now();
-  const duplicate = {
-    nama: `${original.nama} (Copy)`,
-    slug: `${original.slug}-copy-${timestamp}`,
-    deskripsi_pendek: original.deskripsi_pendek,
-    deskripsi_panjang: original.deskripsi_panjang,
-    icon: original.icon,
-    harga_mulai: original.harga_mulai,
-    fitur: original.fitur,
-    urutan: original.urutan + 1,
-    aktif: false,
-  };
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("services").insert(duplicate);
-  if (error) throw error;
+  const columns = [
+    "nama", "slug", "deskripsi_pendek", "deskripsi_panjang",
+    "icon", "harga_mulai", "fitur", "urutan", "aktif",
+  ];
+
+  const values: unknown[] = [
+    `${original.nama} (Copy)`,
+    `${original.slug}-copy-${timestamp}`,
+    original.deskripsi_pendek,
+    original.deskripsi_panjang,
+    original.icon,
+    original.harga_mulai,
+    Array.isArray(original.fitur) ? JSON.stringify(original.fitur) : null,
+    original.urutan + 1,
+    false,
+  ];
+
+  const placeholders = columns.map((_, i) => `$${i + 1}`);
+  await queryPooler(
+    `INSERT INTO services (${columns.join(", ")}) VALUES (${placeholders.join(", ")})`,
+    values
+  );
+
   updatePublicContent([CACHE_TAGS.services]);
-  return { success: true, slug: duplicate.slug };
+  return { success: true, slug: `${original.slug}-copy-${timestamp}` };
 }

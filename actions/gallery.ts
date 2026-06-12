@@ -4,8 +4,7 @@ import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { createClient } from "@/lib/supabase/server";
-import { queryPooler } from "@/lib/db/pooler";
-import { toSnakeCase } from "@/lib/utils/case";
+import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 
 function slugify(value: string) {
   return value
@@ -36,15 +35,16 @@ const updateGallerySchema = galleryPayloadSchema.partial().refine((value) => Obj
 const uuidSchema = z.string().uuid();
 
 async function createUniqueGallerySlug(baseValue: string, excludeId?: string) {
-  const supabase = await createClient();
   const baseSlug = slugify(baseValue);
   let candidate = baseSlug;
   let suffix = 2;
 
   while (suffix <= 100) {
-    let query = supabase.from("gallery").select("id").eq("slug", candidate).maybeSingle();
-    const { data, error } = await query;
-    if (error) throw error;
+    const rows = await queryPooler<{ id: string }>(
+      `SELECT id FROM gallery WHERE slug = $1 LIMIT 1`,
+      [candidate]
+    );
+    const data = rows[0] || null;
     if (!data || data.id === excludeId) return candidate;
     candidate = `${baseSlug}-${suffix}`;
     suffix += 1;
@@ -73,10 +73,9 @@ export async function getGalleryItem(id: string) {
     throw new Error("Invalid gallery item ID: must be a valid UUID");
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("gallery").select("*").eq("id", parsed.data).single();
-  if (error) throw error;
-  return data;
+  const row = await queryPoolerSingle(`SELECT * FROM gallery WHERE id = $1`, [parsed.data]);
+  if (!row) throw new Error("Gallery item not found");
+  return row;
 }
 
 export async function getGalleryItemBySlug(slug: string) {
@@ -87,10 +86,9 @@ export async function getGalleryItemBySlug(slug: string) {
     throw new Error("Invalid gallery item slug");
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("gallery").select("*").eq("slug", parsed.data).single();
-  if (error) throw error;
-  return data;
+  const row = await queryPoolerSingle(`SELECT * FROM gallery WHERE slug = $1`, [parsed.data]);
+  if (!row) throw new Error("Gallery item not found");
+  return row;
 }
 
 export async function createGalleryItem(data: Record<string, unknown>) {
@@ -101,18 +99,33 @@ export async function createGalleryItem(data: Record<string, unknown>) {
     throw new Error("Invalid gallery item data: " + parsed.error.issues[0].message);
   }
 
-  const supabase = await createClient();
   const { imageUrl, fileUrl, thumbnailUrl, ...galleryData } = parsed.data;
   const slug = await createUniqueGallerySlug(parsed.data.slug || parsed.data.judul);
-  const payload = {
-    ...galleryData,
-    slug,
-    fileUrl: fileUrl || imageUrl,
-    thumbnailUrl: thumbnailUrl || fileUrl || imageUrl || null,
-    kategori: parsed.data.kategori || null,
-  };
-  const { data: item, error } = await supabase.from("gallery").insert(toSnakeCase(payload)).select().single();
-  if (error) throw error;
+
+  const columns: string[] = [];
+  const values: string[] = [];
+  const params: unknown[] = [];
+  let idx = 1;
+
+  function addColumn(col: string, val: unknown) {
+    columns.push(col);
+    values.push(`$${idx++}`);
+    params.push(val);
+  }
+
+  addColumn("judul", galleryData.judul);
+  addColumn("slug", slug);
+  addColumn("deskripsi", galleryData.deskripsi || null);
+  addColumn("file_url", fileUrl || imageUrl);
+  addColumn("thumbnail_url", thumbnailUrl || fileUrl || imageUrl || null);
+  addColumn("tipe", galleryData.tipe);
+  addColumn("kategori", parsed.data.kategori || null);
+  if (galleryData.urutan !== undefined) addColumn("urutan", galleryData.urutan);
+
+  const [item] = await queryPooler(
+    `INSERT INTO gallery (${columns.join(", ")}) VALUES (${values.join(", ")}) RETURNING *`,
+    params
+  );
   updatePublicContent([CACHE_TAGS.gallery]);
   return item;
 }
@@ -136,9 +149,11 @@ export async function updateGalleryItemBySlug(currentSlug: string, data: Record<
     throw new Error("Invalid gallery item slug");
   }
 
-  const supabase = await createClient();
-  const { data: existing, error: existingError } = await supabase.from("gallery").select("id").eq("slug", parsedSlug.data).single();
-  if (existingError) throw existingError;
+  const existing = await queryPoolerSingle<{ id: string }>(
+    `SELECT id FROM gallery WHERE slug = $1`,
+    [parsedSlug.data]
+  );
+  if (!existing) throw new Error("Gallery item not found");
 
   return updateGalleryItemById(existing.id, data);
 }
@@ -150,24 +165,35 @@ async function updateGalleryItemById(id: string, data: Record<string, unknown>) 
   }
 
   const { imageUrl, fileUrl, thumbnailUrl, ...galleryData } = parsed.data;
-  const slug = parsed.data.slug || parsed.data.judul ? await createUniqueGallerySlug(parsed.data.slug || parsed.data.judul || "gallery-media", id) : undefined;
-  const payload = {
-    ...galleryData,
-    ...(slug ? { slug } : {}),
-    ...(fileUrl || imageUrl ? { fileUrl: fileUrl || imageUrl } : {}),
-    ...(thumbnailUrl !== undefined || fileUrl || imageUrl ? { thumbnailUrl: thumbnailUrl || fileUrl || imageUrl || null } : {}),
-    ...(parsed.data.kategori !== undefined ? { kategori: parsed.data.kategori || null } : {}),
-    ...(parsed.data.deskripsi !== undefined ? { deskripsi: parsed.data.deskripsi || null } : {}),
-  };
+  const slug = parsed.data.slug || parsed.data.judul
+    ? await createUniqueGallerySlug(parsed.data.slug || parsed.data.judul || "gallery-media", id)
+    : undefined;
 
-  const supabase = await createClient();
-  const { data: item, error } = await supabase
-    .from("gallery")
-    .update(toSnakeCase(payload))
-    .eq("id", id)
-    .select()
-    .single();
-  if (error) throw error;
+  const setClauses: string[] = [];
+  const params: unknown[] = [];
+  let idx = 1;
+
+  if (galleryData.judul !== undefined) { setClauses.push(`judul = $${idx++}`); params.push(galleryData.judul); }
+  if (slug !== undefined) { setClauses.push(`slug = $${idx++}`); params.push(slug); }
+  if (galleryData.deskripsi !== undefined) { setClauses.push(`deskripsi = $${idx++}`); params.push(galleryData.deskripsi || null); }
+  if (galleryData.tipe !== undefined) { setClauses.push(`tipe = $${idx++}`); params.push(galleryData.tipe); }
+  if (galleryData.urutan !== undefined) { setClauses.push(`urutan = $${idx++}`); params.push(galleryData.urutan); }
+  if (parsed.data.kategori !== undefined) { setClauses.push(`kategori = $${idx++}`); params.push(parsed.data.kategori || null); }
+  if (fileUrl || imageUrl) { setClauses.push(`file_url = $${idx++}`); params.push(fileUrl || imageUrl); }
+  if (thumbnailUrl !== undefined || fileUrl || imageUrl) { setClauses.push(`thumbnail_url = $${idx++}`); params.push(thumbnailUrl || fileUrl || imageUrl || null); }
+
+  if (setClauses.length === 0) {
+    const row = await queryPoolerSingle(`SELECT * FROM gallery WHERE id = $1`, [id]);
+    if (!row) throw new Error("Gallery item not found");
+    return row;
+  }
+
+  params.push(id);
+  const [item] = await queryPooler(
+    `UPDATE gallery SET ${setClauses.join(", ")} WHERE id = $${idx} RETURNING *`,
+    params
+  );
+  if (!item) throw new Error("Gallery item not found");
   updatePublicContent([CACHE_TAGS.gallery]);
   return item;
 }
@@ -180,9 +206,7 @@ export async function deleteGalleryItem(id: string) {
     throw new Error("Invalid gallery item ID: must be a valid UUID");
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("gallery").delete().eq("id", parsed.data);
-  if (error) throw error;
+  await queryPooler(`DELETE FROM gallery WHERE id = $1`, [parsed.data]);
   updatePublicContent([CACHE_TAGS.gallery]);
   return { success: true };
 }
@@ -212,17 +236,16 @@ export async function getGalleryStats() {
 
 export async function bulkDeleteGalleryItems(ids: string[]) {
   await requireAdmin();
-  
+
   for (const id of ids) {
     const parsed = uuidSchema.safeParse(id);
     if (!parsed.success) {
       throw new Error("Invalid gallery item ID: must be a valid UUID");
     }
   }
-  
-  const supabase = await createClient();
-  const { error } = await supabase.from("gallery").delete().in("id", ids);
-  if (error) throw error;
+
+  const placeholders = ids.map((_, i) => `$${i + 1}`).join(", ");
+  await queryPooler(`DELETE FROM gallery WHERE id IN (${placeholders})`, ids);
   updatePublicContent([CACHE_TAGS.gallery]);
   return { success: true };
 }

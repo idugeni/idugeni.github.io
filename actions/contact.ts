@@ -83,7 +83,6 @@ export async function submitContactMessage(data: { nama: string; email: string; 
     throw new Error("Data tidak valid: " + parsed.error.issues[0].message);
   }
 
-  const supabase = await createClient();
   const messagePayload = {
     nama: parsed.data.nama,
     email: parsed.data.email,
@@ -93,17 +92,21 @@ export async function submitContactMessage(data: { nama: string; email: string; 
     layanan: parsed.data.layanan || undefined,
   };
 
-  const { data: insertedMessage, error } = await supabase.from("contact_messages").insert({
-    nama: messagePayload.nama,
-    email: messagePayload.email,
-    subjek: messagePayload.subjek,
-    pesan: messagePayload.pesan,
-    no_wa: messagePayload.noWa || null,
-    layanan: messagePayload.layanan || null,
-    resend_admin_status: "pending",
-    resend_auto_reply_status: process.env.CONTACT_AUTO_REPLY_ENABLED === "true" ? "pending" : "skipped",
-  }).select("id").single();
-  if (error) throw error;
+  const [insertedMessage] = await queryPooler<{ id: string }>(
+    `INSERT INTO contact_messages (nama, email, subjek, pesan, no_wa, layanan, resend_admin_status, resend_auto_reply_status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     RETURNING id`,
+    [
+      messagePayload.nama,
+      messagePayload.email,
+      messagePayload.subjek,
+      messagePayload.pesan,
+      messagePayload.noWa || null,
+      messagePayload.layanan || null,
+      "pending",
+      process.env.CONTACT_AUTO_REPLY_ENABLED === "true" ? "pending" : "skipped",
+    ],
+  );
 
   const [adminNotification, autoReply] = await Promise.all([
     sendContactNotification(messagePayload),
@@ -111,12 +114,26 @@ export async function submitContactMessage(data: { nama: string; email: string; 
   ]);
 
   const deliveryUpdate = toResendUpdate(adminNotification, autoReply);
-  const { error: deliveryError } = await supabase
-    .from("contact_messages")
-    .update(deliveryUpdate)
-    .eq("id", insertedMessage.id);
 
-  if (deliveryError) {
+  try {
+    await queryPooler(
+      `UPDATE contact_messages SET
+         resend_admin_status = $1, resend_admin_email_id = $2, resend_admin_error = $3,
+         resend_auto_reply_status = $4, resend_auto_reply_email_id = $5, resend_auto_reply_error = $6,
+         resend_sent_at = $7
+       WHERE id = $8`,
+      [
+        deliveryUpdate.resend_admin_status,
+        deliveryUpdate.resend_admin_email_id,
+        deliveryUpdate.resend_admin_error,
+        deliveryUpdate.resend_auto_reply_status,
+        deliveryUpdate.resend_auto_reply_email_id,
+        deliveryUpdate.resend_auto_reply_error,
+        deliveryUpdate.resend_sent_at,
+        insertedMessage.id,
+      ],
+    );
+  } catch (deliveryError) {
     console.error("Failed to persist contact Resend delivery status", deliveryError);
   }
 
@@ -267,9 +284,10 @@ export async function markMessageRead(id: string) {
     throw new Error("Invalid message ID: must be a valid UUID");
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("contact_messages").update({ dibaca: true }).eq("id", parsed.data);
-  if (error) throw error;
+  await queryPooler(
+    `UPDATE contact_messages SET dibaca = true WHERE id = $1`,
+    [parsed.data],
+  );
   revalidatePath("/admin/messages");
   return { success: true };
 }
@@ -282,12 +300,10 @@ export async function markMessageReplied(id: string) {
     throw new Error("Invalid message ID: must be a valid UUID");
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("contact_messages")
-    .update({ dibaca: true, dibalas: true, replied_at: new Date().toISOString() })
-    .eq("id", parsed.data);
-  if (error) throw error;
+  await queryPooler(
+    `UPDATE contact_messages SET dibaca = true, dibalas = true, replied_at = $1 WHERE id = $2`,
+    [new Date().toISOString(), parsed.data],
+  );
   revalidatePath("/admin/messages");
   return { success: true };
 }
@@ -307,9 +323,14 @@ export async function bulkUpdateContactMessages(ids: string[], patch: { dibaca?:
     updatePatch.replied_at = null;
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("contact_messages").update(updatePatch).in("id", parsedIds);
-  if (error) throw error;
+  const columns = Object.keys(updatePatch);
+  const values = Object.values(updatePatch);
+  const setClauses = columns.map((col, i) => `${col} = $${i + 1}`).join(", ");
+  const placeholders = parsedIds.map((_, i) => `$${columns.length + i + 1}`).join(", ");
+  await queryPooler(
+    `UPDATE contact_messages SET ${setClauses} WHERE id IN (${placeholders})`,
+    [...values, ...parsedIds],
+  );
   revalidatePath("/admin/messages");
   return { success: true };
 }
@@ -318,9 +339,8 @@ export async function bulkDeleteContactMessages(ids: string[]) {
   await requireAdmin();
 
   const parsedIds = uuidArraySchema.parse(ids);
-  const supabase = await createClient();
-  const { error } = await supabase.from("contact_messages").delete().in("id", parsedIds);
-  if (error) throw error;
+  const placeholders = parsedIds.map((_, i) => `$${i + 1}`).join(", ");
+  await queryPooler(`DELETE FROM contact_messages WHERE id IN (${placeholders})`, parsedIds);
   revalidatePath("/admin/messages");
   return { success: true };
 }
@@ -333,13 +353,11 @@ export async function retryContactMessageNotification(id: string) {
     throw new Error("Invalid message ID: must be a valid UUID");
   }
 
-  const supabase = await createClient();
-  const { data: message, error } = await supabase
-    .from("contact_messages")
-    .select("*")
-    .eq("id", parsed.data)
-    .single();
-  if (error) throw error;
+  const [message] = await queryPooler<ContactMessageRow>(
+    `SELECT * FROM contact_messages WHERE id = $1`,
+    [parsed.data],
+  );
+  if (!message) throw new Error("Contact message not found");
 
   const adminNotification = await sendContactNotification({
     nama: message.nama,
@@ -350,17 +368,19 @@ export async function retryContactMessageNotification(id: string) {
     layanan: message.layanan ?? undefined,
   });
 
-  const { error: updateError } = await supabase
-    .from("contact_messages")
-    .update({
-      resend_admin_status: adminNotification.status,
-      resend_admin_email_id: adminNotification.id ?? null,
-      resend_admin_error: truncateReason(adminNotification.reason),
-      resend_sent_at: adminNotification.status === "sent" ? new Date().toISOString() : message.resend_sent_at,
-    })
-    .eq("id", parsed.data);
-
-  if (updateError) throw updateError;
+  await queryPooler(
+    `UPDATE contact_messages SET
+       resend_admin_status = $1, resend_admin_email_id = $2, resend_admin_error = $3,
+       resend_sent_at = $4
+     WHERE id = $5`,
+    [
+      adminNotification.status,
+      adminNotification.id ?? null,
+      truncateReason(adminNotification.reason),
+      adminNotification.status === "sent" ? new Date().toISOString() : message.resend_sent_at,
+      parsed.data,
+    ],
+  );
   revalidatePath("/admin/messages");
   return { success: true, email: adminNotification };
 }

@@ -170,13 +170,14 @@ export async function createTestimonial(data: Record<string, unknown>) {
   const parsed = testimonialInputSchema.safeParse(data);
   if (!parsed.success) throw new Error("Invalid testimonial data: " + parsed.error.issues[0].message);
 
-  const supabase = await createClient();
-  const { data: testimonial, error } = await supabase
-    .from("testimonials")
-    .insert(normalizeTestimonialPayload(parsed.data))
-    .select()
-    .single();
-  if (error) throw error;
+  const payload = normalizeTestimonialPayload(parsed.data);
+  const columns = Object.keys(payload);
+  const values = Object.values(payload);
+  const placeholders = columns.map((_, i) => `$${i + 1}`).join(", ");
+  const [testimonial] = await queryPooler<TestimonialRow>(
+    `INSERT INTO testimonials (${columns.join(", ")}) VALUES (${placeholders}) RETURNING *`,
+    values,
+  );
   updatePublicContent([CACHE_TAGS.testimonials]);
   revalidatePath("/admin/testimonials");
   return testimonial;
@@ -189,14 +190,15 @@ export async function updateTestimonial(id: string, data: Record<string, unknown
   const parsed = testimonialUpdateSchema.safeParse(data);
   if (!parsed.success) throw new Error("Invalid testimonial data: " + parsed.error.issues[0].message);
 
-  const supabase = await createClient();
-  const { data: testimonial, error } = await supabase
-    .from("testimonials")
-    .update(normalizeTestimonialPayload(parsed.data))
-    .eq("id", parsedId)
-    .select()
-    .single();
-  if (error) throw error;
+  const payload = normalizeTestimonialPayload(parsed.data);
+  const columns = Object.keys(payload);
+  const values = Object.values(payload);
+  const setClauses = columns.map((col, i) => `${col} = $${i + 1}`).join(", ");
+  const [testimonial] = await queryPooler<TestimonialRow>(
+    `UPDATE testimonials SET ${setClauses} WHERE id = $${columns.length + 1} RETURNING *`,
+    [...values, parsedId],
+  );
+  if (!testimonial) throw new Error("Testimonial not found");
   updatePublicContent([CACHE_TAGS.testimonials]);
   revalidatePath("/admin/testimonials");
   return testimonial;
@@ -207,9 +209,14 @@ export async function bulkUpdateTestimonials(ids: string[], patch: { tampil?: bo
 
   const parsedIds = uuidArraySchema.parse(ids);
   const parsedPatch = bulkTestimonialPatchSchema.parse(patch);
-  const supabase = await createClient();
-  const { error } = await supabase.from("testimonials").update(parsedPatch).in("id", parsedIds);
-  if (error) throw error;
+  const columns = Object.keys(parsedPatch);
+  const values = Object.values(parsedPatch);
+  const setClauses = columns.map((col, i) => `${col} = $${i + 1}`).join(", ");
+  const placeholders = parsedIds.map((_, i) => `$${columns.length + i + 1}`).join(", ");
+  await queryPooler(
+    `UPDATE testimonials SET ${setClauses} WHERE id IN (${placeholders})`,
+    [...values, ...parsedIds],
+  );
   updatePublicContent([CACHE_TAGS.testimonials]);
   revalidatePath("/admin/testimonials");
   return { success: true };
@@ -219,19 +226,23 @@ export async function duplicateTestimonial(id: string) {
   await requireAdmin();
 
   const parsedId = uuidSchema.parse(id);
-  const supabase = await createClient();
-  const { data: source, error } = await supabase.from("testimonials").select("*").eq("id", parsedId).single();
-  if (error) throw error;
+  const [source] = await queryPooler<TestimonialRow>(
+    `SELECT * FROM testimonials WHERE id = $1`,
+    [parsedId],
+  );
+  if (!source) throw new Error("Testimonial not found");
 
   const { id: _id, created_at: _createdAt, ...clone } = source;
   void _id;
   void _createdAt;
-  const { data: testimonial, error: insertError } = await supabase
-    .from("testimonials")
-    .insert({ ...clone, nama: `${source.nama} Copy`, tampil: false, featured: false })
-    .select()
-    .single();
-  if (insertError) throw insertError;
+  const insertData = { ...clone, nama: `${source.nama} Copy`, tampil: false, featured: false };
+  const columns = Object.keys(insertData);
+  const values = Object.values(insertData);
+  const placeholders = columns.map((_, i) => `$${i + 1}`).join(", ");
+  const [testimonial] = await queryPooler<TestimonialRow>(
+    `INSERT INTO testimonials (${columns.join(", ")}) VALUES (${placeholders}) RETURNING *`,
+    values,
+  );
   updatePublicContent([CACHE_TAGS.testimonials]);
   revalidatePath("/admin/testimonials");
   return testimonial;
@@ -241,9 +252,7 @@ export async function deleteTestimonial(id: string) {
   await requireAdmin();
 
   const parsed = uuidSchema.parse(id);
-  const supabase = await createClient();
-  const { error } = await supabase.from("testimonials").delete().eq("id", parsed);
-  if (error) throw error;
+  await queryPooler(`DELETE FROM testimonials WHERE id = $1`, [parsed]);
   updatePublicContent([CACHE_TAGS.testimonials]);
   revalidatePath("/admin/testimonials");
   return { success: true };
@@ -253,9 +262,8 @@ export async function bulkDeleteTestimonials(ids: string[]) {
   await requireAdmin();
 
   const parsedIds = uuidArraySchema.parse(ids);
-  const supabase = await createClient();
-  const { error } = await supabase.from("testimonials").delete().in("id", parsedIds);
-  if (error) throw error;
+  const placeholders = parsedIds.map((_, i) => `$${i + 1}`).join(", ");
+  await queryPooler(`DELETE FROM testimonials WHERE id IN (${placeholders})`, parsedIds);
   updatePublicContent([CACHE_TAGS.testimonials]);
   revalidatePath("/admin/testimonials");
   return { success: true };

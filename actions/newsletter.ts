@@ -4,15 +4,13 @@ import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { Resend } from "resend";
-import { createClient } from "@/lib/supabase/server";
-import { queryPooler } from "@/lib/db/pooler";
+import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { rateLimit } from "@/lib/rate-limit";
 import { getClientIp, uuidSchema } from "@/lib/security/server-action";
 import type { Database } from "@/lib/supabase/types";
 
 type NewsletterRow = Database["public"]["Tables"]["newsletter_subscribers"]["Row"];
-type NewsletterUpdate = Database["public"]["Tables"]["newsletter_subscribers"]["Update"];
 
 const subscribeSchema = z.object({
   email: z.string().email().max(255).trim().toLowerCase(),
@@ -38,13 +36,6 @@ function getNewsletterSortColumn(sort: z.infer<typeof adminNewsletterFilterSchem
   return "subscribed_at";
 }
 
-function statusPatch(aktif: boolean): NewsletterUpdate {
-  return {
-    aktif,
-    unsubscribed_at: aktif ? null : new Date().toISOString(),
-  };
-}
-
 export async function subscribeNewsletter(data: { email: string; nama?: string }) {
   const ip = await getClientIp();
   await rateLimit(ip, "newsletter", { max: 3, window: 60 * 60 * 1000 });
@@ -54,22 +45,24 @@ export async function subscribeNewsletter(data: { email: string; nama?: string }
     return { success: false, message: "Email tidak valid" };
   }
 
-  const supabase = await createClient();
-  const { data: existing } = await supabase.from("newsletter_subscribers").select("id,aktif").eq("email", parsed.data.email).single();
+  const existing = await queryPoolerSingle<{ id: string; aktif: boolean }>(
+    `SELECT id, aktif FROM newsletter_subscribers WHERE email = $1`,
+    [parsed.data.email]
+  );
 
   if (existing) {
     if (existing.aktif) return { success: false, message: "Email sudah terdaftar" };
-    await supabase.from("newsletter_subscribers").update(statusPatch(true)).eq("email", parsed.data.email);
+    await queryPooler(
+      `UPDATE newsletter_subscribers SET aktif = $1, unsubscribed_at = NULL WHERE email = $2`,
+      [true, parsed.data.email]
+    );
     return { success: true, message: "Berhasil berlangganan newsletter!" };
   }
 
-  const { error } = await supabase.from("newsletter_subscribers").insert({
-    email: parsed.data.email,
-    nama: parsed.data.nama || null,
-    aktif: true,
-    token_unsubscribe: randomUUID(),
-  });
-  if (error) throw error;
+  await queryPooler(
+    `INSERT INTO newsletter_subscribers (email, nama, aktif, token_unsubscribe) VALUES ($1, $2, $3, $4)`,
+    [parsed.data.email, parsed.data.nama || null, true, randomUUID()]
+  );
   return { success: true, message: "Berhasil berlangganan newsletter!" };
 }
 
@@ -77,19 +70,19 @@ export async function unsubscribeNewsletter(token: string) {
   const parsed = uuidSchema.safeParse(token);
   if (!parsed.success) return { success: false, message: "Token unsubscribe tidak valid" };
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("newsletter_subscribers").update(statusPatch(false)).eq("token_unsubscribe", parsed.data);
-  if (error) throw error;
+  await queryPooler(
+    `UPDATE newsletter_subscribers SET aktif = $1, unsubscribed_at = $2 WHERE token_unsubscribe = $3`,
+    [false, new Date().toISOString(), parsed.data]
+  );
   return { success: true, message: "Berhasil berhenti berlangganan" };
 }
 
 export async function getNewsletterSubscribers() {
   await requireAdmin();
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("newsletter_subscribers").select("*").order("subscribed_at", { ascending: false }).limit(100);
-  if (error) throw error;
-  return data;
+  return queryPooler(
+    `SELECT * FROM newsletter_subscribers ORDER BY subscribed_at DESC LIMIT 100`
+  );
 }
 
 export async function getAdminNewsletterSubscribersPage(rawFilters: unknown) {
@@ -164,9 +157,11 @@ export async function updateNewsletterSubscriberStatus(id: string, aktif: boolea
   const parsedId = uuidSchema.parse(id);
   const parsedPatch = newsletterPatchSchema.parse({ aktif });
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("newsletter_subscribers").update(statusPatch(parsedPatch.aktif)).eq("id", parsedId);
-  if (error) throw error;
+  const unsubscribedAt = parsedPatch.aktif ? null : new Date().toISOString();
+  await queryPooler(
+    `UPDATE newsletter_subscribers SET aktif = $1, unsubscribed_at = $2 WHERE id = $3`,
+    [parsedPatch.aktif, unsubscribedAt, parsedId]
+  );
   revalidatePath("/admin/newsletter");
   return { success: true };
 }
@@ -176,9 +171,12 @@ export async function bulkUpdateNewsletterSubscribers(ids: string[], patch: { ak
   const parsedIds = uuidArraySchema.parse(ids);
   const parsedPatch = newsletterPatchSchema.parse(patch);
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("newsletter_subscribers").update(statusPatch(parsedPatch.aktif)).in("id", parsedIds);
-  if (error) throw error;
+  const unsubscribedAt = parsedPatch.aktif ? null : new Date().toISOString();
+  const placeholders = parsedIds.map((_, i) => `$${i + 2}`).join(", ");
+  await queryPooler(
+    `UPDATE newsletter_subscribers SET aktif = $1, unsubscribed_at = $2 WHERE id IN (${placeholders})`,
+    [parsedPatch.aktif, unsubscribedAt, ...parsedIds]
+  );
   revalidatePath("/admin/newsletter");
   return { success: true };
 }
@@ -187,9 +185,11 @@ export async function bulkDeleteNewsletterSubscribers(ids: string[]) {
   await requireAdmin();
   const parsedIds = uuidArraySchema.parse(ids);
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("newsletter_subscribers").delete().in("id", parsedIds);
-  if (error) throw error;
+  const placeholders = parsedIds.map((_, i) => `$${i + 1}`).join(", ");
+  await queryPooler(
+    `DELETE FROM newsletter_subscribers WHERE id IN (${placeholders})`,
+    parsedIds
+  );
   revalidatePath("/admin/newsletter");
   return { success: true };
 }
@@ -203,13 +203,11 @@ export async function dispatchNewsletterCampaign(data: { subject: string; conten
   await requireAdmin();
   const parsed = campaignSchema.parse(data);
 
-  const supabase = await createClient();
-  const { data: subscribers, error } = await supabase
-    .from("newsletter_subscribers")
-    .select("email, nama, token_unsubscribe")
-    .eq("aktif", true);
+  const subscribers = await queryPooler<{ email: string; nama: string | null; token_unsubscribe: string }>(
+    `SELECT email, nama, token_unsubscribe FROM newsletter_subscribers WHERE aktif = $1`,
+    [true]
+  );
 
-  if (error) throw error;
   if (!subscribers || subscribers.length === 0) {
     return { success: true, message: "No active subscribers found.", sentCount: 0, failedCount: 0 };
   }
