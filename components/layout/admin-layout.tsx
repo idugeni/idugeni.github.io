@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -229,8 +229,19 @@ function SidebarLogout() {
   );
 }
 
+function useSafePathname() {
+  const [pathname, setPathname] = useState("/admin");
+  useEffect(() => {
+    setPathname(window.location.pathname);
+    const handleRouteChange = () => setPathname(window.location.pathname);
+    window.addEventListener("popstate", handleRouteChange);
+    return () => window.removeEventListener("popstate", handleRouteChange);
+  }, []);
+  return pathname;
+}
+
 export function AdminLayout({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
+  const pathname = useSafePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileSidebarRef = useRef<HTMLDivElement>(null);
