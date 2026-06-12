@@ -277,6 +277,17 @@
   box-shadow: 0 0 5px hsl(var(--primary));
 }
 
+/* Smooth touch scrolling for Radix ScrollArea on mobile */
+[data-radix-scroll-area-viewport] {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+[data-radix-scroll-area-viewport]::-webkit-scrollbar {
+  display: none;
+}
+
 body::after {
   content: "";
   position: fixed;
