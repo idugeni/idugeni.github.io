@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -165,7 +165,7 @@ function SidebarContent({ pathname, onNavigate, onLogout }: { pathname: string; 
       </div>
 
       <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-4">
-        <nav className="space-y-5">
+        <nav className="space-y-5" aria-label="Admin navigation">
           {navGroups.map((group) => (
             <div key={group.label}>
               <div className="mb-2 px-3 font-mono text-[10px] font-bold tracking-[0.25em] text-muted-foreground/70">{group.label}</div>
@@ -173,7 +173,7 @@ function SidebarContent({ pathname, onNavigate, onLogout }: { pathname: string; 
                 {group.items.map((item) => {
                   const active = activeItem.href === item.href;
                   return (
-                    <Link key={item.href} href={item.href} onClick={onNavigate} className="block">
+                    <Link key={item.href} href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined} className="block">
                       <span className={cn(
                         "group relative flex items-center gap-3 overflow-hidden border border-transparent px-3 py-3 text-sm transition-all duration-200",
                         active
@@ -216,6 +216,22 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [isLogoutPending, setIsLogoutPending] = useState(false);
+  const mobileSidebarRef = useRef<HTMLDivElement>(null);
+
+  const closeMobileMenu = useCallback(() => setIsMobileMenuOpen(false), []);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeMobileMenu();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen, closeMobileMenu]);
 
 
   useEffect(() => {
@@ -264,16 +280,16 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           <SidebarContent pathname={pathname} onNavigate={() => setIsMobileMenuOpen(false)} onLogout={() => setIsLogoutDialogOpen(true)} />
         </aside>
 
-        <aside className={cn("fixed inset-y-0 left-0 z-50 w-80 max-w-[86vw] border-r border-sidebar-border/60 bg-sidebar/96 backdrop-blur-xl transition-transform duration-300 md:hidden", isMobileMenuOpen ? "translate-x-0" : "-translate-x-full")}>
+        <aside ref={mobileSidebarRef} className={cn("fixed inset-y-0 left-0 z-50 w-80 max-w-[86vw] border-r border-sidebar-border/60 bg-sidebar/96 backdrop-blur-xl transition-transform duration-300 md:hidden", isMobileMenuOpen ? "translate-x-0" : "-translate-x-full")} role="dialog" aria-modal="true" aria-label="Admin navigation">
           <div className="absolute right-3 top-3 z-10">
-            <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)} className="rounded-none border border-border/50" aria-label="Close admin navigation">
+            <Button variant="ghost" size="icon" onClick={closeMobileMenu} className="rounded-none border border-border/50" aria-label="Close admin navigation">
               <X className="h-5 w-5" />
             </Button>
           </div>
-          <SidebarContent pathname={pathname} onNavigate={() => setIsMobileMenuOpen(false)} onLogout={() => setIsLogoutDialogOpen(true)} />
+          <SidebarContent pathname={pathname} onNavigate={closeMobileMenu} onLogout={() => setIsLogoutDialogOpen(true)} />
         </aside>
 
-        {isMobileMenuOpen && <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden" onClick={() => setIsMobileMenuOpen(false)} />}
+        {isMobileMenuOpen && <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden" onClick={closeMobileMenu} aria-hidden="true" />}
 
         <div className="flex min-w-0 flex-1 flex-col md:pl-[320px]">
           <AdminShellHeader pathname={pathname} onMenuClick={() => setIsMobileMenuOpen(true)} />
