@@ -9,24 +9,29 @@ export const metadata: Metadata = {
   description: "Koleksi visual dari workspace, events, achievements, dan momen di balik layar pengembangan proyek.",
 };
 
-export default async function GalleryPage() {
+async function GalleryContent() {
   const { items, error } = await getGalleryIndexData();
 
   if (error) {
     return (
-      <PublicLayout>
-        <div className="text-center py-20">
-          <p className="text-muted-foreground">Failed to load gallery.</p>
-        </div>
-      </PublicLayout>
+      <div className="text-center py-20">
+        <p className="text-muted-foreground">Failed to load gallery.</p>
+      </div>
     );
   }
 
+  return <GalleryClient items={items} />;
+}
 
+function GalleryFallback() {
+  return <div className="min-h-[50vh]" />;
+}
+
+export default function GalleryPage() {
   return (
     <PublicLayout>
-      <Suspense fallback={null}>
-        <GalleryClient items={items} />
+      <Suspense fallback={<GalleryFallback />}>
+        <GalleryContent />
       </Suspense>
     </PublicLayout>
   );
