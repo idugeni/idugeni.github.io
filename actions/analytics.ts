@@ -1,6 +1,5 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { requireAdmin, withTimeout } from "@/lib/auth/rbac";
 import { queryPooler } from "@/lib/db/pooler";
@@ -116,15 +115,14 @@ export async function getAnalyticsSummary() {
 export async function getPageViewsChart() {
   await requireAdmin();
 
-  const supabase = await createClient();
   const thirtyDaysAgo = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
-  const { data, error } = await supabase
-    .from("page_views")
-    .select("created_at")
-    .gte("created_at", thirtyDaysAgo.toISOString())
-    .order("created_at");
-
-  if (error) throw error;
+  const rows = await queryPooler<{ date: string; count: number }>(`
+    SELECT DATE(created_at) AS date, COUNT(*)::int AS count
+    FROM page_views
+    WHERE created_at >= $1
+    GROUP BY DATE(created_at)
+    ORDER BY date
+  `, [thirtyDaysAgo.toISOString()]);
 
   const chartData: Record<string, number> = {};
   for (let i = 0; i < 30; i++) {
@@ -132,10 +130,10 @@ export async function getPageViewsChart() {
     chartData[date.toISOString().split("T")[0]] = 0;
   }
 
-  data?.forEach((row) => {
-    const date = new Date(row.created_at).toISOString().split("T")[0];
-    chartData[date] = (chartData[date] || 0) + 1;
-  });
+  for (const row of rows) {
+    const d = typeof row.date === "string" ? row.date.split("T")[0] : String(row.date).split("T")[0];
+    chartData[d] = (chartData[d] || 0) + row.count;
+  }
 
   return Object.entries(chartData)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -270,14 +268,10 @@ export async function getRecentPageViews(limit = 8) {
   await requireAdmin();
 
   const safeLimit = Math.min(Math.max(limit, 1), 20);
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("page_views")
-    .select("halaman,referrer,created_at")
-    .order("created_at", { ascending: false })
-    .limit(safeLimit);
-  if (error) throw error;
-  return (data ?? []) as PageViewRow[];
+  return await queryPooler<PageViewRow>(
+    `SELECT halaman, referrer, created_at FROM page_views ORDER BY created_at DESC LIMIT $1`,
+    [safeLimit]
+  );
 }
 
 export interface SecurityAuditSummary {
