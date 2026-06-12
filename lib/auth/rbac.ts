@@ -107,7 +107,11 @@ export async function isAdmin(): Promise<boolean> {
  */
 export async function requireAuth() {
   const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const { data: { user }, error } = await withTimeout(
+    supabase.auth.getUser(),
+    3000,
+    "Auth check timeout: Supabase connection may be unavailable"
+  );
 
   if (error || !user) {
     throw new Error("Unauthorized: Authentication required");

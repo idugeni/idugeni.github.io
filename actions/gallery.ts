@@ -212,6 +212,7 @@ export async function deleteGalleryItem(id: string) {
 }
 
 export async function getGalleryStats() {
+  await requireAdmin();
   const [row] = await queryPooler<{
     total: number;
     images: number;

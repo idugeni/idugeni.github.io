@@ -8,6 +8,11 @@ import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { rateLimit } from "@/lib/rate-limit";
 import { getClientIp, uuidSchema } from "@/lib/security/server-action";
+import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 import type { Database } from "@/lib/supabase/types";
 
 type NewsletterRow = Database["public"]["Tables"]["newsletter_subscribers"]["Row"];
@@ -230,7 +235,7 @@ export async function dispatchNewsletterCampaign(data: { subject: string; conten
     const emailsPayload = chunk.map((sub) => {
       const token = sub.token_unsubscribe;
       const unsubscribeUrl = `${siteUrl}/newsletter/unsubscribe?token=${token}`;
-      const nameGreeting = sub.nama ? `Halo ${sub.nama},` : "Halo,";
+      const nameGreeting = sub.nama ? `Halo ${escapeHtml(sub.nama)},` : "Halo,";
 
       const wrappedHtml = `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0b0f19; color: #f3f4f6; padding: 40px 20px; text-align: left;">
@@ -240,7 +245,7 @@ export async function dispatchNewsletterCampaign(data: { subject: string; conten
             </div>
             <div style="font-size: 15px; line-height: 1.6; color: #d1d5db; margin-bottom: 30px;">
               <p style="margin-bottom: 20px; font-weight: 500;">${nameGreeting}</p>
-              ${parsed.contentHtml}
+              ${sanitizeRichHtml(parsed.contentHtml)}
             </div>
             <hr style="border: 0; border-top: 1px solid #374151; margin: 30px 0;">
             <p style="font-size: 11px; color: #9ca3af; text-align: center; line-height: 1.5;">

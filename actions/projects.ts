@@ -145,6 +145,7 @@ export async function getProjectBySlug(slug: string) {
 }
 
 export async function getProjectStats() {
+  await requireAdmin();
   const [row] = await queryPooler<{
     total: number;
     completed: number;

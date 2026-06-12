@@ -523,6 +523,7 @@ export async function createBlogComment(data: Record<string, unknown>) {
 }
 
 export async function getBlogStats() {
+  await requireAdmin();
   const [row] = await queryPooler<{
     total: number;
     published: number;

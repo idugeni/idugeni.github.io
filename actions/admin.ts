@@ -25,7 +25,7 @@ export async function adminLogin(data: { email: string; password: string }) {
     password: parsed.data.password,
   });
   if (error) throw error;
-  return { token: authData.session?.access_token, user: authData.user };
+  return { user: { email: authData.user?.email, id: authData.user?.id } };
 }
 
 export async function adminLogout() {
