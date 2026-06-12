@@ -1,7 +1,13 @@
 -- ============================================================
--- DATABASE INDEXES FOR VERCEL FREE PLAN OPTIMIZATION
+-- DATABASE CLEANUP & INDEXES
 -- Run in Supabase SQL Editor (one query at a time)
 -- ============================================================
+
+-- 1. DROP DUPLICATE INDEXES (from linter warnings)
+DROP INDEX IF EXISTS idx_blog_like_unique;
+DROP INDEX IF EXISTS idx_shortlinks_deleted;
+
+-- 2. ADD PERFORMANCE INDEXES (safe to re-run with IF NOT EXISTS)
 
 -- page_views: critical for analytics performance
 CREATE INDEX IF NOT EXISTS idx_page_views_created_at ON page_views (created_at DESC);
@@ -12,12 +18,8 @@ CREATE INDEX IF NOT EXISTS idx_blog_artikel_slug ON blog_artikel (slug);
 CREATE INDEX IF NOT EXISTS idx_blog_artikel_status_created ON blog_artikel (status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_blog_artikel_kategori ON blog_artikel (kategori_id) WHERE kategori_id IS NOT NULL;
 
--- blog_like: needed for toggle dedup + unique constraint
-CREATE UNIQUE INDEX IF NOT EXISTS idx_blog_like_unique ON blog_like (artikel_id, ip_address);
-
 -- shortlinks: critical for public redirect performance
 CREATE INDEX IF NOT EXISTS idx_shortlinks_code ON shortlinks (code);
-CREATE INDEX IF NOT EXISTS idx_shortlinks_deleted ON shortlinks (deleted_at) WHERE deleted_at IS NOT NULL;
 
 -- shortlink_clicks: critical for analytics and anomaly detection
 CREATE INDEX IF NOT EXISTS idx_shortlink_clicks_shortlink_id ON shortlink_clicks (shortlink_id);
