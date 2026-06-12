@@ -29,7 +29,6 @@ import {
   X,
 } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
-import { ConfirmActionDialog } from "@/components/admin/ConfirmActionDialog";
 
 const navGroups = [
   {
@@ -214,8 +213,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
-  const [isLogoutPending, setIsLogoutPending] = useState(false);
   const mobileSidebarRef = useRef<HTMLDivElement>(null);
 
   const closeMobileMenu = useCallback(() => setIsMobileMenuOpen(false), []);
@@ -257,20 +254,18 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     }
   }, [pathname]);
 
-  const confirmLogout = async () => {
-    setIsLogoutPending(true);
-    try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      setIsLogoutDialogOpen(false);
+  const handleLogout = useCallback(() => {
+    if (!window.confirm("LOGOUT_ADMIN_SESSION — You are about to end the current admin session. Unsaved changes may be lost.")) return;
+    (async () => {
+      try {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+      } catch {
+        // signOut may fail but cookies might still be cleared
+      }
       router.replace("/login");
-    } catch {
-      setIsLogoutDialogOpen(false);
-      router.replace("/login");
-    } finally {
-      setIsLogoutPending(false);
-    }
-  };
+    })();
+  }, [router]);
 
 
   return (
@@ -280,7 +275,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
       <div className="flex min-h-[100dvh]">
         <aside className="fixed inset-y-0 left-0 hidden h-[100dvh] w-80 border-r border-sidebar-border/60 bg-sidebar/92 backdrop-blur-xl md:block">
-          <SidebarContent pathname={pathname} onNavigate={() => setIsMobileMenuOpen(false)} onLogout={() => setIsLogoutDialogOpen(true)} />
+          <SidebarContent pathname={pathname} onNavigate={() => setIsMobileMenuOpen(false)} onLogout={handleLogout} />
         </aside>
 
         <aside ref={mobileSidebarRef} className={cn("fixed inset-y-0 left-0 z-50 w-80 max-w-[86vw] border-r border-sidebar-border/60 bg-sidebar/96 backdrop-blur-xl transition-transform duration-300 md:hidden", isMobileMenuOpen ? "translate-x-0" : "-translate-x-full")} role="dialog" aria-modal="true" aria-label="Admin navigation">
@@ -289,7 +284,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
               <X className="h-5 w-5" />
             </Button>
           </div>
-          <SidebarContent pathname={pathname} onNavigate={closeMobileMenu} onLogout={() => setIsLogoutDialogOpen(true)} />
+          <SidebarContent pathname={pathname} onNavigate={closeMobileMenu} onLogout={handleLogout} />
         </aside>
 
         {isMobileMenuOpen && <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden" onClick={closeMobileMenu} aria-hidden="true" />}
@@ -305,16 +300,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           <div className="px-4 pb-4 text-center font-mono text-[10px] text-muted-foreground/60 md:px-8">© 2026 IRNK Codes Admin Console</div>
         </div>
       </div>
-      <ConfirmActionDialog
-        open={isLogoutDialogOpen}
-        onOpenChange={setIsLogoutDialogOpen}
-        title="LOGOUT_ADMIN_SESSION"
-        description="You are about to end the current admin session. Unsaved changes may be lost."
-        confirmLabel="LOGOUT"
-        variant="destructive"
-        isPending={isLogoutPending}
-        onConfirm={confirmLogout}
-      />
     </div>
   );
 }
