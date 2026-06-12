@@ -54,10 +54,10 @@ export const requireAdmin = cache(async () => {
   }
   const supabase = await createClient();
   
-  // Wrap auth check with 5-second timeout to prevent hanging
+  // Wrap auth check with 3-second timeout to prevent hanging
   const { data: { user }, error } = await withTimeout(
     supabase.auth.getUser(),
-    5000,
+    3000,
     "Auth check timeout: Supabase connection may be unavailable"
   );
 

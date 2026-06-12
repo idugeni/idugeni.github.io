@@ -57,8 +57,8 @@ export async function getDashboardStats() {
       supabase.from("contact_messages").select("dibaca"),
       supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("aktif", true),
     ]),
-    6000,
-    "Dashboard stats timeout: Failed to load stats within 6 seconds"
+    4000,
+    "Dashboard stats timeout: Failed to load stats within 4 seconds"
   );
 
   const messagesCount = messages.data?.length ?? 0;
@@ -91,8 +91,8 @@ export async function getAdminDashboardOverview() {
       supabase.from("services").select("aktif"),
       supabase.from("gallery").select("id"),
     ]),
-    8000,
-    "Dashboard queries timeout: Failed to load admin dashboard data within 8 seconds"
+    5000,
+    "Dashboard queries timeout: Failed to load admin dashboard data within 5 seconds"
   );
 
   const newsletterRows = newsletter.data ?? [];
