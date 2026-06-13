@@ -133,7 +133,7 @@ export function ShortlinkListClient({
       <Card className="admin-panel">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <Table className="w-full table-fixed">
+            <Table>
               <TableHeader>
                 <TableRow className="border-b border-border/50 hover:bg-transparent">
                   <TableHead className="w-48 font-mono text-xs uppercase tracking-wider text-primary">

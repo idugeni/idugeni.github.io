@@ -27,7 +27,7 @@ function filterHref(next: ServiceFiltersProps["filters"]) {
 
 export function ServiceFilters({ filters }: ServiceFiltersProps) {
   return (
-    <form action="/admin/services" className="grid gap-3 rounded-none border border-border/50 bg-card p-4 md:grid-cols-[1fr_160px_160px_140px_auto]">
+    <form action="/admin/services" className="grid gap-3 rounded-none border border-border/50 bg-card p-4 md:grid-cols-2 xl:grid-cols-[1fr_160px_160px_140px_auto]">
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input

@@ -84,9 +84,9 @@ export function AnnouncementForm({ initialData, mode }: AnnouncementFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[1fr_450px]">
+    <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_450px]">
       {/* Form Fields Column */}
-      <div className="space-y-6">
+      <div className="min-w-0 space-y-6">
         <Card className="admin-panel">
           <CardHeader>
             <CardTitle className="font-orbitron text-primary">
@@ -262,9 +262,9 @@ export function AnnouncementForm({ initialData, mode }: AnnouncementFormProps) {
       </div>
 
       {/* Sidebar Live Preview & Action buttons */}
-      <aside className="space-y-6">
+      <aside className="min-w-0 space-y-6 xl:sticky xl:top-24 xl:self-start">
         {/* Actions Card */}
-        <Card className="admin-panel-strong sticky top-24">
+        <Card className="admin-panel-strong">
           <CardHeader>
             <CardTitle className="font-orbitron text-primary">
               <Save className="mr-2 inline h-5 w-5" />
@@ -291,7 +291,7 @@ export function AnnouncementForm({ initialData, mode }: AnnouncementFormProps) {
         </Card>
 
         {/* Live Widget Preview */}
-        <Card className="admin-panel sticky top-72">
+        <Card className="admin-panel">
           <CardHeader className="pb-3 border-b border-border/40">
             <CardTitle className="font-orbitron text-xs uppercase tracking-wider text-muted-foreground">
               LIVE_WIDGET_PREVIEW
@@ -302,16 +302,16 @@ export function AnnouncementForm({ initialData, mode }: AnnouncementFormProps) {
           </CardHeader>
           <CardContent className="pt-6 font-mono text-xs space-y-4">
             {formData.placement === "banner" && (
-              <div className={`border p-3 flex items-center justify-between gap-3 text-xs ${getPreviewStyles()}`}>
-                <div className="flex items-center gap-2">
+              <div className={`border p-3 flex items-start justify-between gap-3 text-xs break-words ${getPreviewStyles()}`}>
+                <div className="flex items-center gap-2 min-w-0 flex-wrap">
                   {getPreviewIcon()}
-                  <span className="font-bold">{formData.title}:</span>
-                  <span className="opacity-90">{formData.content}</span>
+                  <span className="font-bold shrink-0">{formData.title}:</span>
+                  <span className="opacity-90 break-words">{formData.content}</span>
                   {formData.cta_label && formData.cta_url && (
-                    <span className="underline ml-2 font-bold cursor-pointer">{formData.cta_label}</span>
+                    <span className="underline ml-2 font-bold cursor-pointer shrink-0">{formData.cta_label}</span>
                   )}
                 </div>
-                {formData.dismissible && <X className="h-3.5 w-3.5 opacity-60 cursor-pointer shrink-0" />}
+                {formData.dismissible && <X className="h-3.5 w-3.5 opacity-60 cursor-pointer shrink-0 mt-0.5" />}
               </div>
             )}
 

@@ -139,7 +139,7 @@ export function GalleryPreviewModal({ item, open, onOpenChange }: GalleryPreview
           </div>
 
           {/* Actions */}
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <a href={item.fileUrl} download target="_blank" rel="noopener noreferrer">
               <Button className="font-mono rounded-none">
                 <Download className="w-4 h-4 mr-2" />

@@ -125,7 +125,7 @@ export default function AdminGalleryNew() {
       </div>
 
       <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card className="rounded-none border-border/50 bg-card/90">
             <CardHeader><CardTitle className="font-orbitron text-primary"><FileText className="mr-2 inline h-5 w-5" />GALLERY_CORE</CardTitle></CardHeader>
             <CardContent className="space-y-5">

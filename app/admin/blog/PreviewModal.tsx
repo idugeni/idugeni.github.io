@@ -170,7 +170,7 @@ export function PreviewModal({ article, open, onOpenChange }: PreviewModalProps)
             <h3 className="font-mono text-sm font-semibold mb-2 text-primary">
               SLUG:
             </h3>
-            <code className="text-sm bg-secondary px-2 py-1 rounded font-mono">
+            <code className="text-sm bg-secondary px-2 py-1 rounded font-mono break-all">
               /blog/{article.slug}
             </code>
           </div>

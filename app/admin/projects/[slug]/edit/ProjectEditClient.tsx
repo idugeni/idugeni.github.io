@@ -128,7 +128,7 @@ export function ProjectEditClient({ project }: { project: ProjectRecord }) {
               <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Update project content, URLs, stack, thumbnail, ordering, status, and featured placement.</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 font-mono text-xs sm:flex">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex gap-2 font-mono text-xs">
             <span className="border border-primary/30 bg-primary/10 px-3 py-2 text-primary">STACK {techCount}</span>
             <span className="border border-border/60 px-3 py-2 text-muted-foreground">WORDS {descriptionWords}</span>
             <span className="border border-border/60 px-3 py-2 text-muted-foreground">ORDER {formData.urutan}</span>
@@ -138,7 +138,7 @@ export function ProjectEditClient({ project }: { project: ProjectRecord }) {
       </div>
 
       <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card className="rounded-none border-border/50 bg-card/90">
             <CardHeader><CardTitle className="font-orbitron text-primary"><FileText className="mr-2 inline h-5 w-5" />PROJECT_CORE</CardTitle></CardHeader>
             <CardContent className="space-y-5">
@@ -193,7 +193,7 @@ export function ProjectEditClient({ project }: { project: ProjectRecord }) {
           </Card>
         </div>
 
-        <aside className="space-y-6 xl:sticky xl:top-24 xl:self-start">
+        <aside className="min-w-0 space-y-6 xl:sticky xl:top-24 xl:self-start">
           <Card className="rounded-none border-primary/25 bg-card/95 shadow-[0_0_40px_hsl(var(--primary)/0.08)]">
             <CardHeader><CardTitle className="font-orbitron text-primary"><Sparkles className="mr-2 inline h-5 w-5" />PUBLISHING</CardTitle></CardHeader>
             <CardContent className="space-y-4">

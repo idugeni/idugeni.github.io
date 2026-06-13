@@ -71,7 +71,7 @@ export function BlogTable({ articles, selectedIds, onSelectAll, onSelectOne, onP
 
   return (
     <div className="overflow-x-auto">
-      <Table className="w-full table-fixed">
+      <Table>
         <TableHeader>
           <TableRow className="border-border/50 hover:bg-transparent">
             <TableHead className="w-11">

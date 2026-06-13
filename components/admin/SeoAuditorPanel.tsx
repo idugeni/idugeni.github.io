@@ -132,7 +132,7 @@ export function SeoAuditorPanel({
       </CardHeader>
       
       <CardContent className="relative space-y-6 pt-5">
-        <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_180px]">
           <div className="space-y-2">
             <Label htmlFor="target-keyword" className="font-mono text-xs text-muted-foreground uppercase tracking-wider">TARGET_SEO_KEYWORD</Label>
             <div className="flex gap-2">

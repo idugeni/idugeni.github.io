@@ -90,7 +90,7 @@ async function OverviewStats() {
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <Card className="rounded-none border-border/50 bg-card/80">
           <CardHeader><CardTitle className="font-orbitron text-primary">QUICK_ACTIONS</CardTitle></CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">

@@ -30,7 +30,7 @@ function formatDate(value: string) {
 export function CategoryTable({ categories, onDelete }: CategoryTableProps) {
   return (
     <div className="overflow-x-auto border border-border/50 bg-card/80">
-      <Table className="w-full table-fixed">
+      <Table className="w-full">
         <TableHeader>
           <TableRow className="border-border/50 hover:bg-transparent">
             <TableHead className="font-mono text-primary">CATEGORY_DETAILS</TableHead>

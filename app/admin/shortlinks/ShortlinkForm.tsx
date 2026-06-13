@@ -286,9 +286,9 @@ export function ShortlinkForm({ shortlink, mode }: ShortlinkFormProps) {
         </button>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_400px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
         {/* Main Form */}
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {activeTab === "settings" ? (
             <>
           {/* Link Details */}
@@ -599,7 +599,6 @@ export function ShortlinkForm({ shortlink, mode }: ShortlinkFormProps) {
                           )}
                           Scrape & Build Safelink Content
                         </Button>
-                      </div>
                     ) : (
                       <div className="space-y-4 font-mono text-xs text-left">
                         <div className="grid gap-4 md:grid-cols-2">
@@ -976,8 +975,8 @@ export function ShortlinkForm({ shortlink, mode }: ShortlinkFormProps) {
         </div>
 
         {/* Sidebar */}
-        <aside className="space-y-6">
-          <Card className="admin-panel-strong sticky top-24">
+        <aside className="min-w-0 space-y-6 xl:sticky xl:top-24 xl:self-start">
+          <Card className="admin-panel-strong">
             <CardHeader>
               <CardTitle className="font-orbitron text-primary">
                 <Save className="mr-2 inline h-5 w-5" />

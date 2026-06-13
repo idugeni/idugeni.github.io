@@ -188,7 +188,7 @@ export function ProjectPreviewModal({ project, open, onOpenChange }: ProjectPrev
             <h3 className="font-mono text-sm font-semibold mb-2 text-primary">
               SLUG:
             </h3>
-            <code className="text-sm bg-secondary px-2 py-1 rounded font-mono">
+            <code className="block break-all text-sm bg-secondary px-2 py-1 rounded font-mono">
               /projects/{project.slug}
             </code>
           </div>
