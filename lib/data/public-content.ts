@@ -146,7 +146,6 @@ export async function getProjectsIndexData() {
 }
 
 export async function getProjectsIndexPageData({ category, status, tech, page = 1 }: ProjectsIndexPageParams = {}) {
-  "use cache";
   applyPublicContentCacheTags(CACHE_TAGS.projects);
 
   const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
