@@ -72,70 +72,68 @@ export async function getDashboardStats() {
 export async function getAdminDashboardOverview() {
   await requireAdmin();
 
-  const rows = await withTimeout(
-    queryPooler<any>(`
-      SELECT
-        (SELECT COUNT(*)::int FROM blog_artikel) AS blog_total,
-        (SELECT COUNT(*)::int FROM blog_artikel WHERE status='published') AS blog_published,
-        (SELECT COUNT(*)::int FROM blog_artikel WHERE status='draft') AS blog_draft,
-        (SELECT COUNT(*)::int FROM projects) AS project_total,
-        (SELECT COUNT(*)::int FROM projects WHERE status='completed') AS project_completed,
-        (SELECT COUNT(*)::int FROM projects WHERE status='ongoing') AS project_ongoing,
-        (SELECT COUNT(*)::int FROM contact_messages) AS msg_total,
-        (SELECT COUNT(*)::int FROM contact_messages WHERE dibaca=false) AS msg_unread,
-        (SELECT COUNT(*)::int FROM newsletter_subscribers WHERE aktif=true) AS sub_active,
-        (SELECT COUNT(*)::int FROM page_views) AS total_views,
-        (SELECT COUNT(*)::int FROM page_views WHERE created_at >= CURRENT_DATE) AS views_today,
-        (SELECT COUNT(*)::int FROM page_views WHERE created_at >= CURRENT_DATE - INTERVAL '7 days') AS views_this_week,
-        (SELECT COUNT(*)::int FROM page_views WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE)) AS views_this_month,
-        (SELECT COUNT(*)::int FROM page_views WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month' AND created_at < DATE_TRUNC('month', CURRENT_DATE)) AS views_prev_month,
-        (SELECT COALESCE(halaman,'/') FROM page_views GROUP BY halaman ORDER BY COUNT(*) DESC LIMIT 1) AS most_visited_page,
-        (SELECT COUNT(*)::int FROM page_views WHERE halaman = (SELECT halaman FROM page_views GROUP BY halaman ORDER BY COUNT(*) DESC LIMIT 1)) AS most_visited_page_views,
-        (SELECT COUNT(*)::int FROM newsletter_subscribers) AS newsletter_total,
-        (SELECT COUNT(*)::int FROM newsletter_subscribers WHERE aktif=true) AS newsletter_active,
-        (SELECT COUNT(*)::int FROM testimonials) AS testimonial_total,
-        (SELECT COUNT(*)::int FROM testimonials WHERE tampil=true) AS testimonial_visible,
-        (SELECT COUNT(*)::int FROM testimonials WHERE featured=true) AS testimonial_featured,
-        COALESCE((SELECT ROUND(AVG(rating)::numeric,1) FROM testimonials),0)::float AS testimonial_avg_rating,
-        (SELECT COUNT(*)::int FROM services) AS service_total,
-        (SELECT COUNT(*)::int FROM services WHERE aktif=true) AS service_active,
-        (SELECT COUNT(*)::int FROM gallery) AS gallery_total
-    `),
-    6000,
-    "Dashboard overview timeout"
-  );
+  const [rows, topPages, latestMessages, latestArticles, latestProjects] = await Promise.all([
+    withTimeout(
+      queryPooler<any>(`
+        SELECT
+          (SELECT COUNT(*)::int FROM blog_artikel) AS blog_total,
+          (SELECT COUNT(*)::int FROM blog_artikel WHERE status='published') AS blog_published,
+          (SELECT COUNT(*)::int FROM blog_artikel WHERE status='draft') AS blog_draft,
+          (SELECT COUNT(*)::int FROM projects) AS project_total,
+          (SELECT COUNT(*)::int FROM projects WHERE status='completed') AS project_completed,
+          (SELECT COUNT(*)::int FROM projects WHERE status='ongoing') AS project_ongoing,
+          (SELECT COUNT(*)::int FROM contact_messages) AS msg_total,
+          (SELECT COUNT(*)::int FROM contact_messages WHERE dibaca=false) AS msg_unread,
+          (SELECT COUNT(*)::int FROM newsletter_subscribers WHERE aktif=true) AS sub_active,
+          (SELECT COUNT(*)::int FROM page_views) AS total_views,
+          (SELECT COUNT(*)::int FROM page_views WHERE created_at >= CURRENT_DATE) AS views_today,
+          (SELECT COUNT(*)::int FROM page_views WHERE created_at >= CURRENT_DATE - INTERVAL '7 days') AS views_this_week,
+          (SELECT COUNT(*)::int FROM page_views WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE)) AS views_this_month,
+          (SELECT COUNT(*)::int FROM page_views WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month' AND created_at < DATE_TRUNC('month', CURRENT_DATE)) AS views_prev_month,
+          (SELECT COALESCE(halaman,'/') FROM page_views GROUP BY halaman ORDER BY COUNT(*) DESC LIMIT 1) AS most_visited_page,
+          (SELECT COUNT(*)::int FROM page_views WHERE halaman = (SELECT halaman FROM page_views GROUP BY halaman ORDER BY COUNT(*) DESC LIMIT 1)) AS most_visited_page_views,
+          (SELECT COUNT(*)::int FROM newsletter_subscribers) AS newsletter_total,
+          (SELECT COUNT(*)::int FROM newsletter_subscribers WHERE aktif=true) AS newsletter_active,
+          (SELECT COUNT(*)::int FROM testimonials) AS testimonial_total,
+          (SELECT COUNT(*)::int FROM testimonials WHERE tampil=true) AS testimonial_visible,
+          (SELECT COUNT(*)::int FROM testimonials WHERE featured=true) AS testimonial_featured,
+          COALESCE((SELECT ROUND(AVG(rating)::numeric,1) FROM testimonials),0)::float AS testimonial_avg_rating,
+          (SELECT COUNT(*)::int FROM services) AS service_total,
+          (SELECT COUNT(*)::int FROM services WHERE aktif=true) AS service_active,
+          (SELECT COUNT(*)::int FROM gallery) AS gallery_total
+      `),
+      6000,
+      "Dashboard overview timeout"
+    ),
+    withTimeout(
+      queryPooler<{ halaman: string; views: number; share: number }>(`
+        WITH recent AS (SELECT halaman FROM page_views ORDER BY created_at DESC LIMIT 3000),
+             agg AS (SELECT halaman, COUNT(*)::int AS views FROM recent GROUP BY halaman),
+             total AS (SELECT COUNT(*)::int AS t FROM recent)
+        SELECT halaman, views, ROUND((views::numeric / NULLIF(t,0) * 100),1)::float AS share
+        FROM agg, total ORDER BY views DESC LIMIT 5
+      `),
+      4000,
+      "Top pages timeout"
+    ),
+    withTimeout(
+      queryPooler<any>(`SELECT id,nama,subjek,dibaca,created_at FROM contact_messages ORDER BY created_at DESC LIMIT 5`),
+      3000,
+      "Latest messages timeout"
+    ),
+    withTimeout(
+      queryPooler<any>(`SELECT id,judul,slug,status,jumlah_view,created_at FROM blog_artikel ORDER BY created_at DESC LIMIT 5`),
+      3000,
+      "Latest articles timeout"
+    ),
+    withTimeout(
+      queryPooler<any>(`SELECT id,nama,slug,status,created_at FROM projects ORDER BY created_at DESC LIMIT 5`),
+      3000,
+      "Latest projects timeout"
+    ),
+  ]);
 
   const r = rows[0] || {};
-
-  const topPages = await withTimeout(
-    queryPooler<{ halaman: string; views: number; share: number }>(`
-      WITH recent AS (SELECT halaman FROM page_views ORDER BY created_at DESC LIMIT 3000),
-           agg AS (SELECT halaman, COUNT(*)::int AS views FROM recent GROUP BY halaman),
-           total AS (SELECT COUNT(*)::int AS t FROM recent)
-      SELECT halaman, views, ROUND((views::numeric / NULLIF(t,0) * 100),1)::float AS share
-      FROM agg, total ORDER BY views DESC LIMIT 5
-    `),
-    4000,
-    "Top pages timeout"
-  );
-
-  const latestMessages = await withTimeout(
-    queryPooler<any>(`SELECT id,nama,subjek,dibaca,created_at FROM contact_messages ORDER BY created_at DESC LIMIT 5`),
-    3000,
-    "Latest messages timeout"
-  );
-
-  const latestArticles = await withTimeout(
-    queryPooler<any>(`SELECT id,judul,slug,status,jumlah_view,created_at FROM blog_artikel ORDER BY created_at DESC LIMIT 5`),
-    3000,
-    "Latest articles timeout"
-  );
-
-  const latestProjects = await withTimeout(
-    queryPooler<any>(`SELECT id,nama,slug,status,created_at FROM projects ORDER BY created_at DESC LIMIT 5`),
-    3000,
-    "Latest projects timeout"
-  );
 
   const currentMonth = r.views_this_month ?? 0;
   const previousMonth = r.views_prev_month ?? 0;

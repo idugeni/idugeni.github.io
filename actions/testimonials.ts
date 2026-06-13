@@ -86,7 +86,7 @@ export async function getTestimonials(filters?: { featured?: boolean }) {
 
 export async function getAllTestimonials() {
   await requireAdmin();
-  return await queryPooler(`SELECT * FROM testimonials ORDER BY created_at DESC`);
+  return await queryPooler(`SELECT * FROM testimonials ORDER BY created_at DESC LIMIT 100`);
 }
 
 export async function getAdminTestimonialsPage(rawFilters: unknown) {

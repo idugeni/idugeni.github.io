@@ -21,7 +21,7 @@ export default function GlobalError({
               Aplikasi mengalami error fatal. Silakan coba lagi.
             </p>
             <div className="my-4 border border-red-500/20 bg-red-500/5 p-3 text-left font-mono text-xs text-gray-400 max-w-sm mx-auto">
-              {error.message || "Unhandled application error"}
+              {process.env.NODE_ENV === "development" ? (error.message || "Unhandled application error") : "An unexpected error occurred. Please try again."}
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button

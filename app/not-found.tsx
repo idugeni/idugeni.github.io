@@ -3,11 +3,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { HiOutlineHome, HiOutlineArrowLeft, HiOutlineArrowPath } from "react-icons/hi2";
-import { useRouter } from "next/navigation";
 
 export default function NotFound() {
-  const router = useRouter();
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden dark">
       {/* Background effects */}
@@ -39,13 +36,14 @@ export default function NotFound() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button
-            onClick={() => router.back()}
-            variant="outline"
-            className="font-mono border-primary/50 hover:bg-primary/10"
-          >
-            <HiOutlineArrowLeft className="mr-2 h-4 w-4" /> GO_BACK
-          </Button>
+          <Link href="/">
+            <Button
+              variant="outline"
+              className="font-mono border-primary/50 hover:bg-primary/10"
+            >
+              <HiOutlineArrowLeft className="mr-2 h-4 w-4" /> GO_BACK
+            </Button>
+          </Link>
           <Button
             onClick={() => window.location.reload()}
             variant="outline"

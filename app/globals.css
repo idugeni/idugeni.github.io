@@ -293,10 +293,15 @@ body::after {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.25) 51%);
-  background-size: 100% 4px;
-  z-index: 9999;
-  opacity: 0.15;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.03) 3px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  z-index: 50;
+  opacity: 0.6;
 }
 
 @keyframes glitch {

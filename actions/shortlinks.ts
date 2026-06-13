@@ -149,15 +149,16 @@ async function logAudit(
 // ─── Code Generation ─────────────────────────────────────────────────────────
 
 async function generateUniqueCode(): Promise<string> {
-  const code = nanoid(6);
-  const existing = await queryPoolerSingle<{ code: string }>(
-    "SELECT code FROM shortlinks WHERE code = $1",
-    [code]
-  );
-  if (existing) {
-    return generateUniqueCode();
+  const MAX_ATTEMPTS = 5;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const code = nanoid(6);
+    const existing = await queryPoolerSingle<{ code: string }>(
+      "SELECT code FROM shortlinks WHERE code = $1",
+      [code]
+    );
+    if (!existing) return code;
   }
-  return code;
+  return nanoid(10);
 }
 
 // ─── QR Code Generation ─────────────────────────────────────────────────────
@@ -631,7 +632,7 @@ export async function getTrashShortlinks() {
   await requireAuth();
 
   return await queryPooler<Shortlink>(
-    `SELECT * FROM shortlinks WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC`
+    `SELECT * FROM shortlinks WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC LIMIT 100`
   );
 }
 

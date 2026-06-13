@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { FiGithub, FiInstagram, FiMail } from "react-icons/fi";
 import { siteConfig } from "@/lib/config/site";

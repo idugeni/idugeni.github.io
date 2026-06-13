@@ -40,13 +40,19 @@ export async function getHomeData() {
     CACHE_TAGS.gallery,
   );
 
-  const [projects, services, testimonials, articles, galleryItems] = await Promise.all([
+  const [projectsResult, servicesResult, testimonialsResult, articlesResult, galleryResult] = await Promise.allSettled([
     queryPooler<any>(`SELECT id,nama,slug,deskripsi,kategori,status,featured,thumbnail_url,thumbnail_aspect_ratio,github_url,live_url,tech_stack,urutan,created_at,updated_at FROM projects WHERE featured=true ORDER BY urutan LIMIT 6`),
     queryPooler<any>(`SELECT id,nama,slug,deskripsi_pendek,deskripsi_panjang,icon,harga_mulai,fitur,aktif,urutan,created_at,updated_at FROM services WHERE aktif=true ORDER BY urutan LIMIT 9`),
     queryPooler<any>(`SELECT id,nama,jabatan,perusahaan,isi,rating,avatar_url,avatar_aspect_ratio,featured,tampil,created_at FROM testimonials WHERE tampil=true AND featured=true ORDER BY created_at DESC LIMIT 6`),
     queryPooler<any>(`SELECT id,judul,slug,ringkasan,thumbnail_url,thumbnail_aspect_ratio,kategori_id,status,featured,published_at,jumlah_like,jumlah_view,waktu_baca,created_at,updated_at FROM blog_artikel WHERE status='published' ORDER BY created_at DESC LIMIT 3`),
     queryPooler<any>(`SELECT id,judul,deskripsi,file_url,thumbnail_url,tipe,kategori,aspect_ratio,urutan,created_at FROM gallery ORDER BY urutan LIMIT 8`),
   ]);
+
+  const projects = projectsResult.status === "fulfilled" ? projectsResult.value : [];
+  const services = servicesResult.status === "fulfilled" ? servicesResult.value : [];
+  const testimonials = testimonialsResult.status === "fulfilled" ? testimonialsResult.value : [];
+  const articles = articlesResult.status === "fulfilled" ? articlesResult.value : [];
+  const galleryItems = galleryResult.status === "fulfilled" ? galleryResult.value : [];
 
   return {
     projects: toCamelCase<Project[]>(projects),
