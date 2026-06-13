@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { connection } from "next/server";
 import { AdminLayout } from "@/components/layout/admin-layout";
 
 export const metadata: Metadata = {
@@ -13,10 +14,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AdminRootLayout({
+export default async function AdminRootLayout({
   children,
 }: {
   children: ReactNode;
 }) {
+  await connection();
   return <AdminLayout>{children}</AdminLayout>;
 }
