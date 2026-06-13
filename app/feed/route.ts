@@ -30,7 +30,7 @@ export async function GET() {
     <managingEditor>${siteConfig.contact.email} (${siteConfig.owner.name})</managingEditor>
     <webMaster>${siteConfig.contact.email} (${siteConfig.owner.name})</webMaster>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-    <atom:link href="${siteConfig.url}/feed.xml" rel="self" type="application/rss+xml"/>
+    <atom:link href="${siteConfig.url}/feed" rel="self" type="application/rss+xml"/>
     <image>
       <url>${siteConfig.url}/irnk.png</url>
       <title>${siteConfig.name}</title>

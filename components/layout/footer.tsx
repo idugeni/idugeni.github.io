@@ -73,7 +73,7 @@ export function Footer() {
               <li><Link href="/privacy" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link></li>
               <li><Link href="/terms" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link></li>
               <li><Link href="/sitemap" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Sitemap</Link></li>
-              <li><a href="/feed.xml" className="text-muted-foreground hover:text-primary transition-colors">RSS Feed</a></li>
+              <li><a href="/feed" className="text-muted-foreground hover:text-primary transition-colors">RSS Feed</a></li>
             </ul>
           </div>
         </div>

@@ -101,7 +101,7 @@ export const siteConfig = {
         { href: "/privacy", label: "Privacy Policy" },
         { href: "/terms", label: "Terms of Service" },
         { href: "/sitemap", label: "Sitemap" },
-        { href: "/feed.xml", label: "RSS Feed" },
+        { href: "/feed", label: "RSS Feed" },
       ],
     },
   },

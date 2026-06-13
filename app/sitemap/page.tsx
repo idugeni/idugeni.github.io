@@ -100,7 +100,7 @@ async function getSitemapSections(): Promise<SitemapSection[]> {
         { href: "/privacy", label: "Privacy Policy", description: "Kebijakan privasi" },
         { href: "/terms", label: "Terms of Service", description: "Syarat dan ketentuan" },
         { href: "/sitemap.xml", label: "Sitemap XML", description: "Sitemap untuk mesin pencari" },
-        { href: "/feed.xml", label: "RSS Feed", description: "Berlangganan via RSS" },
+        { href: "/feed", label: "RSS Feed", description: "Berlangganan via RSS" },
       ],
     },
   ];
