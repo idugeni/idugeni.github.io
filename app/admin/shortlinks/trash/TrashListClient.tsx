@@ -8,31 +8,52 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Trash2, Undo } from "@/lib/icons";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AdminTableActionButton } from "@/components/admin/AdminTableActionButton";
+import { useToast } from "@/hooks/use-toast";
+import { ConfirmActionDialog } from "@/components/admin/ConfirmActionDialog";
 
 export function TrashListClient({ shortlinks }: { shortlinks: Shortlink[] }) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [shortlinkToDelete, setShortlinkToDelete] = useState<string | null>(null);
 
   const handleRestore = async (id: string) => {
     setLoading(id);
     try {
       await restoreShortlink(id);
+      toast({ title: "Shortlink restored successfully" });
       router.refresh();
-    } catch {
-      alert("Failed to restore");
+    } catch (error) {
+      toast({ 
+        title: "Error", 
+        description: error instanceof Error ? error.message : "Failed to restore", 
+        variant: "destructive" 
+      });
     } finally {
       setLoading(null);
     }
   };
 
-  const handlePermanentDelete = async (id: string) => {
-    if (!confirm("Permanently delete this shortlink? This cannot be undone.")) return;
-    setLoading(id);
+  const handlePermanentDeleteClick = (id: string) => {
+    setShortlinkToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handlePermanentDelete = async () => {
+    if (!shortlinkToDelete) return;
+    setLoading(shortlinkToDelete);
     try {
-      await permanentDeleteShortlink(id);
+      await permanentDeleteShortlink(shortlinkToDelete);
+      toast({ title: "Shortlink permanently deleted" });
       router.refresh();
-    } catch {
-      alert("Failed to delete");
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      toast({ 
+        title: "Error", 
+        description: error instanceof Error ? error.message : "Failed to delete", 
+        variant: "destructive" 
+      });
     } finally {
       setLoading(null);
     }
@@ -95,7 +116,7 @@ export function TrashListClient({ shortlinks }: { shortlinks: Shortlink[] }) {
                         label="Delete shortlink permanently"
                         icon={Trash2}
                         intent="delete"
-                        onClick={() => handlePermanentDelete(s.id)}
+                        onClick={() => handlePermanentDeleteClick(s.id)}
                         disabled={loading === s.id}
                       />
                     </div>
@@ -106,6 +127,17 @@ export function TrashListClient({ shortlinks }: { shortlinks: Shortlink[] }) {
           </Table>
         </div>
       </CardContent>
+
+      <ConfirmActionDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="PERMANENT_DELETE"
+        description="Permanently delete this shortlink? This cannot be undone."
+        confirmLabel="DELETE_FOREVER"
+        variant="destructive"
+        isPending={loading === shortlinkToDelete}
+        onConfirm={handlePermanentDelete}
+      />
     </Card>
   );
 }

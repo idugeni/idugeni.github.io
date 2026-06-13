@@ -11,6 +11,8 @@ import { Copy, Edit, ExternalLink, Lock, QrCode, Search, Trash2 } from "@/lib/ic
 import { StatusPill } from "@/components/admin/StatusPill";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AdminTableActionButton } from "@/components/admin/AdminTableActionButton";
+import { useToast } from "@/hooks/use-toast";
+import { ConfirmActionDialog } from "@/components/admin/ConfirmActionDialog";
 
 interface ShortlinkListClientProps {
   initialShortlinks: Shortlink[];
@@ -42,6 +44,9 @@ export function ShortlinkListClient({
   const router = useRouter();
   const [search, setSearch] = useState(filters.search || "");
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [shortlinkToDelete, setShortlinkToDelete] = useState<string | null>(null);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,14 +56,25 @@ export function ShortlinkListClient({
     router.push(`/admin/shortlinks?${params.toString()}`);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this shortlink?")) return;
-    setIsDeleting(id);
+  const handleDeleteClick = (id: string) => {
+    setShortlinkToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!shortlinkToDelete) return;
+    setIsDeleting(shortlinkToDelete);
     try {
-      await deleteShortlink(id);
+      await deleteShortlink(shortlinkToDelete);
+      toast({ title: "Shortlink deleted successfully" });
       router.refresh();
+      setDeleteDialogOpen(false);
     } catch (error) {
-      alert("Failed to delete shortlink");
+      toast({ 
+        title: "Error", 
+        description: error instanceof Error ? error.message : "Failed to delete shortlink", 
+        variant: "destructive" 
+      });
     } finally {
       setIsDeleting(null);
     }
@@ -66,7 +82,7 @@ export function ShortlinkListClient({
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert("Copied to clipboard!");
+    toast({ title: "Copied to clipboard!" });
   };
 
   const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
@@ -250,7 +266,7 @@ export function ShortlinkListClient({
                             label="Delete shortlink"
                             icon={Trash2}
                             intent="delete"
-                            onClick={() => handleDelete(shortlink.id)}
+                            onClick={() => handleDeleteClick(shortlink.id)}
                             disabled={isDeleting === shortlink.id}
                           />
                         </div>
@@ -286,6 +302,17 @@ export function ShortlinkListClient({
           ))}
         </div>
       )}
+
+      <ConfirmActionDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="DELETE_SHORTLINK"
+        description="Are you sure you want to delete this shortlink? This action cannot be undone."
+        confirmLabel="DELETE"
+        variant="destructive"
+        isPending={isDeleting === shortlinkToDelete}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

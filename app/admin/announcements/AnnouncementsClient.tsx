@@ -5,7 +5,8 @@ import Link from "next/link";
 import { deleteAnnouncement, type Announcement } from "@/actions/announcements";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
+import { ConfirmActionDialog } from "@/components/admin/ConfirmActionDialog";
 import { AlertTriangle, Calendar, Clock, Edit, Trash2 } from "@/lib/icons";
 
 interface AnnouncementsClientProps {
@@ -14,16 +15,28 @@ interface AnnouncementsClientProps {
 
 export function AnnouncementsClient({ initialAnnouncements }: AnnouncementsClientProps) {
   const [announcements, setAnnouncements] = useState(initialAnnouncements);
+  const { toast } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [announcementToDelete, setAnnouncementToDelete] = useState<string | null>(null);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to permanently delete this announcement?")) return;
+  const handleDeleteClick = (id: string) => {
+    setAnnouncementToDelete(id);
+    setDeleteDialogOpen(true);
+  };
 
+  const handleDelete = async () => {
+    if (!announcementToDelete) return;
     try {
-      await deleteAnnouncement(id);
-      toast.success("Announcement deleted successfully!");
-      setAnnouncements((prev) => prev.filter((item) => item.id !== id));
+      await deleteAnnouncement(announcementToDelete);
+      toast({ title: "Announcement deleted successfully!" });
+      setAnnouncements((prev) => prev.filter((item) => item.id !== announcementToDelete));
+      setDeleteDialogOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete announcement");
+      toast({ 
+        title: "Error", 
+        description: err instanceof Error ? err.message : "Failed to delete announcement", 
+        variant: "destructive" 
+      });
     }
   };
 
@@ -145,7 +158,7 @@ export function AnnouncementsClient({ initialAnnouncements }: AnnouncementsClien
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(item.id)}
+                          onClick={() => handleDeleteClick(item.id)}
                           className="h-7 w-7 p-0 hover:bg-red-500/10"
                         >
                           <Trash2 className="h-3.5 w-3.5 text-red-400" />
@@ -159,6 +172,17 @@ export function AnnouncementsClient({ initialAnnouncements }: AnnouncementsClien
           </div>
         )}
       </CardContent>
+
+      <ConfirmActionDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="DELETE_ANNOUNCEMENT"
+        description="Are you sure you want to permanently delete this announcement?"
+        confirmLabel="DELETE"
+        variant="destructive"
+        isPending={false}
+        onConfirm={handleDelete}
+      />
     </Card>
   );
 }

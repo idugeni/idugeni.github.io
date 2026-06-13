@@ -29,6 +29,7 @@ import {
   X,
 } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
+import { ConfirmActionDialog } from "@/components/admin/ConfirmActionDialog";
 
 const navGroups = [
   {
@@ -209,23 +210,44 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate: ()
 
 function SidebarLogout() {
   const router = useRouter();
-  const handleLogout = useCallback(() => {
-    if (!window.confirm("LOGOUT_ADMIN_SESSION — You are about to end the current admin session. Unsaved changes may be lost.")) return;
-    (async () => {
-      try {
-        const supabase = createClient();
-        await supabase.auth.signOut();
-      } catch {
-        // signOut may fail but cookies might still be cleared
-      }
-      router.replace("/login");
-    })();
-  }, [router]);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogoutClick = () => {
+    setLogoutDialogOpen(true);
+  };
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch {
+      // signOut may fail but cookies might still be cleared
+    }
+    router.replace("/login");
+  };
 
   return (
-    <Button variant="ghost" className="w-full justify-start rounded-none border border-transparent font-mono text-muted-foreground hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}>
-      <LogOut className="mr-2 h-4 w-4" /> Logout
-    </Button>
+    <>
+      <Button 
+        variant="ghost" 
+        className="w-full justify-start rounded-none border border-transparent font-mono text-muted-foreground hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive" 
+        onClick={handleLogoutClick}
+      >
+        <LogOut className="mr-2 h-4 w-4" /> Logout
+      </Button>
+      <ConfirmActionDialog
+        open={logoutDialogOpen}
+        onOpenChange={setLogoutDialogOpen}
+        title="LOGOUT_ADMIN_SESSION"
+        description="You are about to end the current admin session. Unsaved changes may be lost."
+        confirmLabel="LOGOUT"
+        variant="destructive"
+        isPending={isLoggingOut}
+        onConfirm={handleLogout}
+      />
+    </>
   );
 }
 
