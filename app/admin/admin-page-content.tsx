@@ -59,13 +59,13 @@ async function OverviewStats() {
   return (
     <>
       <section className="relative overflow-hidden rounded-none border border-primary/20 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.18),transparent_35%),hsl(var(--card)/0.88)] p-4 md:p-6">
-        <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
+        <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0 flex-1">
             <p className="font-mono text-xs uppercase tracking-[0.35em] text-primary">ADMIN_COMMAND_CENTER</p>
             <h1 className="mt-2 font-orbitron text-2xl font-black text-foreground md:text-3xl lg:text-4xl">SYSTEM_OVERVIEW</h1>
             <p className="mt-2 max-w-2xl font-mono text-xs text-muted-foreground sm:text-sm">Live operational telemetry, content status, messages, analytics, and quick controls from the production database.</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 font-mono text-xs sm:grid-cols-4 lg:min-w-[520px]">
+          <div className="grid grid-cols-2 gap-2 font-mono text-xs sm:grid-cols-4 lg:w-[520px] lg:shrink-0">
             {health.map(([label, value, tone]) => (
               <div key={label} className="border border-border/50 bg-background/40 p-3">
                 <div className="text-muted-foreground">{label}</div>
