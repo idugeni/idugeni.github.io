@@ -66,7 +66,7 @@ export function NewsletterForm() {
               <span className="font-mono text-[10px] text-primary/70 tracking-widest">
                 // JOIN THE NETWORK
               </span>
-              <h2 className="text-3xl md:text-4xl font-orbitron font-bold mt-2 mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-orbitron font-bold mt-2 mb-4">
                 STAY_CONNECTED
               </h2>
               <p className="text-muted-foreground font-mono text-sm mb-8 max-w-lg mx-auto">

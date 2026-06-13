@@ -14,7 +14,7 @@ export function ServicesSection({ services }: ServicesSectionProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-orbitron font-bold neon-text mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-orbitron font-bold neon-text mb-4">
               SERVICES_CATALOG
             </h2>
             <p className="text-muted-foreground font-mono text-sm max-w-2xl mx-auto">
