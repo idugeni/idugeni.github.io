@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { Shortlink } from "@/actions/shortlinks";
 import { deleteShortlink } from "@/actions/shortlinks";
@@ -81,7 +81,11 @@ export function ShortlinkListClient({
     toast.success("Copied to clipboard!");
   };
 
-  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const [siteUrl, setSiteUrl] = useState("");
+
+  useEffect(() => {
+    setSiteUrl(window.location.origin);
+  }, []);
 
   return (
     <div className="space-y-6">

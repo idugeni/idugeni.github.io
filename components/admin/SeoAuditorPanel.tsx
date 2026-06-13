@@ -18,21 +18,7 @@ interface SeoAuditorPanelProps {
 }
 
 function stripHtml(html: string) {
-  if (typeof window === "undefined") return html.replace(/<[^>]*>/g, " ");
-  const doc = new Parser().parseFromString(html, "text/html");
-  return doc.body.textContent || "";
-}
-
-// Simple fallback parser for server-side or immediate render
-class Parser {
-  parseFromString(html: string, _mime: string) {
-    if (typeof document === "undefined") {
-      return { body: { textContent: html.replace(/<[^>]*>/g, " ") } };
-    }
-    const el = document.createElement("div");
-    el.innerHTML = html;
-    return { body: { textContent: el.textContent || el.innerText } };
-  }
+  return html.replace(/<[^>]*>/g, " ");
 }
 
 export function SeoAuditorPanel({
