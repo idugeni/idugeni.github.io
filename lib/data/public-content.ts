@@ -161,7 +161,7 @@ export async function getProjectsIndexPageData({ category, status, tech, page = 
 
   if (safeCategory) { conditions.push(`kategori = $${idx++}`); params.push(safeCategory); }
   if (safeStatus) { conditions.push(`status = $${idx++}`); params.push(safeStatus); }
-  if (safeTech) { conditions.push(`tech_stack @> $${idx++}::jsonb`); params.push(JSON.stringify([safeTech])); }
+  if (safeTech) { conditions.push(`$${idx} = ANY(tech_stack)`); params.push(safeTech); idx++; }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const limitIdx = idx + 1;
