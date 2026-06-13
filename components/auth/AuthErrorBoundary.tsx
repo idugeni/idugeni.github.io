@@ -26,7 +26,7 @@ export function AuthErrorBoundary({
             <ArrowPath className="mr-2 h-4 w-4" /> RETRY_AUTH
           </Button>
           <Button asChild variant="outline" className="rounded-none font-mono">
-            <Link href="/">
+            <Link href="/" prefetch={false}>
               <Home className="mr-2 h-4 w-4" /> HOME_BASE
             </Link>
           </Button>

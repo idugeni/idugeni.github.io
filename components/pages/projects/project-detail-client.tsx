@@ -31,7 +31,7 @@ export function ProjectDetailClient({
     <div className="pt-4 pb-16 min-h-screen">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
-          <Link href="/projects">
+          <Link href="/projects" prefetch={false}>
             <Button variant="ghost" className="mb-8 font-mono text-muted-foreground hover:text-primary">
               <ArrowLeft className="mr-2 h-4 w-4" /> RETURN_TO_ARCHIVES
             </Button>

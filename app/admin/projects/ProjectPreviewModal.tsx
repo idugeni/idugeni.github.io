@@ -147,7 +147,7 @@ export function ProjectPreviewModal({ project, open, onOpenChange }: ProjectPrev
           <div className="flex flex-wrap gap-4">
             {/* Live Demo */}
             {project.live_url && (
-              <Link href={project.live_url} target="_blank">
+              <Link href={project.live_url} target="_blank" prefetch={false}>
                 <Badge
                   variant="outline"
                   className="font-mono rounded-none cursor-pointer hover:bg-secondary"
@@ -160,7 +160,7 @@ export function ProjectPreviewModal({ project, open, onOpenChange }: ProjectPrev
 
             {/* Repository */}
             {project.github_url && (
-              <Link href={project.github_url} target="_blank">
+              <Link href={project.github_url} target="_blank" prefetch={false}>
                 <Badge
                   variant="outline"
                   className="font-mono rounded-none cursor-pointer hover:bg-secondary"
@@ -172,7 +172,7 @@ export function ProjectPreviewModal({ project, open, onOpenChange }: ProjectPrev
             )}
 
             {/* Public Page */}
-            <Link href={`/projects/${project.slug}`} target="_blank">
+            <Link href={`/projects/${project.slug}`} target="_blank" prefetch={false}>
               <Badge
                 variant="outline"
                 className="font-mono rounded-none cursor-pointer hover:bg-secondary"

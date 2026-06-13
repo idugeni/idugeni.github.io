@@ -18,7 +18,7 @@ export function ProjectCTA() {
             Let's discuss how I can help bring your project to life with cutting-edge technology and clean code.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <Link href="/contact">
+            <Link href="/contact" prefetch={false}>
               <Button 
                 size="lg" 
                 className="font-mono bg-primary hover:bg-primary/90 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-all"
@@ -27,7 +27,7 @@ export function ProjectCTA() {
                 GET_IN_TOUCH
               </Button>
             </Link>
-            <Link href="/contact">
+            <Link href="/contact" prefetch={false}>
               <Button
                 variant="outline"
                 size="lg"

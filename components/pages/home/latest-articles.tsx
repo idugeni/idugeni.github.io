@@ -22,7 +22,7 @@ export function LatestArticles({ articles }: LatestArticlesProps) {
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-orbitron font-bold neon-text">
               LATEST_TRANSMISSIONS
             </h2>
-            <Link href="/blog">
+            <Link href="/blog" prefetch={false}>
               <Button
                 variant="ghost"
                 className="font-mono text-primary hover:text-primary/80"
@@ -36,7 +36,7 @@ export function LatestArticles({ articles }: LatestArticlesProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {articles.map((article, i) => (
             <ScrollReveal key={article.id} delay={i * 150}>
-              <Link href={`/blog/${article.slug}`}>
+              <Link href={`/blog/${article.slug}`} prefetch={false}>
                 <div className="glass-card h-full flex flex-col overflow-hidden group cursor-pointer hover:shadow-[0_0_20px_rgba(6,182,212,0.1)] transition-shadow">
                   {getSafeImageSource(article.thumbnailUrl) && (
                     <div className="relative h-40 overflow-hidden border-b border-primary/20">

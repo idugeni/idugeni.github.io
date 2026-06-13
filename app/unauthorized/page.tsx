@@ -39,12 +39,12 @@ export default function UnauthorizedPage() {
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild variant="default" size="lg">
-              <Link href="/">
+              <Link href="/" prefetch={false}>
                 Kembali ke Beranda
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href="/login">
+              <Link href="/login" prefetch={false}>
                 Login dengan Akun Lain
               </Link>
             </Button>

@@ -74,7 +74,7 @@ export function ServiceFilters({ filters }: ServiceFiltersProps) {
       <div className="flex gap-2">
         <Button type="submit" className="rounded-none font-mono">FILTER</Button>
         <Button asChild type="button" variant="outline" className="rounded-none font-mono">
-          <Link href={filterHref({})}>RESET</Link>
+          <Link href={filterHref({})} prefetch={false}>RESET</Link>
         </Button>
       </div>
     </form>

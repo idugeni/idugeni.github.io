@@ -117,11 +117,11 @@ export function MessageListClient({ initialMessages, stats, filters, services, p
 
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/50 pt-4">
             <Button asChild variant="outline" className="rounded-none font-mono" disabled={!canGoPrevious}>
-              <Link href={canGoPrevious ? pageHref(pagination.page - 1, filters) : pageHref(1, filters)}>PREVIOUS</Link>
+              <Link href={canGoPrevious ? pageHref(pagination.page - 1, filters) : pageHref(1, filters)} prefetch={false}>PREVIOUS</Link>
             </Button>
             <span className="font-mono text-xs text-muted-foreground">Page {pagination.page} of {pagination.totalPages}</span>
             <Button asChild variant="outline" className="rounded-none font-mono" disabled={!canGoNext}>
-              <Link href={canGoNext ? pageHref(pagination.page + 1, filters) : pageHref(pagination.totalPages, filters)}>NEXT</Link>
+              <Link href={canGoNext ? pageHref(pagination.page + 1, filters) : pageHref(pagination.totalPages, filters)} prefetch={false}>NEXT</Link>
             </Button>
           </div>
         </CardContent>

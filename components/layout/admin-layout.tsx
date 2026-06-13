@@ -109,12 +109,12 @@ function AdminShellHeader({ pathname, onMenuClick }: { pathname: string; onMenuC
             <Shield className="h-3.5 w-3.5" /> SECURE_ADMIN
           </span>
           <Button asChild variant="outline" size="sm" className="rounded-none font-mono">
-            <Link href="/" target="_blank">
+            <Link href="/" target="_blank" prefetch={false}>
               <ExternalLink className="mr-2 h-3.5 w-3.5" /> View Site
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm" className="rounded-none font-mono">
-            <Link href="/admin/messages">
+            <Link href="/admin/messages" prefetch={false}>
               <Mail className="mr-2 h-3.5 w-3.5" /> Inbox
             </Link>
           </Button>
@@ -136,7 +136,7 @@ function AdminShellFooter() {
           <span className="border border-border/50 px-2 py-1">RSC_READY</span>
           <span className="border border-border/50 px-2 py-1">TURBOPACK_SAFE</span>
           <span className="border border-border/50 px-2 py-1">SERVER_FIRST</span>
-          <Link href="/admin/analytics" className="border border-primary/30 px-2 py-1 text-primary transition-colors hover:bg-primary/10">ANALYTICS</Link>
+          <Link href="/admin/analytics" prefetch={false} className="border border-primary/30 px-2 py-1 text-primary transition-colors hover:bg-primary/10">ANALYTICS</Link>
         </div>
       </div>
     </footer>
@@ -150,7 +150,7 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate: ()
       <div className="relative border-b border-sidebar-border/60 p-6">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.18),transparent_45%)]" />
         <div className="relative">
-          <Link href="/admin" onClick={onNavigate} className="group block">
+          <Link href="/admin" onClick={onNavigate} prefetch={false} className="group block">
             <div className="font-orbitron text-2xl font-black leading-none tracking-[0.18em] text-primary transition-colors group-hover:text-primary/80">IRNK</div>
             <div className="mt-1 font-orbitron text-sm font-bold tracking-[0.38em] text-foreground">CODES</div>
           </Link>
@@ -173,7 +173,7 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate: ()
                 {group.items.map((item) => {
                   const active = activeItem.href === item.href;
                   return (
-                    <Link key={item.href} href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined} className="block">
+                    <Link key={item.href} href={item.href} onClick={onNavigate} prefetch={false} aria-current={active ? "page" : undefined} className="block">
                       <span className={cn(
                         "group relative flex items-center gap-3 overflow-hidden border border-transparent px-3 py-3 text-sm transition-all duration-200",
                         active

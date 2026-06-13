@@ -73,12 +73,12 @@ async function BlogContent({ searchParams }: { searchParams: AdminBlogSearchPara
         actions={
           <>
             <Button asChild variant="outline" className="rounded-none font-mono">
-              <Link href="/admin/categories">
+              <Link href="/admin/categories" prefetch={false}>
                 <Tag className="mr-2 h-4 w-4" /> CATEGORIES
               </Link>
             </Button>
             <Button asChild className="rounded-none bg-primary font-mono text-primary-foreground hover:bg-primary/90">
-              <Link href="/admin/blog/new">
+              <Link href="/admin/blog/new" prefetch={false}>
                 <Plus className="mr-2 h-4 w-4" /> NEW_TRANSMISSION
               </Link>
             </Button>

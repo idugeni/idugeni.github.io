@@ -72,7 +72,7 @@ async function ProjectsContent({ searchParams }: { searchParams: AdminProjectsSe
         subtitle="Manage portfolio archive, status pipeline, featured placement, tech stack tags, and client deliverables."
         actions={
           <Button asChild className="rounded-none bg-primary font-mono text-primary-foreground hover:bg-primary/90">
-            <Link href="/admin/projects/new">
+            <Link href="/admin/projects/new" prefetch={false}>
               <Plus className="mr-2 h-4 w-4" /> NEW_PROJECT
             </Link>
           </Button>

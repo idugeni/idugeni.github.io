@@ -161,7 +161,7 @@ export function ServiceDetailClient({
                     <div className="text-3xl font-orbitron font-bold text-primary mb-6">
                       {service.hargaMulai}
                     </div>
-                    <Link href="/contact">
+                    <Link href="/contact" prefetch={false}>
                       <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-mono">
                         REQUEST_QUOTE
                         <HiArrowRight className="ml-2 h-4 w-4" />
@@ -279,7 +279,7 @@ export function ServiceDetailClient({
                 Hubungi kami untuk konsultasi gratis dan dapatkan solusi yang
                 disesuaikan dengan kebutuhan Anda.
               </p>
-              <Link href="/contact">
+              <Link href="/contact" prefetch={false}>
                 <Button className="inline-flex items-center gap-2 px-8 py-3 font-mono text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all duration-300 group">
                   CONTACT_US
                   <HiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

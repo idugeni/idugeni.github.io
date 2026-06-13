@@ -46,7 +46,7 @@ async function AnnouncementsContent() {
           </p>
         </div>
         <div>
-          <Link href="/admin/announcements/new">
+          <Link href="/admin/announcements/new" prefetch={false}>
             <Button className="rounded-none font-mono text-xs text-primary-foreground">
               <Plus className="mr-2 h-4 w-4" />
               NEW_ANNOUNCEMENT

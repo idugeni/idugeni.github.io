@@ -67,7 +67,7 @@ export function ServicesSection({ services }: ServicesSectionProps) {
 
         <ScrollReveal delay={400}>
           <div className="text-center mt-10">
-            <Link href="/services">
+            <Link href="/services" prefetch={false}>
               <Button
                 variant="outline"
                 className="font-mono border-primary/50 hover:bg-primary/10"

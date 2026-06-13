@@ -35,7 +35,7 @@ export function Breadcrumbs() {
     <nav aria-label="Breadcrumb" className="w-full border-b border-border/30 bg-secondary/20 backdrop-blur-sm pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2.5 py-3">
-          <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1.5 text-muted-foreground shrink-0">
+          <Link href="/" prefetch={false} className="hover:text-primary transition-colors flex items-center gap-1.5 text-muted-foreground shrink-0">
             <HiOutlineHome className="w-3.5 h-3.5" />
             <span className="font-mono text-xs">Home</span>
           </Link>
@@ -47,7 +47,7 @@ export function Breadcrumbs() {
                   {crumb.label}
                 </span>
               ) : (
-                <Link href={crumb.href} className="font-mono text-xs text-muted-foreground hover:text-primary transition-colors capitalize">
+                <Link href={crumb.href} prefetch={false} className="font-mono text-xs text-muted-foreground hover:text-primary transition-colors capitalize">
                   {crumb.label}
                 </Link>
               )}

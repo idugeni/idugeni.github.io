@@ -56,7 +56,7 @@ export function AdminTableActionButton({
   if (href) {
     const isInternal = href.startsWith("/");
     const link = isInternal ? (
-      <Link href={href} target={target} rel={rel} aria-label={label} download={download ? "" : undefined}>
+      <Link href={href} target={target} rel={rel} prefetch={false} aria-label={label} download={download ? "" : undefined}>
         {content}
       </Link>
     ) : (

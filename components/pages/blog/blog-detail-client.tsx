@@ -419,7 +419,7 @@ export function BlogDetailClient({
             {/* Main content */}
             <div className="min-w-0">
               <ScrollReveal>
-                <Link href="/blog">
+                <Link href="/blog" prefetch={false}>
                   <Button
                     variant="ghost"
                     className="mb-6 font-mono text-muted-foreground hover:text-primary"

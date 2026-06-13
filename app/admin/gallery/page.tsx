@@ -42,7 +42,7 @@ export default async function AdminGallery() {
         subtitle="Manage media collection, image and video assets, aspect ratios, and publishing-ready gallery items."
         actions={
           <Button asChild className="rounded-none bg-primary font-mono text-primary-foreground hover:bg-primary/90">
-            <Link href="/admin/gallery/new">
+            <Link href="/admin/gallery/new" prefetch={false}>
               <Plus className="mr-2 h-4 w-4" /> NEW_MEDIA
             </Link>
           </Button>

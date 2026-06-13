@@ -52,12 +52,12 @@ export function HeroSection() {
         </ScrollReveal>
 
         <ScrollReveal delay={800} className="flex flex-col sm:flex-row gap-4">
-          <Link href="/projects">
+          <Link href="/projects" prefetch={false}>
             <Button className="font-mono h-12 px-8 rounded-none border border-primary bg-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)]">
               [ LIHAT_PROYEK ]
             </Button>
           </Link>
-          <Link href="/contact">
+          <Link href="/contact" prefetch={false}>
             <Button
               variant="outline"
               className="font-mono h-12 px-8 rounded-none border-primary/50 text-foreground hover:bg-primary/10 transition-all"

@@ -47,7 +47,7 @@ export function BlogListClient({
 
         {featuredArticle && (
           <div className="mb-16">
-            <Link href={`/blog/${featuredArticle.slug}`} className="block group">
+            <Link href={`/blog/${featuredArticle.slug}`} prefetch={false} className="block group">
               <div className="relative overflow-hidden rounded-xl bg-black shadow-2xl shadow-black/50">
                 <div className="relative h-[340px] md:h-[440px] overflow-hidden">
                   {getSafeImageSource(featuredArticle.thumbnailUrl) && (
@@ -151,7 +151,7 @@ export function BlogListClient({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {regularArticles.map((article, i) => (
                   <ScrollReveal key={article.id} delay={i * 60}>
-                    <Link href={`/blog/${article.slug}`} className="block h-full">
+                    <Link href={`/blog/${article.slug}`} prefetch={false} className="block h-full">
                       <div className="group h-full rounded-xl overflow-hidden bg-card/80 backdrop-blur-sm border border-border/20 hover:border-primary/30 transition-all duration-500 hover:shadow-[0_8px_40px_-12px_rgba(6,182,212,0.15)] hover:-translate-y-1">
                         <div className="relative h-48 overflow-hidden bg-black">
                           {getSafeImageSource(article.thumbnailUrl) ? (

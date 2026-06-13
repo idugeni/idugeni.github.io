@@ -70,7 +70,7 @@ export function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-primary/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link href="/">
+        <Link href="/" prefetch={false}>
           <span className="font-orbitron font-bold text-xl text-primary cursor-pointer hover:text-primary/80 transition-colors neon-text">
             IRNK
           </span>
@@ -85,7 +85,7 @@ export function Navbar() {
               onMouseEnter={() => link.megaMenu && setMegaMenuOpen(link.label)}
               onMouseLeave={() => setMegaMenuOpen(null)}
             >
-              <Link href={link.href}>
+              <Link href={link.href} prefetch={false}>
                 <span
                   className={cn(
                     "text-sm font-mono tracking-wide transition-colors cursor-pointer hover:text-primary px-3 py-2 inline-flex items-center gap-1",
@@ -129,7 +129,7 @@ export function Navbar() {
               )}
             </div>
           ))}
-          <Link href="/contact" className="ml-2">
+          <Link href="/contact" prefetch={false} className="ml-2">
             <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground font-mono text-xs h-9">
               [ CONTACT ]
             </Button>
@@ -153,7 +153,7 @@ export function Navbar() {
           <div className="flex flex-col gap-1 p-4 overflow-y-auto flex-1">
             {navLinks.map((link) => (
               <div key={link.href + link.label}>
-                <Link href={link.href}>
+                <Link href={link.href} prefetch={false}>
                   <span
                     className={cn(
                       "block text-base font-mono tracking-wide p-3 rounded-sm",
@@ -183,7 +183,7 @@ export function Navbar() {
                 )}
               </div>
             ))}
-            <Link href="/contact">
+            <Link href="/contact" prefetch={false}>
               <Button className="w-full bg-primary text-primary-foreground font-mono mt-3" onClick={() => setIsOpen(false)}>
                 CONTACT
               </Button>

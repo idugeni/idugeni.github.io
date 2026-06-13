@@ -36,7 +36,7 @@ export default function NotFound() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/">
+          <Link href="/" prefetch={false}>
             <Button
               variant="outline"
               className="font-mono border-primary/50 hover:bg-primary/10"
@@ -51,7 +51,7 @@ export default function NotFound() {
           >
             <HiOutlineArrowPath className="mr-2 h-4 w-4" /> RELOAD_PAGE
           </Button>
-          <Link href="/">
+          <Link href="/" prefetch={false}>
             <Button className="font-mono bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
               <HiOutlineHome className="mr-2 h-4 w-4" /> HOME_BASE
             </Button>

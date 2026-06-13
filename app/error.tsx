@@ -58,7 +58,7 @@ export default function Error({
           >
             <ArrowPath className="mr-2 h-4 w-4" /> RELOAD_PAGE
           </Button>
-          <Link href="/">
+          <Link href="/" prefetch={false}>
             <Button
               variant="outline"
               className="font-mono border-primary/50 hover:bg-primary/10"

@@ -24,7 +24,7 @@ export function FeaturedProjects({ projects }: FeaturedProjectsProps) {
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-orbitron font-bold neon-text">
               FEATURED_PROJECTS
             </h2>
-            <Link href="/projects">
+            <Link href="/projects" prefetch={false}>
               <Button
                 variant="ghost"
                 className="font-mono text-primary hover:text-primary/80"
@@ -38,7 +38,7 @@ export function FeaturedProjects({ projects }: FeaturedProjectsProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {projects.map((project, i) => (
             <ScrollReveal key={project.id} delay={i * 150}>
-              <Link href={`/projects/${project.slug}`}>
+              <Link href={`/projects/${project.slug}`} prefetch={false}>
                 <TiltCard className="h-full">
                   <NeonBorder className="h-full flex flex-col">
                     <div className="relative h-48 bg-secondary/50 border-b border-primary/20 overflow-hidden group">

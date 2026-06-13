@@ -25,7 +25,7 @@ export function ServicesListClient({ services }: ServicesListClientProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24">
           {services.map((service, i) => (
             <ScrollReveal key={service.id} delay={i * 120}>
-              <Link href={`/services/${service.slug}`}>
+              <Link href={`/services/${service.slug}`} prefetch={false}>
                 <NeonBorder className="h-full hover:shadow-[0_0_30px_rgba(6,182,212,0.15)] transition-shadow duration-500 cursor-pointer">
                 <div className="p-8 flex flex-col h-full relative overflow-hidden">
                   {/* Background glow effect */}
@@ -115,7 +115,7 @@ export function ServicesListClient({ services }: ServicesListClientProps) {
                   dan dapatkan solusi yang disesuaikan dengan kebutuhan sistem Anda.
                 </p>
 
-                <Link href="/contact">
+                <Link href="/contact" prefetch={false}>
                   <button className="inline-flex items-center gap-2 px-8 py-3 font-mono text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all duration-300 group">
                     ESTABLISH_CONNECTION
                     <HiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

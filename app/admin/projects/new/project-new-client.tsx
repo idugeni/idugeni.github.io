@@ -151,7 +151,7 @@ export default function AdminProjectNew() {
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
             <Button asChild variant="ghost" size="icon" className="rounded-none text-muted-foreground hover:text-primary">
-              <Link href="/admin/projects" aria-label="Back to project list"><ArrowLeft className="h-4 w-4" /></Link>
+              <Link href="/admin/projects" prefetch={false} aria-label="Back to project list"><ArrowLeft className="h-4 w-4" /></Link>
             </Button>
             <div>
               <p className="font-mono text-xs uppercase tracking-[0.35em] text-primary/70">PROJECT_CREATION_CONSOLE</p>
@@ -286,7 +286,7 @@ export default function AdminProjectNew() {
               </div>
 
               <Button type="submit" className="w-full rounded-none bg-primary font-mono text-primary-foreground hover:bg-primary/90" disabled={createProject.isLoading || isUploading}>{isUploading ? "UPLOADING_THUMBNAIL..." : createProject.isLoading ? "SAVING..." : <><Save className="mr-2 h-4 w-4" />SAVE_PROJECT</>}</Button>
-              <Button asChild type="button" variant="outline" className="w-full rounded-none font-mono"><Link href="/admin/projects"><Send className="mr-2 h-4 w-4" />BACK_TO_LIST</Link></Button>
+              <Button asChild type="button" variant="outline" className="w-full rounded-none font-mono"><Link href="/admin/projects" prefetch={false}><Send className="mr-2 h-4 w-4" />BACK_TO_LIST</Link></Button>
             </CardContent>
           </Card>
         </aside>

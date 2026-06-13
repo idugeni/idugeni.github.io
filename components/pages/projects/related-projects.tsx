@@ -39,7 +39,7 @@ export function RelatedProjects({ projects }: RelatedProjectsProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {projects.map((project, i) => (
           <ScrollReveal key={project.id} delay={i * 100}>
-            <Link href={`/projects/${project.slug}`}>
+            <Link href={`/projects/${project.slug}`} prefetch={false}>
               <div className="glass-card group hover:border-primary/50 transition-all duration-300 overflow-hidden">
                 {/* Thumbnail */}
                 {getSafeImageSource(project.thumbnailUrl) ? (

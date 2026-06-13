@@ -44,7 +44,7 @@ async function ServicesContent({ searchParams }: { searchParams: AdminServicesSe
         subtitle="Manage service offerings, pricing tiers, feature lists, ordering, and public visibility."
         actions={
           <Button asChild className="rounded-none bg-primary font-mono text-primary-foreground hover:bg-primary/90">
-            <Link href="/admin/services/new">
+            <Link href="/admin/services/new" prefetch={false}>
               <Plus className="mr-2 h-4 w-4" /> NEW_SERVICE
             </Link>
           </Button>

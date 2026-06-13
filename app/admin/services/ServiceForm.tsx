@@ -88,7 +88,7 @@ export function ServiceForm({ mode, service }: ServiceFormProps) {
     <div className="mx-auto w-full max-w-4xl space-y-6 pb-10">
       <div className="flex items-center gap-4">
         <Button asChild variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-          <Link href="/admin/services"><ArrowLeft className="h-4 w-4" /></Link>
+          <Link href="/admin/services" prefetch={false}><ArrowLeft className="h-4 w-4" /></Link>
         </Button>
         <h1 className="font-orbitron text-2xl font-bold text-primary">
           {mode === "edit" ? "Edit Service" : "New Service"}

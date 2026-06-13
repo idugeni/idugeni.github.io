@@ -36,7 +36,7 @@ async function CategoriesContent() {
         icon={<Tag className="h-7 w-7 text-primary" />}
         actions={
           <Button asChild className="rounded-none bg-primary font-mono text-primary-foreground hover:bg-primary/90">
-            <Link href="/admin/categories/new">
+            <Link href="/admin/categories/new" prefetch={false}>
               <Plus className="mr-2 h-4 w-4" /> NEW_CATEGORY
             </Link>
           </Button>

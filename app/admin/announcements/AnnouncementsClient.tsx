@@ -145,7 +145,7 @@ export function AnnouncementsClient({ initialAnnouncements }: AnnouncementsClien
                     </td>
                     <td className="py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <Link href={`/admin/announcements/${item.id}/edit`}>
+                        <Link href={`/admin/announcements/${item.id}/edit`} prefetch={false}>
                           <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-secondary/40">
                             <Edit className="h-3.5 w-3.5 text-primary" />
                           </Button>

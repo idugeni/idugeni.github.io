@@ -57,7 +57,7 @@ export function GalleryPreview({ items }: { items: GalleryItem[] }) {
                   GALLERY_PREVIEW
                 </h2>
               </div>
-              <Link href="/gallery">
+              <Link href="/gallery" prefetch={false}>
                 <Button variant="ghost" className="font-mono text-primary hover:text-primary/80">
                   VIEW_ALL <HiOutlineArrowRight className="ml-2 h-4 w-4" />
                 </Button>

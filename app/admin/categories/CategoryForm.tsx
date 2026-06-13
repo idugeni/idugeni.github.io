@@ -76,7 +76,7 @@ export function CategoryForm({ mode, category }: CategoryFormProps) {
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <div className="flex items-center gap-4">
         <Button asChild variant="ghost" size="icon" className="rounded-none text-muted-foreground hover:text-primary">
-          <Link href="/admin/categories" aria-label="Back to categories">
+          <Link href="/admin/categories" prefetch={false} aria-label="Back to categories">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
@@ -155,7 +155,7 @@ export function CategoryForm({ mode, category }: CategoryFormProps) {
 
             <div className="flex flex-col gap-3 border-t border-border/50 pt-6 sm:flex-row sm:justify-end">
               <Button asChild type="button" variant="outline" className="rounded-none font-mono">
-                <Link href="/admin/categories">CANCEL</Link>
+                <Link href="/admin/categories" prefetch={false}>CANCEL</Link>
               </Button>
               <Button type="submit" disabled={isSaving} className="rounded-none bg-primary font-mono text-primary-foreground hover:bg-primary/90">
                 <Save className="mr-2 h-4 w-4" /> {isSaving ? "SAVING..." : "SAVE_CATEGORY"}

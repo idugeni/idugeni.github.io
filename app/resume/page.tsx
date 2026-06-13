@@ -62,7 +62,7 @@ export default function Resume() {
                         </a>
                       </Button>
                       <Button asChild variant="outline" className="rounded-none border-primary/40 bg-background/40 font-mono text-primary hover:bg-primary/10">
-                        <Link href="/contact">
+                        <Link href="/contact" prefetch={false}>
                           <Mail className="mr-2 h-4 w-4" /> CONTACT_ME
                         </Link>
                       </Button>
@@ -228,7 +228,7 @@ export default function Resume() {
                       <a href={`https://${resumeData.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary">
                         <ExternalLink className="h-4 w-4 text-primary" /> {resumeData.github}
                       </a>
-                      <Link href="/" className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary">
+                      <Link href="/" prefetch={false} className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary">
                         <Globe className="h-4 w-4 text-primary" /> {resumeData.website}
                       </Link>
                     </div>

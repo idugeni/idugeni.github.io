@@ -83,7 +83,7 @@ export function MessageFilters({ filters, services }: MessageFiltersProps) {
       <div className="flex gap-2">
         <Button type="submit" className="flex-1 rounded-none font-mono">FILTER</Button>
         <Button asChild type="button" variant="outline" className="rounded-none font-mono">
-          <Link href={buildHref({})}>RESET</Link>
+          <Link href={buildHref({})} prefetch={false}>RESET</Link>
         </Button>
       </div>
       <input type="hidden" name="sort" value={filters.sort || "date"} />

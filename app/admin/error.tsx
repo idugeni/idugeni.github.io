@@ -23,7 +23,7 @@ export default function AdminError({ reset }: { error: Error & { digest?: string
             <ArrowPath className="mr-2 h-4 w-4" /> RETRY_ADMIN
           </Button>
           <Button asChild variant="outline" className="rounded-none font-mono">
-            <Link href="/admin">
+            <Link href="/admin" prefetch={false}>
               <Home className="mr-2 h-4 w-4" /> ADMIN_HOME
             </Link>
           </Button>
