@@ -11,6 +11,9 @@ out/
 .env
 .env*.local
 
+# playwright
+.playwright-cli/
+
 # vercel
 .vercel
 
