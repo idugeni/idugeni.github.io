@@ -24,7 +24,10 @@ export async function adminLogin(data: { email: string; password: string }) {
     email: parsed.data.email,
     password: parsed.data.password,
   });
-  if (error) throw error;
+  if (error) {
+    console.error("Admin login failed:", error.message);
+    throw new Error("Invalid email or password");
+  }
   return { user: { email: authData.user?.email, id: authData.user?.id } };
 }
 
@@ -40,33 +43,6 @@ export async function getAdminUser() {
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) return null;
   return user;
-}
-
-export async function getDashboardStats() {
-  await requireAdmin();
-  const rows = await queryPooler<{
-    blog_total: number; blog_published: number; blog_draft: number;
-    project_total: number; project_completed: number; project_ongoing: number;
-    msg_total: number; msg_unread: number; sub_active: number;
-  }>(`
-    SELECT
-      (SELECT COUNT(*)::int FROM blog_artikel) AS blog_total,
-      (SELECT COUNT(*)::int FROM blog_artikel WHERE status='published') AS blog_published,
-      (SELECT COUNT(*)::int FROM blog_artikel WHERE status='draft') AS blog_draft,
-      (SELECT COUNT(*)::int FROM projects) AS project_total,
-      (SELECT COUNT(*)::int FROM projects WHERE status='completed') AS project_completed,
-      (SELECT COUNT(*)::int FROM projects WHERE status='ongoing') AS project_ongoing,
-      (SELECT COUNT(*)::int FROM contact_messages) AS msg_total,
-      (SELECT COUNT(*)::int FROM contact_messages WHERE dibaca=false) AS msg_unread,
-      (SELECT COUNT(*)::int FROM newsletter_subscribers WHERE aktif=true) AS sub_active
-  `);
-  const r = rows[0] || {} as any;
-  return {
-    blog: { total: r.blog_total ?? 0, published: r.blog_published ?? 0, draft: r.blog_draft ?? 0, featured: 0 },
-    projects: { total: r.project_total ?? 0, completed: r.project_completed ?? 0, ongoing: r.project_ongoing ?? 0, featured: 0 },
-    messages: { total: r.msg_total ?? 0, unread: r.msg_unread ?? 0 },
-    subscribers: r.sub_active ?? 0,
-  };
 }
 
 export async function getAdminDashboardOverview() {

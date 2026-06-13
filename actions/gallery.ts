@@ -5,9 +5,8 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { createClient } from "@/lib/supabase/server";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
+import { slugSchema } from "@/lib/security/server-action";
 import { slugify } from "@/lib/utils/slug";
-
-const slugSchema = z.string().min(1).max(220).transform(slugify).pipe(z.string().min(1).max(200));
 
 const galleryPayloadSchema = z.object({
   judul: z.string().min(1).max(200).trim(),

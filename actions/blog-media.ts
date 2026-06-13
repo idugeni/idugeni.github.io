@@ -3,6 +3,7 @@
 import { requireAdmin } from "@/lib/auth/rbac";
 import { createServiceClient } from "@/lib/supabase/service";
 import { z } from "zod";
+import { slugSchema } from "@/lib/security/server-action";
 
 const MEDIA_BUCKET = "media";
 const allowedMimeTypes = new Set([
@@ -15,7 +16,6 @@ const allowedMimeTypes = new Set([
   "video/webm",
 ]);
 
-const slugSchema = z.string().min(1).max(200).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const mediaKindSchema = z.enum(["image", "video"]);
 
 function safeFileName(name: string) {

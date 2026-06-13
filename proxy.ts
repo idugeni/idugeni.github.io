@@ -44,7 +44,7 @@ export async function proxy(request: NextRequest) {
 
   // --- Admin route protection ---
   if (pathname.startsWith("/admin")) {
-    if (process.env.NODE_ENV === "development") {
+    if (process.env.DEV_BYPASS_AUTH === "true") {
       return response;
     }
     const { user } = await getProxyUser(request, response);

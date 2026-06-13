@@ -4,7 +4,7 @@ import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
-import { uuidArraySchema } from "@/lib/security/server-action";
+import { slugSchema, uuidArraySchema } from "@/lib/security/server-action";
 import { getTotalPages, parsePositiveInt } from "@/lib/utils/pagination";
 import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
 import { slugify } from "@/lib/utils/slug";
@@ -40,7 +40,6 @@ const adminServiceFiltersSchema = z.object({
   order: z.enum(["asc", "desc"]).optional(),
 });
 const uuidSchema = z.string().uuid();
-const slugSchema = z.string().min(1).max(220).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const ADMIN_SERVICE_PAGE_SIZE = 20;
 const SERVICE_COLUMNS = "id,nama,slug,deskripsi_pendek,deskripsi_panjang,icon,harga_mulai,fitur,urutan,aktif,created_at,updated_at";
 

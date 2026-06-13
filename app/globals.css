@@ -201,6 +201,12 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--app-font-orbitron);
   }
+
+  [role="dialog"] h1, [role="dialog"] h2, [role="dialog"] h3,
+  [role="alert"] h1, [role="alert"] h2,
+  .font-sans {
+    font-family: var(--app-font-sans);
+  }
   
   code, pre {
     font-family: var(--app-font-mono);

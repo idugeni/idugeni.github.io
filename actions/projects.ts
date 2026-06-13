@@ -4,7 +4,7 @@ import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
-import { uuidArraySchema } from "@/lib/security/server-action";
+import { slugSchema, uuidArraySchema } from "@/lib/security/server-action";
 import { getTotalPages, parsePositiveInt } from "@/lib/utils/pagination";
 import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
 
@@ -36,7 +36,6 @@ const bulkProjectUpdateSchema = z.object({
   featured: z.boolean().optional(),
 }).refine((value) => Object.keys(value).length > 0, "At least one update field is required");
 const uuidSchema = z.string().uuid();
-const slugSchema = z.string().min(1).max(220).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const adminProjectFiltersSchema = z.object({
   page: z.unknown().optional(),
   q: z.string().max(100).optional(),
