@@ -1,5 +1,6 @@
 import { PublicLayout } from "@/components/layout/public-layout";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import { TableOfContents, type TocItem } from "@/components/ui/table-of-contents";
 import { Shield, Database, Cookie, UserCheck, Mail, Clock } from "@/lib/icons";
 import { siteConfig } from "@/lib/config/site";
 import type { Metadata } from "next";
@@ -13,14 +14,25 @@ export const metadata: Metadata = {
   },
 };
 
+const privacyToc: TocItem[] = [
+  { id: "data-collection", label: "Data yang Dikumpulkan", number: "01" },
+  { id: "data-usage", label: "Penggunaan Data", number: "02" },
+  { id: "cookies", label: "Cookies", number: "03" },
+  { id: "data-security", label: "Keamanan Data", number: "04" },
+  { id: "user-rights", label: "Hak Pengguna", number: "05" },
+  { id: "data-retention", label: "Penyimpanan Data", number: "06" },
+  { id: "contact-privacy", label: "Kontak Privasi", number: "07" },
+];
+
 export default function Privacy() {
   return (
     <PublicLayout>
       <div className="pt-4 pb-16 min-h-screen relative">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <TableOfContents items={privacyToc} title="TABLE_OF_CONTENTS" />
           {/* Header */}
           <ScrollReveal>
-            <div className="mb-12">
+            <div className="mb-12 max-w-4xl">
               <div className="flex items-center gap-3 mb-4">
                 <Shield className="w-8 h-8 text-primary" />
                 <h1 className="text-4xl md:text-5xl font-orbitron font-bold neon-text">
@@ -39,7 +51,7 @@ export default function Privacy() {
 
           {/* Introduction */}
           <ScrollReveal delay={100}>
-            <div className="glass-card p-8 mb-8">
+            <div className="glass-card p-8 mb-8 max-w-4xl">
               <p className="font-mono text-sm text-muted-foreground leading-relaxed">
                 Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi
                 informasi pribadi Anda saat menggunakan website ini. Kami berkomitmen untuk menjaga
@@ -51,7 +63,7 @@ export default function Privacy() {
 
           {/* Section 1 */}
           <ScrollReveal delay={150}>
-            <div className="glass-card p-8 mb-8">
+            <div id="data-collection" className="glass-card p-8 mb-8 scroll-mt-24">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   01
@@ -115,7 +127,7 @@ export default function Privacy() {
 
           {/* Section 2 */}
           <ScrollReveal delay={200}>
-            <div className="glass-card p-8 mb-8">
+            <div id="data-usage" className="glass-card p-8 mb-8 scroll-mt-24">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   02
@@ -154,7 +166,7 @@ export default function Privacy() {
 
           {/* Section 3 */}
           <ScrollReveal delay={250}>
-            <div className="glass-card p-8 mb-8">
+            <div id="cookies" className="glass-card p-8 mb-8 scroll-mt-24">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   03
@@ -191,7 +203,7 @@ export default function Privacy() {
 
           {/* Section 4 */}
           <ScrollReveal delay={300}>
-            <div className="glass-card p-8 mb-8">
+            <div id="data-security" className="glass-card p-8 mb-8 scroll-mt-24">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   04
@@ -226,7 +238,7 @@ export default function Privacy() {
 
           {/* Section 5 */}
           <ScrollReveal delay={350}>
-            <div className="glass-card p-8 mb-8">
+            <div id="user-rights" className="glass-card p-8 mb-8 scroll-mt-24">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   05
@@ -273,7 +285,7 @@ export default function Privacy() {
 
           {/* Section 6 */}
           <ScrollReveal delay={400}>
-            <div className="glass-card p-8 mb-8">
+            <div id="data-retention" className="glass-card p-8 mb-8 scroll-mt-24">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   06
@@ -304,7 +316,7 @@ export default function Privacy() {
 
           {/* Section 7 - Contact */}
           <ScrollReveal delay={450}>
-            <div className="glass-card p-8 border-primary/30">
+            <div id="contact-privacy" className="glass-card p-8 border-primary/30 scroll-mt-24">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   07
