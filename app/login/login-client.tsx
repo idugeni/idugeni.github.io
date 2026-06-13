@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ParticleBackground } from "@/components/ui/particle-background";
-import { Lock } from "@/lib/icons";
+import { Lock, Loader2Icon } from "@/lib/icons";
 
 export function LoginClient() {
   const router = useRouter();
@@ -18,6 +18,9 @@ export function LoginClient() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isPending, setIsPending] = useState(false);
+  const [shakeKey, setShakeKey] = useState(0);
+
+  const triggerShake = () => setShakeKey((k) => k + 1);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -33,6 +36,7 @@ export function LoginClient() {
 
       if (loginError) {
         setError(`ACCESS_DENIED: ${loginError.message}`);
+        triggerShake();
         return;
       }
 
@@ -47,6 +51,7 @@ export function LoginClient() {
       if (!status.isAdmin) {
         await supabase.auth.signOut();
         setError("ACCESS_DENIED: Admin access required");
+        triggerShake();
         return;
       }
 
@@ -54,6 +59,7 @@ export function LoginClient() {
       router.refresh();
     } catch {
       setError("ACCESS_DENIED: Login service unavailable. Please retry.");
+      triggerShake();
     } finally {
       setIsPending(false);
     }
@@ -62,7 +68,7 @@ export function LoginClient() {
   return (
     <div className="min-h-screen flex items-center justify-center relative bg-background">
       <ParticleBackground />
-      <div className="relative z-10 w-full max-w-md px-4">
+      <div className="relative z-10 w-full max-w-md px-4 animate-fade-in-up">
         <div className="text-center mb-8">
           <GlitchText text="IRNK_ADMIN" className="text-3xl font-orbitron font-bold text-primary tracking-widest" />
           <p className="font-mono text-xs text-muted-foreground mt-2">RESTRICTED ACCESS LEVEL REQUIRED</p>
@@ -77,7 +83,7 @@ export function LoginClient() {
             </div>
 
             {error && (
-              <div className="mb-6 p-3 border border-destructive/50 bg-destructive/10 text-destructive text-xs font-mono text-center animate-pulse">
+              <div key={shakeKey} className="mb-6 p-3 border border-destructive/50 bg-destructive/10 text-destructive text-xs font-mono text-center animate-shake">
                 {error}
               </div>
             )}
@@ -90,7 +96,7 @@ export function LoginClient() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="bg-background/50 border-primary/30 focus:border-primary font-mono text-sm rounded-none h-12"
+                  className="bg-background/50 border-primary/30 focus:border-primary focus:shadow-[0_0_12px_rgba(6,182,212,0.3)] font-mono text-sm rounded-none h-12 transition-all duration-200"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                 />
@@ -102,7 +108,7 @@ export function LoginClient() {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className="bg-background/50 border-primary/30 focus:border-primary font-mono text-sm rounded-none h-12"
+                  className="bg-background/50 border-primary/30 focus:border-primary focus:shadow-[0_0_12px_rgba(6,182,212,0.3)] font-mono text-sm rounded-none h-12 transition-all duration-200"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                 />
@@ -111,10 +117,17 @@ export function LoginClient() {
 
             <Button
               type="submit"
-              className="w-full font-mono bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-none tracking-widest"
+              className="w-full font-mono bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-[0.98] h-12 rounded-none tracking-widest transition-all duration-200"
               disabled={isPending}
             >
-              {isPending ? "VERIFYING..." : "AUTHORIZE"}
+              {isPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2Icon className="h-4 w-4 animate-spin" />
+                  VERIFYING...
+                </span>
+              ) : (
+                "AUTHORIZE"
+              )}
             </Button>
 
             <div className="mt-4 text-center">
