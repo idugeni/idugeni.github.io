@@ -1,6 +1,16 @@
 import { PublicLayout } from "@/components/layout/public-layout";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { FileText, Scale, Shield, Briefcase, XCircle, Clock } from "@/lib/icons";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "Syarat dan Ketentuan Layanan IRNK Codes — Ketentuan penggunaan website, hak kekayaan intelektual, layanan, dan batasan tanggung jawab.",
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 export default function Terms() {
   return (

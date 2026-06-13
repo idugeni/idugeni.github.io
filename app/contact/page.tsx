@@ -1,4 +1,5 @@
 import { PublicLayout } from "@/components/layout/public-layout";
+import { JsonLdContact } from "@/components/seo/json-ld";
 import { ContactFormClient } from "@/components/pages/contact/contact-form-client";
 import { NeonBorder } from "@/components/ui/neon-border";
 import { PageHeader } from "@/components/ui/page-header";
@@ -24,6 +25,7 @@ export const metadata: Metadata = {
 export default function Contact() {
   return (
     <PublicLayout>
+      <JsonLdContact />
       <div className="pt-4 pb-20 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <PageHeader

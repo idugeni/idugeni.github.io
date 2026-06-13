@@ -1,4 +1,5 @@
 import { PublicLayout } from "@/components/layout/public-layout";
+import { JsonLdAbout } from "@/components/seo/json-ld";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { PageHeader } from "@/components/ui/page-header";
 import type { Metadata } from "next";
@@ -181,6 +182,7 @@ const certifications = [
 export default function About() {
   return (
     <PublicLayout>
+      <JsonLdAbout />
       <div className="pt-4 pb-20 min-h-screen">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero Header */}

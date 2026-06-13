@@ -2,6 +2,16 @@ import { PublicLayout } from "@/components/layout/public-layout";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { Shield, Database, Cookie, UserCheck, Mail, Clock } from "@/lib/icons";
 import { siteConfig } from "@/lib/config/site";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "Kebijakan Privasi IRNK Codes — Informasi tentang pengumpulan, penggunaan, dan perlindungan data pribadi Anda sesuai peraturan perlindungan data Indonesia.",
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 export default function Privacy() {
   return (

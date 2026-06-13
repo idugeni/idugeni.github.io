@@ -1,11 +1,23 @@
 import Link from "next/link";
 import { PublicLayout } from "@/components/layout/public-layout";
+import { JsonLdResume } from "@/components/seo/json-ld";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { NeonBorder } from "@/components/ui/neon-border";
 import { PageHeader } from "@/components/ui/page-header";
 import { resumeData } from "@/lib/data/resume";
 import { Briefcase, Download, ExternalLink, Globe, Mail, MonitorUp, Sparkles, Terminal } from "@/lib/icons";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Resume",
+  description: "Resume profesional Eliyanto Sarage — Full Stack Developer, UI/UX Designer & AI Engineer dengan 5+ tahun pengalaman. Lihat portfolio, skills, dan pencapaian karir.",
+  openGraph: {
+    title: "Resume — Eliyanto Sarage | Full Stack Developer",
+    description: "Resume profesional dengan pengalaman di Next.js, React, Python, AI/ML, dan cloud architecture.",
+    type: "profile",
+  },
+};
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
@@ -27,6 +39,7 @@ function SkillPill({ children }: { children: React.ReactNode }) {
 export default function Resume() {
   return (
     <PublicLayout>
+      <JsonLdResume />
       <main className="min-h-screen pt-4 pb-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <PageHeader

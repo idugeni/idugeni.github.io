@@ -1,5 +1,131 @@
 import { siteConfig } from "@/lib/config/site";
 
+export function JsonLdAbout() {
+  const aboutPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    mainEntity: {
+      "@type": "Person",
+      "@id": `${siteConfig.url}/#person`,
+      name: siteConfig.owner.name,
+      url: `${siteConfig.url}/about`,
+      image: `${siteConfig.url}${siteConfig.seo.ogImage}`,
+      jobTitle: siteConfig.owner.title,
+      description: siteConfig.owner.bio,
+      worksFor: { "@id": `${siteConfig.url}/#organization` },
+      sameAs: [siteConfig.social.github, siteConfig.social.instagram],
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Wonosobo",
+        addressRegion: "Jawa Tengah",
+        addressCountry: "ID",
+      },
+      hasOccupation: [
+        { "@type": "Occupation", name: "Full Stack Developer" },
+        { "@type": "Occupation", name: "UI/UX Designer" },
+        { "@type": "Occupation", name: "AI Engineer" },
+      ],
+      knowsAbout: [
+        "Full Stack Development", "UI/UX Design", "Artificial Intelligence",
+        "Machine Learning", "Next.js", "React", "TypeScript", "Python",
+        "Node.js", "Tailwind CSS", "Docker", "Kubernetes",
+      ],
+      hasCredential: [
+        { "@type": "EducationalOccupationalCredential", name: "Google Cloud Professional Cloud Architect", credentialCategory: "certification" },
+        { "@type": "EducationalOccupationalCredential", name: "AWS Certified Solutions Architect", credentialCategory: "certification" },
+        { "@type": "EducationalOccupationalCredential", name: "TensorFlow Developer Certificate", credentialCategory: "certification" },
+        { "@type": "EducationalOccupationalCredential", name: "Meta Front-End Developer Professional Certificate", credentialCategory: "certification" },
+      ],
+    },
+    breadcrumb: {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: siteConfig.url },
+        { "@type": "ListItem", position: 2, name: "About", item: `${siteConfig.url}/about` },
+      ],
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutPageSchema) }}
+    />
+  );
+}
+
+export function JsonLdContact() {
+  const contactPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    url: `${siteConfig.url}/contact`,
+    name: "Contact",
+    description: "Hubungi IRNK Codes untuk konsultasi, kolaborasi, dan proyek pengembangan digital.",
+    breadcrumb: {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: siteConfig.url },
+        { "@type": "ListItem", position: 2, name: "Contact", item: `${siteConfig.url}/contact` },
+      ],
+    },
+    mainEntity: {
+      "@type": "Person",
+      "@id": `${siteConfig.url}/#person`,
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: siteConfig.contact.phone,
+        email: siteConfig.contact.email,
+        contactType: "customer service",
+        availableLanguage: ["Indonesian", "English"],
+        areaServed: ["ID", "SG", "MY"],
+      },
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(contactPageSchema) }}
+    />
+  );
+}
+
+export function JsonLdResume() {
+  const resumePageSchema = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    url: `${siteConfig.url}/resume`,
+    name: "Resume",
+    description: "Resume profesional Eliyanto Sarage — Full Stack Developer, UI/UX Designer & AI Engineer.",
+    mainEntity: {
+      "@type": "Person",
+      "@id": `${siteConfig.url}/#person`,
+      name: siteConfig.owner.name,
+      jobTitle: siteConfig.owner.title,
+      url: `${siteConfig.url}/resume`,
+      hasOccupation: [
+        { "@type": "Occupation", name: "Senior Full Stack Developer & AI Engineer", estimatedSalary: { "@type": "MonetaryAmount", currency: "IDR" } },
+      ],
+      worksFor: { "@id": `${siteConfig.url}/#organization` },
+      knowsLanguage: ["id", "en"],
+    },
+    breadcrumb: {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: siteConfig.url },
+        { "@type": "ListItem", position: 2, name: "Resume", item: `${siteConfig.url}/resume` },
+      ],
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(resumePageSchema) }}
+    />
+  );
+}
+
 export function JsonLd() {
   const organizationSchema = {
     "@context": "https://schema.org",
