@@ -72,7 +72,7 @@ export function TestimonialTable({
                   <div className="text-xs text-muted-foreground">{item.perusahaan || "-"}</div>
                 </TableCell>
                 
-                <TableCell className="max-w-[420px] font-mono text-xs text-muted-foreground">
+                <TableCell className="max-w-[180px] sm:max-w-[300px] lg:max-w-[420px] font-mono text-xs text-muted-foreground">
                   <p className="line-clamp-3 leading-relaxed">{item.isi}</p>
                 </TableCell>
                 

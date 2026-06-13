@@ -103,7 +103,7 @@ export function TestimonialListClient({ initialTestimonials, stats, filters, pag
             onDuplicate={(id) => run("Testimonial duplicated", () => duplicateTestimonial(id))}
             onDelete={(id) => run("Testimonial deleted", () => deleteTestimonial(id))}
           />
-          <div className="flex items-center justify-between gap-3 border-t border-border/50 pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/50 pt-4">
             <Button asChild variant="outline" className="rounded-none font-mono" disabled={!canGoPrevious}>
               <Link href={canGoPrevious ? pageHref(pagination.page - 1, filters) : pageHref(1, filters)}>PREVIOUS</Link>
             </Button>

@@ -70,12 +70,13 @@ export function BlogTable({ articles, selectedIds, onSelectAll, onSelectOne, onP
   const allSelected = articles.length > 0 && selectedIds.length === articles.length;
 
   return (
-    <Table className="w-full table-fixed">
-      <TableHeader>
-        <TableRow className="border-border/50 hover:bg-transparent">
-          <TableHead className="w-11">
-            <Checkbox checked={allSelected} onCheckedChange={onSelectAll} aria-label="Select all" className="rounded-none" />
-          </TableHead>
+    <div className="overflow-x-auto">
+      <Table className="w-full table-fixed">
+        <TableHeader>
+          <TableRow className="border-border/50 hover:bg-transparent">
+            <TableHead className="w-11">
+              <Checkbox checked={allSelected} onCheckedChange={onSelectAll} aria-label="Select all" className="rounded-none" />
+            </TableHead>
           <TableHead className="w-44 font-mono text-primary">THUMBNAIL</TableHead>
           <TableHead className="font-mono text-primary">ARTICLE_DETAIL</TableHead>
           <TableHead className="hidden w-52 font-mono text-primary xl:table-cell">STATUS_METRICS</TableHead>
@@ -175,5 +176,6 @@ export function BlogTable({ articles, selectedIds, onSelectAll, onSelectOne, onP
         })}
       </TableBody>
     </Table>
+    </div>
   );
 }

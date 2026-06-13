@@ -81,7 +81,7 @@ export function MessageTable({
                   <div className="text-xs text-muted-foreground">WA: {message.no_wa || "-"}</div>
                 </TableCell>
                 
-                <TableCell className="max-w-[420px] font-mono">
+                <TableCell className="max-w-[200px] sm:max-w-[300px] lg:max-w-[420px] font-mono">
                   <div className="font-medium text-foreground">{message.subjek}</div>
                   <p className="mt-1 line-clamp-2 text-xs text-muted-foreground leading-relaxed">{message.pesan}</p>
                   {message.layanan && (

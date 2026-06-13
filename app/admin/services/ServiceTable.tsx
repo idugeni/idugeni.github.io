@@ -35,12 +35,13 @@ export function ServiceTable({ services, selectedIds, onSelectAll, onSelectOne, 
   const allSelected = services.length > 0 && selectedIds.length === services.length;
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="border-border/50 hover:bg-transparent">
-          <TableHead className="w-12">
-            <Checkbox checked={allSelected} onCheckedChange={onSelectAll} aria-label="Select all services" className="rounded-none" />
-          </TableHead>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow className="border-border/50 hover:bg-transparent">
+            <TableHead className="w-12">
+              <Checkbox checked={allSelected} onCheckedChange={onSelectAll} aria-label="Select all services" className="rounded-none" />
+            </TableHead>
           <TableHead className="font-mono text-primary">SERVICE</TableHead>
           <TableHead className="font-mono text-primary">PRICE</TableHead>
           <TableHead className="font-mono text-primary">FEATURES</TableHead>
@@ -63,7 +64,7 @@ export function ServiceTable({ services, selectedIds, onSelectAll, onSelectOne, 
               <div className="space-y-1">
                 <div className="font-mono font-medium text-foreground">{service.nama}</div>
                 <div className="font-mono text-xs text-muted-foreground">/{service.slug}</div>
-                <p className="line-clamp-2 max-w-[360px] text-sm text-muted-foreground">{service.deskripsi_pendek}</p>
+                <p className="line-clamp-2 max-w-[200px] sm:max-w-[300px] lg:max-w-[360px] text-sm text-muted-foreground">{service.deskripsi_pendek}</p>
               </div>
             </TableCell>
             <TableCell className="font-mono text-sm text-muted-foreground">{service.harga_mulai || "-"}</TableCell>
@@ -84,5 +85,6 @@ export function ServiceTable({ services, selectedIds, onSelectAll, onSelectOne, 
         ))}
       </TableBody>
     </Table>
+    </div>
   );
 }
