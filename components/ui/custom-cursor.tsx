@@ -1,50 +1,43 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function CustomCursor() {
+  const [isDesktop, setIsDesktop] = useState(false);
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
   const mouse = useRef({ x: 0, y: 0 });
   const ringPos = useRef({ x: 0, y: 0 });
   const isPointer = useRef(false);
   const rafId = useRef<number>(0);
-  const isTouch = useRef(false);
   const mounted = useRef(false);
 
   useEffect(() => {
-    // Check if device is touch
-    if (window.matchMedia("(pointer: coarse)").matches) {
-      isTouch.current = true;
-      return;
-    }
-
+    // Only enable on desktop (fine pointer = mouse, not touch)
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    setIsDesktop(true);
     mounted.current = true;
 
     const handleMouseMove = (e: MouseEvent) => {
       mouse.current.x = e.clientX;
       mouse.current.y = e.clientY;
 
-      // Update dot immediately (no lag)
       if (dotRef.current) {
         dotRef.current.style.transform = `translate3d(${e.clientX - 4}px, ${e.clientY - 4}px, 0) scale(${isPointer.current ? 1.5 : 1})`;
       }
 
-      // Check cursor type (throttled via rAF, no forced reflow on every move)
+      // Check cursor type — use tag/role checks only (no getComputedStyle)
       const target = e.target as HTMLElement;
       if (target) {
         const tagName = target.tagName.toLowerCase();
-        const hasPointer =
+        isPointer.current =
           tagName === "a" ||
           tagName === "button" ||
           target.closest("a") !== null ||
           target.closest("button") !== null ||
-          target.getAttribute("role") === "button" ||
-          window.getComputedStyle(target).cursor === "pointer";
-        isPointer.current = hasPointer;
+          target.getAttribute("role") === "button";
       }
     };
 
-    // Smooth ring follow using rAF (lerp)
     const animate = () => {
       if (!mounted.current) return;
 
@@ -72,10 +65,7 @@ export function CustomCursor() {
     };
   }, []);
 
-  // Don't render on touch devices (checked after first render)
-  if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
-    return null;
-  }
+  if (!isDesktop) return null;
 
   return (
     <>

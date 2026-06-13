@@ -364,6 +364,11 @@ body::after {
   animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
+@keyframes loading-progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
 /* Marquee - handled via JS requestAnimationFrame */
 
 /* Section fade edges - smooth transition between bg-card and bg-background */

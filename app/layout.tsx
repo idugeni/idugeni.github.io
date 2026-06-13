@@ -26,7 +26,7 @@ const spaceMono = Space_Mono({
 const orbitron = Orbitron({
   subsets: ["latin"],
   variable: "--app-font-orbitron",
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "600", "700", "900"],
 });
 
 export const viewport: Viewport = {
