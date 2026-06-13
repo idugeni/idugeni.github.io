@@ -98,8 +98,8 @@ export async function getBlogIndexPageData({ category, page = 1 }: BlogIndexPage
   }
 
   const whereClause = `WHERE ${conditions.join(" AND ")}`;
-  const limitIdx = idx + 1;
-  const offsetIdx = idx + 2;
+  const limitIdx = idx;
+  const offsetIdx = idx + 1;
 
   const [countResult, articlesResult, categoriesResult] = await Promise.all([
     queryPooler<{ count: number }>(
@@ -162,8 +162,8 @@ export async function getProjectsIndexPageData({ category, status, tech, page = 
     if (safeTech) { conditions.push(`$${idx} = ANY(tech_stack)`); params.push(safeTech); idx++; }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-    const limitIdx = idx + 1;
-    const offsetIdx = idx + 2;
+    const limitIdx = idx;
+    const offsetIdx = idx + 1;
 
     const [countResult, projectsResult, filterResult] = await Promise.all([
       queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM projects ${whereClause}`, params),
