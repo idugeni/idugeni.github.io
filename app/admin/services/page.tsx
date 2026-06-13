@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAdminServicesPage, getServiceStats } from "@/actions/services";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -5,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2Icon } from "@/lib/icons";
 import Link from "next/link";
 import { ServiceListClient } from "./ServiceListClient";
+
+export const metadata: Metadata = { title: "Services" };
 
 type AdminServicesSearchParams = Promise<Record<string, string | string[] | undefined>>;
 

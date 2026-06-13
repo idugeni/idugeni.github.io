@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { AdminRuntimeFallback } from "@/components/admin/AdminRuntimeFallback";
 import { AnnouncementForm } from "../AnnouncementForm";
+
+export const metadata: Metadata = { title: "New Announcement" };
 
 async function NewAnnouncementRuntimeContent() {
   await connection();

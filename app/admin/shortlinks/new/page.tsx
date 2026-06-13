@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { AdminRuntimeFallback } from "@/components/admin/AdminRuntimeFallback";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { ShortlinkForm } from "../ShortlinkForm";
+
+export const metadata: Metadata = { title: "New Shortlink" };
 
 async function NewShortlinkRuntimeContent() {
   await connection();

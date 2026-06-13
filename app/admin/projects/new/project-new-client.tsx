@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import dynamic from "next/dynamic";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { ArrowLeft, Calendar, FileText, ImageIcon, Save, Send, Sparkles, Target } from "@/lib/icons";
 import { slugify } from "@/lib/utils/slug";
 
@@ -62,7 +62,7 @@ function DatePickerField({ label, value, onChange }: { label: string; value: str
 export default function AdminProjectNew() {
   const router = useRouter();
   const createProject = useCreateProject();
-  const { toast } = useToast();
+
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -104,7 +104,7 @@ export default function AdminProjectNew() {
       return;
     }
     if (!file.type.startsWith("image/")) {
-      toast({ title: "Invalid thumbnail", description: "Please select an image file." });
+      toast.error("Please select an image file.");
       return;
     }
     setThumbnailFile(file);
@@ -132,13 +132,13 @@ export default function AdminProjectNew() {
       };
       const created = await createProject.execute(payload);
       if (!created) {
-        toast({ title: "Failed to save project", description: createProject.error?.message || "Please verify all fields." });
+        toast.error("Failed to save project", { description: createProject.error?.message || "Please verify all fields." });
         return;
       }
-      toast({ title: "Project created successfully" });
+      toast.success("Project created successfully");
       router.push("/admin/projects");
     } catch (error) {
-      toast({ title: "Project upload failed", description: error instanceof Error ? error.message : "Unknown error" });
+      toast.error("Project upload failed", { description: error instanceof Error ? error.message : "Unknown error" });
     } finally {
       setIsUploading(false);
     }

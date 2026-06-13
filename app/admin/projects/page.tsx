@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAdminProjectsPage, getProjectStats } from "@/actions/projects";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -6,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Plus, Loader2Icon } from "@/lib/icons";
 import Link from "next/link";
 import { ProjectListClient } from "./ProjectListClient";
+
+export const metadata: Metadata = { title: "Projects" };
 
 type AdminProjectsSearchParams = Promise<Record<string, string | string[] | undefined>>;
 

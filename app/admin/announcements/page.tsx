@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAdminAnnouncements, type Announcement } from "@/actions/announcements";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -5,6 +6,8 @@ import { AnnouncementsClient } from "./AnnouncementsClient";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2Icon } from "@/lib/icons";
 import Link from "next/link";
+
+export const metadata: Metadata = { title: "Announcements" };
 
 /**
  * Admin Announcements Page (Server Component)

@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { HiOutlineEnvelope } from "react-icons/hi2";
 import { subscribeNewsletter } from "@/actions/newsletter";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,21 +21,13 @@ export function NewsletterForm() {
     try {
       const result = await subscribeNewsletter({ email });
       if (result.success) {
-        toast({ title: "Subscribed!", description: result.message });
+        toast.success("Subscribed!", { description: result.message });
         setEmail("");
       } else {
-        toast({
-          title: "Info",
-          description: result.message,
-          variant: "destructive",
-        });
+        toast.error("Info", { description: result.message });
       }
     } catch {
-      toast({
-        title: "Error",
-        description: "Gagal berlangganan. Silakan coba lagi.",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: "Gagal berlangganan. Silakan coba lagi." });
     } finally {
       setIsLoading(false);
     }

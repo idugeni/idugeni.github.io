@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { unsubscribeNewsletter } from "@/actions/newsletter";
 import { AlertTriangle, CheckCircle } from "@/lib/icons";
+
+export const metadata: Metadata = { title: "Unsubscribe" };
 
 type UnsubscribeSearchParams = Promise<{ token?: string | string[] }>;
 

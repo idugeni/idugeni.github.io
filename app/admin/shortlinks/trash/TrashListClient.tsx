@@ -8,13 +8,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Trash2, Undo } from "@/lib/icons";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AdminTableActionButton } from "@/components/admin/AdminTableActionButton";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { ConfirmActionDialog } from "@/components/admin/ConfirmActionDialog";
 
 export function TrashListClient({ shortlinks }: { shortlinks: Shortlink[] }) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
-  const { toast } = useToast();
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [shortlinkToDelete, setShortlinkToDelete] = useState<string | null>(null);
 
@@ -22,14 +22,10 @@ export function TrashListClient({ shortlinks }: { shortlinks: Shortlink[] }) {
     setLoading(id);
     try {
       await restoreShortlink(id);
-      toast({ title: "Shortlink restored successfully" });
+      toast.success("Shortlink restored successfully");
       router.refresh();
     } catch (error) {
-      toast({ 
-        title: "Error", 
-        description: error instanceof Error ? error.message : "Failed to restore", 
-        variant: "destructive" 
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to restore");
     } finally {
       setLoading(null);
     }
@@ -45,15 +41,11 @@ export function TrashListClient({ shortlinks }: { shortlinks: Shortlink[] }) {
     setLoading(shortlinkToDelete);
     try {
       await permanentDeleteShortlink(shortlinkToDelete);
-      toast({ title: "Shortlink permanently deleted" });
+      toast.success("Shortlink permanently deleted");
       router.refresh();
       setDeleteDialogOpen(false);
     } catch (error) {
-      toast({ 
-        title: "Error", 
-        description: error instanceof Error ? error.message : "Failed to delete", 
-        variant: "destructive" 
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to delete");
     } finally {
       setLoading(null);
     }

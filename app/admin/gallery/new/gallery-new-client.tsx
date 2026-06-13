@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { ArrowLeft, FileText, ImageIcon, Save, Send, Sparkles, Target } from "@/lib/icons";
 import { slugify } from "@/lib/utils/slug";
 
@@ -32,7 +32,7 @@ function formatBytes(size: number) {
 
 export default function AdminGalleryNew() {
   const router = useRouter();
-  const { toast } = useToast();
+
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -61,7 +61,7 @@ export default function AdminGalleryNew() {
     const isSupportedImage = nextFile.type.startsWith("image/");
     const isSupportedVideo = nextFile.type === "video/mp4" || nextFile.type === "video/webm";
     if (!isSupportedImage && !isSupportedVideo) {
-      toast({ title: "Unsupported media", description: "Use image files or MP4/WebM video." });
+      toast.error("Use image files or MP4/WebM video.");
       return;
     }
     setFile(nextFile);
@@ -70,7 +70,7 @@ export default function AdminGalleryNew() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!file) {
-      toast({ title: "Media file required", description: "Select an image or video before saving." });
+      toast.error("Select an image or video before saving.");
       return;
     }
 
@@ -91,10 +91,10 @@ export default function AdminGalleryNew() {
         fileUrl: uploaded.url,
         thumbnailUrl: isVideo ? "" : uploaded.url,
       });
-      toast({ title: "Gallery media uploaded" });
+      toast.success("Gallery media uploaded");
       router.push("/admin/gallery");
     } catch (error) {
-      toast({ title: "Gallery upload failed", description: error instanceof Error ? error.message : "Unknown error" });
+      toast.error("Gallery upload failed", { description: error instanceof Error ? error.message : "Unknown error" });
     } finally {
       setIsSaving(false);
     }

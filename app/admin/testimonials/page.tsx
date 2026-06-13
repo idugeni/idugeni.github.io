@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAdminTestimonialsPage, getTestimonialStats } from "@/actions/testimonials";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Loader2Icon } from "@/lib/icons";
 import { TestimonialListClient } from "./TestimonialListClient";
+
+export const metadata: Metadata = { title: "Testimonials" };
 
 type SearchParams = Promise<{
   q?: string;

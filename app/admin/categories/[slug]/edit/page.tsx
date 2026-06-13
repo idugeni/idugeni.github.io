@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getBlogCategoryBySlug } from "@/actions/blog";
 import { CategoryForm } from "../../CategoryForm";
+
+export const metadata: Metadata = { title: "Edit Category" };
 
 type EditCategoryParams = Promise<{ slug: string }>;
 

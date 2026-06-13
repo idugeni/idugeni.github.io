@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAdminBlogCategoriesPage } from "@/actions/blog";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -5,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Plus, Tag, Loader2Icon } from "@/lib/icons";
 import Link from "next/link";
 import { CategoryListClient } from "./CategoryListClient";
+
+export const metadata: Metadata = { title: "Categories" };
 
 async function CategoriesContent() {
   let pageData = null;

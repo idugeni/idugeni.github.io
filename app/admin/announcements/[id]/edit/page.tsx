@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getAnnouncementById } from "@/actions/announcements";
 import { AnnouncementForm } from "../../AnnouncementForm";
+
+export const metadata: Metadata = { title: "Edit Announcement" };
 
 interface EditPageProps {
   params: Promise<{ id: string }>;

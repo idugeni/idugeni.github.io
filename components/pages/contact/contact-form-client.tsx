@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NeonBorder } from "@/components/ui/neon-border";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   HiOutlineCheckCircle,
   HiOutlinePaperAirplane,
@@ -23,7 +23,7 @@ const emptyContactForm = {
 
 export function ContactFormClient() {
   const sendMessage = useSendContactMessage();
-  const { toast } = useToast();
+
   const [formData, setFormData] = useState(emptyContactForm);
   const [sent, setSent] = useState(false);
   const [isCustomSubject, setIsCustomSubject] = useState(false);
@@ -52,8 +52,7 @@ export function ContactFormClient() {
     if (!result) return;
 
     const emailStatus = result.email?.adminNotification;
-    toast({
-      title: "TRANSMISSION_SUCCESSFUL",
+    toast.success("TRANSMISSION_SUCCESSFUL", {
       description:
         emailStatus === "sent"
           ? "Pesan Anda telah diterima dan notifikasi email berhasil dikirim."

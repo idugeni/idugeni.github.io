@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import {
   getAdminContactMessagesPage,
@@ -7,6 +8,8 @@ import {
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Loader2Icon } from "@/lib/icons";
 import { MessageListClient } from "./MessageListClient";
+
+export const metadata: Metadata = { title: "Messages" };
 
 type AdminMessagesSearchParams = Promise<{
   q?: string;

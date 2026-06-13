@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { getTrashShortlinks } from "@/actions/shortlinks";
 import { Loader2Icon } from "@/lib/icons";
 import { TrashListClient } from "./TrashListClient";
+
+export const metadata: Metadata = { title: "Shortlinks Trash" };
 
 async function TrashContent() {
   let shortlinks = null;

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAdminBlogArticlesPage, getBlogStats } from "@/actions/blog";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -6,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Plus, Tag, Loader2Icon } from "@/lib/icons";
 import Link from "next/link";
 import { BlogListClient } from "./BlogListClient";
+
+export const metadata: Metadata = { title: "Blog" };
 
 type AdminBlogSearchParams = Promise<Record<string, string | string[] | undefined>>;
 

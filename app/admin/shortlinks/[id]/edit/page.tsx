@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getShortlinkById } from "@/actions/shortlinks";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { ShortlinkForm } from "../../ShortlinkForm";
+
+export const metadata: Metadata = { title: "Edit Shortlink" };
 
 export default async function EditShortlink({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

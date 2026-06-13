@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { ArrowLeft, Copy, FileText, ImageIcon, Save, Send, Sparkles, Target } from "@/lib/icons";
 import { SeoAuditorPanel } from "@/components/admin/SeoAuditorPanel";
@@ -77,7 +77,7 @@ export function BlogNewClient({ categories }: BlogNewClientProps) {
   const createBlog = useCreateBlogArticle();
   const generateAi = useGenerateBlogArticleWithAi();
   const generateSeoPlan = useGenerateBlogSeoPlanWithAi();
-  const { toast } = useToast();
+
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
@@ -162,7 +162,7 @@ export function BlogNewClient({ categories }: BlogNewClientProps) {
 
   const handleGenerateSeoPlan = async (refineOnly = false) => {
     if (!aiOptions.topic.trim()) {
-      toast({ title: "ARTICLE_BRIEF required", description: "Isi brief artikel dulu sebelum menjalankan SEO blueprint." });
+      toast.error("ARTICLE_BRIEF required", { description: "Isi brief artikel dulu sebelum menjalankan SEO blueprint." });
       return;
     }
 
@@ -178,7 +178,7 @@ export function BlogNewClient({ categories }: BlogNewClientProps) {
     });
 
     if (!result) {
-      toast({ title: "SEO blueprint failed", description: generateSeoPlan.error?.message || "Check Gemini configuration and try again." });
+      toast.error("SEO blueprint failed", { description: generateSeoPlan.error?.message || "Check Gemini configuration and try again." });
       return;
     }
 
@@ -199,18 +199,18 @@ export function BlogNewClient({ categories }: BlogNewClientProps) {
       setHasGeneratedArticle(false);
     }
 
-    toast({ title: refineOnly ? "ARTICLE_BRIEF refined" : "SEO blueprint generated", description: refineOnly ? "Brief diperjelas tanpa mengubah field SEO lain." : "Keyword, audience, CTA, dan text-to-image prompt sudah dibuat." });
+    toast.success(refineOnly ? "ARTICLE_BRIEF refined" : "SEO blueprint generated", { description: refineOnly ? "Brief diperjelas tanpa mengubah field SEO lain." : "Keyword, audience, CTA, dan text-to-image prompt sudah dibuat." });
   };
 
   const handleGenerateAi = async () => {
     if (!hasGeneratedSeoPlan) {
-      toast({ title: "Generate SEO blueprint first", description: "Klik GENERATE_SEO_BLUEPRINT sebelum membuat artikel." });
+      toast.error("Generate SEO blueprint first", { description: "Klik GENERATE_SEO_BLUEPRINT sebelum membuat artikel." });
       return;
     }
 
     const result = await generateAi.execute(aiOptions);
     if (!result) {
-      toast({ title: "AI generation failed", description: generateAi.error?.message || "Check Gemini API key and try again." });
+      toast.error("AI generation failed", { description: generateAi.error?.message || "Check Gemini API key and try again." });
       return;
     }
 
@@ -226,7 +226,7 @@ export function BlogNewClient({ categories }: BlogNewClientProps) {
     }));
     setIsSlugManuallyEdited(Boolean(result.slug));
     setHasGeneratedArticle(true);
-    toast({ title: "SEO draft generated", description: "Review content, prompt gambar, dan SEO score sebelum save." });
+    toast.success("SEO draft generated", { description: "Review content, prompt gambar, dan SEO score sebelum save." });
   };
 
   const handleThumbnailChange = (file: File | null) => {
@@ -235,7 +235,7 @@ export function BlogNewClient({ categories }: BlogNewClientProps) {
       return;
     }
     if (!file.type.startsWith("image/")) {
-      toast({ title: "Invalid thumbnail", description: "Please select an image file." });
+      toast.error("Invalid thumbnail", { description: "Please select an image file." });
       return;
     }
     setThumbnailFile(file);
@@ -245,7 +245,7 @@ export function BlogNewClient({ categories }: BlogNewClientProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!articleReadyToSave) {
-      toast({ title: "SEO workflow belum lengkap", description: "Buat SEO blueprint dan generate artikel dulu sebelum SAVE_TRANSMISSION." });
+      toast.error("SEO workflow belum lengkap", { description: "Buat SEO blueprint dan generate artikel dulu sebelum SAVE_TRANSMISSION." });
       return;
     }
 
@@ -270,13 +270,13 @@ export function BlogNewClient({ categories }: BlogNewClientProps) {
         tags: formData.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
       });
       if (!created) {
-        toast({ title: "Failed to save transmission", description: createBlog.error?.message || "Please verify all required fields." });
+        toast.error("Failed to save transmission", { description: createBlog.error?.message || "Please verify all required fields." });
         return;
       }
-      toast({ title: "Transmission created successfully" });
+      toast.success("Transmission created successfully");
       router.push("/admin/blog");
     } catch (error) {
-      toast({ title: "Thumbnail/save failed", description: error instanceof Error ? error.message : "Unknown error" });
+      toast.error("Thumbnail/save failed", { description: error instanceof Error ? error.message : "Unknown error" });
     } finally {
       setIsUploadingThumbnail(false);
     }

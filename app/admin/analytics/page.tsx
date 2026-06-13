@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAnalyticsSummary, getPageViewsChart, getRouteSegments, getTopPages, getTopReferrers, getRecentPageViews } from "@/actions/analytics";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, BarChart, Eye, Target, ExternalLink, GitBranch, Loader2Icon } from "@/lib/icons";
 import { AnalyticsChart } from "./AnalyticsChart";
+
+export const metadata: Metadata = { title: "Analytics" };
 
 function compact(value: number) {
   return new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(value);

@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAdminNewsletterSubscribersPage, getNewsletterStats } from "@/actions/newsletter";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Loader2Icon } from "@/lib/icons";
 import { NewsletterListClient } from "./NewsletterListClient";
+
+export const metadata: Metadata = { title: "Newsletter" };
 
 type SearchParams = Promise<{
   q?: string;

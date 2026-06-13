@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAdminShortlinks, getShortlinkStats } from "@/actions/shortlinks";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -5,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Loader2Icon } from "@/lib/icons";
 import Link from "next/link";
 import { ShortlinkListClient } from "./ShortlinkListClient";
+
+export const metadata: Metadata = { title: "Shortlinks" };
 
 type SearchParams = Promise<{
   page?: string;

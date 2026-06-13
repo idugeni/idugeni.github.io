@@ -23,7 +23,7 @@ import {
   ChevronRight,
   X,
 } from "@/lib/icons";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { toggleBlogLike, createBlogComment } from "@/actions/blog";
 import { createClient } from "@/lib/supabase/client";
 import type { BlogDetailClientProps } from "@/types/pages";
@@ -243,7 +243,7 @@ export function BlogDetailClient({
   relatedArticles,
   processedContent,
 }: BlogDetailClientProps) {
-  const { toast } = useToast();
+
   const viewTracked = useRef(false);
 
   // Live stats state. Initial values come from the static/PPR payload, then hydrate from the
@@ -367,10 +367,7 @@ export function BlogDetailClient({
     } else {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      toast({
-        title: "Link copied!",
-        description: "URL artikel berhasil disalin.",
-      });
+      toast.success("Link copied!", { description: "URL artikel berhasil disalin." });
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -387,15 +384,9 @@ export function BlogDetailClient({
       });
       setCommentForm({ nama: "", email: "", komentar: "" });
       setShowCommentForm(false);
-      toast({
-        title: "Komentar terkirim!",
-        description: "Komentar Anda akan tampil setelah disetujui.",
-      });
+      toast.success("Komentar terkirim!", { description: "Komentar Anda akan tampil setelah disetujui." });
     } catch {
-      toast({
-        title: "Gagal mengirim komentar",
-        description: "Silakan coba lagi.",
-      });
+      toast.error("Gagal mengirim komentar", { description: "Silakan coba lagi." });
     } finally {
       setCommentLoading(false);
     }

@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import dynamicImport from "next/dynamic";
 import { ArrowLeft, FileText, ImageIcon, Save, Send, Sparkles, Target } from "@/lib/icons";
 import { SeoAuditorPanel } from "@/components/admin/SeoAuditorPanel";
@@ -41,7 +41,7 @@ function parseViews(value: string) {
 
 export function AdminBlogEditClient({ slug }: AdminBlogEditClientProps) {
   const router = useRouter();
-  const { toast } = useToast();
+
   const { data: article, isLoading } = useGetBlogArticle(slug);
   const { data: categories } = useGetBlogCategories();
   const updateBlog = useUpdateBlogArticle();
@@ -118,7 +118,7 @@ export function AdminBlogEditClient({ slug }: AdminBlogEditClientProps) {
       return;
     }
     if (!file.type.startsWith("image/")) {
-      toast({ title: "Invalid thumbnail", description: "Please select an image file." });
+      toast.error("Please select an image file.");
       return;
     }
     setThumbnailFile(file);
@@ -152,14 +152,14 @@ export function AdminBlogEditClient({ slug }: AdminBlogEditClientProps) {
       });
 
       if (!updated) {
-        toast({ title: "Failed to update transmission", description: updateBlog.error?.message || "Please verify all required fields." });
+        toast.error("Failed to update transmission", { description: updateBlog.error?.message || "Please verify all required fields." });
         return;
       }
 
-      toast({ title: "Transmission updated successfully" });
+      toast.success("Transmission updated successfully");
       router.push("/admin/blog");
     } catch (error) {
-      toast({ title: "Thumbnail/update failed", description: error instanceof Error ? error.message : "Unknown error" });
+      toast.error("Thumbnail/update failed", { description: error instanceof Error ? error.message : "Unknown error" });
     } finally {
       setIsUploadingThumbnail(false);
     }

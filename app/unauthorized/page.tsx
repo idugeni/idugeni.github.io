@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { RiShieldStarLine } from "react-icons/ri";
+
+export const metadata: Metadata = { title: "Unauthorized" };
 
 export default function UnauthorizedPage() {
   return (

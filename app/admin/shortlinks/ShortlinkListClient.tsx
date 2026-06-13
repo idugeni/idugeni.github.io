@@ -11,7 +11,7 @@ import { Copy, Edit, ExternalLink, Lock, QrCode, Search, Trash2 } from "@/lib/ic
 import { StatusPill } from "@/components/admin/StatusPill";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AdminTableActionButton } from "@/components/admin/AdminTableActionButton";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { ConfirmActionDialog } from "@/components/admin/ConfirmActionDialog";
 
 interface ShortlinkListClientProps {
@@ -44,7 +44,7 @@ export function ShortlinkListClient({
   const router = useRouter();
   const [search, setSearch] = useState(filters.search || "");
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
-  const { toast } = useToast();
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [shortlinkToDelete, setShortlinkToDelete] = useState<string | null>(null);
 
@@ -66,15 +66,11 @@ export function ShortlinkListClient({
     setIsDeleting(shortlinkToDelete);
     try {
       await deleteShortlink(shortlinkToDelete);
-      toast({ title: "Shortlink deleted successfully" });
+      toast.success("Shortlink deleted successfully");
       router.refresh();
       setDeleteDialogOpen(false);
     } catch (error) {
-      toast({ 
-        title: "Error", 
-        description: error instanceof Error ? error.message : "Failed to delete shortlink", 
-        variant: "destructive" 
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to delete shortlink");
     } finally {
       setIsDeleting(null);
     }
@@ -82,7 +78,7 @@ export function ShortlinkListClient({
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({ title: "Copied to clipboard!" });
+    toast.success("Copied to clipboard!");
   };
 
   const siteUrl = typeof window !== "undefined" ? window.location.origin : "";

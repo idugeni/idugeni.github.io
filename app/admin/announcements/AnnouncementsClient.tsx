@@ -5,7 +5,7 @@ import Link from "next/link";
 import { deleteAnnouncement, type Announcement } from "@/actions/announcements";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { ConfirmActionDialog } from "@/components/admin/ConfirmActionDialog";
 import { AlertTriangle, Calendar, Clock, Edit, Trash2 } from "@/lib/icons";
 
@@ -15,7 +15,6 @@ interface AnnouncementsClientProps {
 
 export function AnnouncementsClient({ initialAnnouncements }: AnnouncementsClientProps) {
   const [announcements, setAnnouncements] = useState(initialAnnouncements);
-  const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [announcementToDelete, setAnnouncementToDelete] = useState<string | null>(null);
 
@@ -28,15 +27,11 @@ export function AnnouncementsClient({ initialAnnouncements }: AnnouncementsClien
     if (!announcementToDelete) return;
     try {
       await deleteAnnouncement(announcementToDelete);
-      toast({ title: "Announcement deleted successfully!" });
+      toast.success("Announcement deleted successfully!");
       setAnnouncements((prev) => prev.filter((item) => item.id !== announcementToDelete));
       setDeleteDialogOpen(false);
     } catch (err) {
-      toast({ 
-        title: "Error", 
-        description: err instanceof Error ? err.message : "Failed to delete announcement", 
-        variant: "destructive" 
-      });
+      toast.error(err instanceof Error ? err.message : "Failed to delete announcement");
     }
   };
 

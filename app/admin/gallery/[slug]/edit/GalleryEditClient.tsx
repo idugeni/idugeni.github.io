@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { ArrowLeft, FileText, ImageIcon, Save, Send, Sparkles, Target } from "@/lib/icons";
 import { slugify } from "@/lib/utils/slug";
 
@@ -44,7 +44,7 @@ function formatBytes(size: number) {
 
 export function GalleryEditClient({ item }: { item: GalleryItem }) {
   const router = useRouter();
-  const { toast } = useToast();
+
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -82,7 +82,7 @@ export function GalleryEditClient({ item }: { item: GalleryItem }) {
     const isSupportedImage = nextFile.type.startsWith("image/");
     const isSupportedVideo = nextFile.type === "video/mp4" || nextFile.type === "video/webm";
     if (!isSupportedImage && !isSupportedVideo) {
-      toast({ title: "Unsupported media", description: "Use image files or MP4/WebM video." });
+      toast.error("Use image files or MP4/WebM video.");
       return;
     }
     setFile(nextFile);
@@ -108,11 +108,11 @@ export function GalleryEditClient({ item }: { item: GalleryItem }) {
       }
 
       const updated = await updateGalleryItemBySlug(item.slug, { ...formData, slug: slugPreview, tipe: finalType, fileUrl: finalFileUrl, thumbnailUrl: finalThumbnailUrl });
-      toast({ title: "Gallery item updated" });
+      toast.success("Gallery item updated");
       router.push(`/admin/gallery/${updated.slug}/edit`);
       router.refresh();
     } catch (error) {
-      toast({ title: "Gallery update failed", description: error instanceof Error ? error.message : "Unknown error" });
+      toast.error("Gallery update failed", { description: error instanceof Error ? error.message : "Unknown error" });
     } finally {
       setIsSaving(false);
     }
