@@ -103,8 +103,8 @@ export function Navbar() {
 
               {/* Mega Menu Dropdown */}
               {link.megaMenu && megaMenuOpen === link.label && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 w-[520px]">
-                  <div className="bg-background/95 backdrop-blur-xl border border-primary/20 shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-4">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 w-[min(520px,95vw)]">
+                  <div className="bg-background/95 backdrop-blur-xl border border-primary/20 shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-4 overflow-x-auto">
                     <div className="grid grid-cols-2 gap-1">
                       {link.megaMenu.map((item) => (
                         <Link key={item.label} href={item.href} prefetch={false}>

@@ -369,6 +369,27 @@ body::after {
   to { width: 100%; }
 }
 
+/* Overflow protection utility classes */
+.no-x-scroll {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+.safe-width {
+  max-width: 100%;
+  width: 100%;
+}
+
+.marquee-safe {
+  overflow-x: hidden;
+  contain: layout style;
+}
+
+.overflow-guard {
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
 /* Marquee - handled via JS requestAnimationFrame */
 
 /* Section fade edges - smooth transition between bg-card and bg-background */

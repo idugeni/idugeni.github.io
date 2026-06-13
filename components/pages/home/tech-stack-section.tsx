@@ -88,7 +88,7 @@ function CircuitFlow() {
   return (
     <div className="relative w-full my-8 flex flex-col items-center justify-center">
       <svg
-        className="w-full max-w-7xl px-4"
+        className="w-full max-w-7xl px-4 overflow-hidden"
         fill="none"
         viewBox="0 0 800 200"
         preserveAspectRatio="xMidYMid meet"

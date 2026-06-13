@@ -186,7 +186,7 @@ export function ParticleBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 w-full h-full pointer-events-none z-0"
+      className="fixed inset-0 w-full h-full max-w-[100vw] max-h-[100vh] pointer-events-none z-0"
       style={{ willChange: "transform" }}
     />
   );

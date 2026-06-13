@@ -111,11 +111,11 @@ function MarqueeRow({ testimonials, direction }: { testimonials: Testimonial[]; 
 
   return (
     <div
-      className="overflow-hidden"
+      className="overflow-hidden marquee-safe"
       onMouseEnter={() => { pausedRef.current = true; }}
       onMouseLeave={() => { pausedRef.current = false; }}
     >
-      <div ref={trackRef} className="flex w-max will-change-transform">
+      <div ref={trackRef} className="flex w-max max-w-full will-change-transform">
         {items.map((testimonial, i) => (
           <TestimonialCard key={`${testimonial.id}-${i}`} testimonial={testimonial} />
         ))}

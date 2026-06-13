@@ -11,18 +11,21 @@ function PublicChromeFallback() {
 
 export function PublicLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-[100dvh] flex flex-col relative dark overflow-x-hidden w-full max-w-[100vw]">
-      <Suspense fallback={<PublicChromeFallback />}>
-        <Navbar />
-      </Suspense>
-      <Suspense fallback={<PublicChromeFallback />}>
-        <Breadcrumbs />
-      </Suspense>
-      <main className="flex-1 z-10">{children}</main>
-      <Footer />
-      <Suspense fallback={<PublicChromeFallback />}>
-        <PublicLayoutClient />
-      </Suspense>
+    <div className="min-h-[100dvh] flex flex-col relative dark overflow-x-hidden w-full max-w-[100vw] overflow-guard">
+      {/* Extra wrapper for overflow protection */}
+      <div className="w-full overflow-x-hidden flex flex-col min-h-[100dvh]">
+        <Suspense fallback={<PublicChromeFallback />}>
+          <Navbar />
+        </Suspense>
+        <Suspense fallback={<PublicChromeFallback />}>
+          <Breadcrumbs />
+        </Suspense>
+        <main className="flex-1 z-10 overflow-x-hidden">{children}</main>
+        <Footer />
+        <Suspense fallback={<PublicChromeFallback />}>
+          <PublicLayoutClient />
+        </Suspense>
+      </div>
     </div>
   );
 }
