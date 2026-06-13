@@ -21,7 +21,7 @@ export function HeroSection() {
         </ScrollReveal>
 
         <ScrollReveal delay={200}>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-orbitron font-bold mb-4 tracking-tighter">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-orbitron font-bold mb-4 tracking-tighter">
             <GlitchText text="IRNK CODES" />
           </h1>
         </ScrollReveal>

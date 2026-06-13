@@ -495,7 +495,7 @@ export function BlogDetailClient({
               {/* Action bar */}
               <div className="mt-12 pt-8 border-t border-primary/20">
                 <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex gap-3">
+                  <div className="flex flex-wrap gap-3">
                     <Button
                       variant="outline"
                       className={`font-mono border-primary/50 hover:bg-primary/20 ${liked ? "bg-primary/20 text-primary" : ""}`}

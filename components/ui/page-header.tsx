@@ -26,7 +26,7 @@ export function PageHeader({ badge, badgeIcon, title, description }: PageHeaderP
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-orbitron font-bold neon-text tracking-tight">
             {title}
           </h1>
-          <p className="mt-4 font-mono text-sm text-muted-foreground max-w-xl mx-auto">
+          <p className="mt-4 font-mono text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto">
             {description}
           </p>
         </div>

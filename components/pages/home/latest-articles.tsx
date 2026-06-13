@@ -18,8 +18,8 @@ export function LatestArticles({ articles }: LatestArticlesProps) {
     <section className="py-24 bg-card relative section-fade">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
-          <div className="flex items-center justify-between mb-12">
-            <h2 className="text-3xl md:text-4xl font-orbitron font-bold neon-text">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-orbitron font-bold neon-text">
               LATEST_TRANSMISSIONS
             </h2>
             <Link href="/blog">
