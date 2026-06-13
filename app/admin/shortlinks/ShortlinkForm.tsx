@@ -599,6 +599,7 @@ export function ShortlinkForm({ shortlink, mode }: ShortlinkFormProps) {
                           )}
                           Scrape & Build Safelink Content
                         </Button>
+                      </div>
                     ) : (
                       <div className="space-y-4 font-mono text-xs text-left">
                         <div className="grid gap-4 md:grid-cols-2">
