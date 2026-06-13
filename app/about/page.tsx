@@ -52,6 +52,8 @@ import {
   SiMongodb,
 } from "react-icons/si";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { HiOutlineArrowDownTray } from "react-icons/hi2";
 
 const skills = {
   frontend: {
@@ -225,6 +227,32 @@ export default function About() {
                   design, building tools yang empower people to do more with less
                   effort.
                 </p>
+              </div>
+            </section>
+          </ScrollReveal>
+
+          {/* CTA - Download Resume */}
+          <ScrollReveal direction="up" delay={125}>
+            <section className="glass-card p-6 md:p-8 mb-8 border-primary/40">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="text-lg md:text-xl font-orbitron text-primary mb-2">
+                    INTERESTED_IN_COLLABORATION?
+                  </h3>
+                  <p className="font-mono text-sm text-muted-foreground">
+                    Download my resume untuk melihat detail pengalaman, skills, dan portfolio lengkap.
+                  </p>
+                </div>
+                <Link href="/resume/download" target="_blank">
+                  <Button
+                    variant="default"
+                    size="lg"
+                    className="gap-2 font-mono whitespace-nowrap"
+                  >
+                    <HiOutlineArrowDownTray className="w-5 h-5" />
+                    Download Resume
+                  </Button>
+                </Link>
               </div>
             </section>
           </ScrollReveal>

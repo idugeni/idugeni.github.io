@@ -14,7 +14,13 @@ import {
   HiOutlineMapPin,
   HiOutlinePhone,
 } from "react-icons/hi2";
-import { FiGithub, FiInstagram } from "react-icons/fi";
+import { FiGithub, FiInstagram, FiLinkedin, FiTwitter } from "react-icons/fi";
+import { HiChevronDown } from "react-icons/hi";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -156,6 +162,42 @@ export default function Contact() {
                           </p>
                         </div>
                       </a>
+                      <a
+                        href={siteConfig.social.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-4 p-3 border border-border/30 hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                      >
+                        <div className="w-10 h-10 bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                          <FiLinkedin className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-mono text-sm text-foreground group-hover:text-primary transition-colors">
+                            LinkedIn
+                          </p>
+                          <p className="font-mono text-[10px] text-muted-foreground">
+                            Eliyanto Sarage
+                          </p>
+                        </div>
+                      </a>
+                      <a
+                        href={siteConfig.social.twitter}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-4 p-3 border border-border/30 hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                      >
+                        <div className="w-10 h-10 bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                          <FiTwitter className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-mono text-sm text-foreground group-hover:text-primary transition-colors">
+                            Twitter/X
+                          </p>
+                          <p className="font-mono text-[10px] text-muted-foreground">
+                            @irnk_codes
+                          </p>
+                        </div>
+                      </a>
                     </div>
                   </div>
                 </NeonBorder>
@@ -187,33 +229,48 @@ export default function Contact() {
                   <h3 className="font-orbitron font-bold text-sm mb-4 text-primary">
                     QUICK_FAQ
                   </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="font-mono text-xs text-foreground font-bold mb-1">
-                        Berapa lama response time?
-                      </p>
-                      <p className="font-mono text-[11px] text-muted-foreground">
-                        Biasanya dalam 24 jam di hari kerja.
-                      </p>
-                    </div>
-                    <div className="border-t border-border/30 pt-4">
-                      <p className="font-mono text-xs text-foreground font-bold mb-1">
-                        Apakah menerima proyek remote?
-                      </p>
-                      <p className="font-mono text-[11px] text-muted-foreground">
-                        Ya, 100% remote-friendly. Klien dari seluruh Indonesia
-                        dan internasional.
-                      </p>
-                    </div>
-                    <div className="border-t border-border/30 pt-4">
-                      <p className="font-mono text-xs text-foreground font-bold mb-1">
-                        Minimum budget proyek?
-                      </p>
-                      <p className="font-mono text-[11px] text-muted-foreground">
-                        Mulai dari Rp 5.000.000 untuk konsultasi. Proyek custom
-                        disesuaikan.
-                      </p>
-                    </div>
+                  <div className="space-y-2">
+                    <Collapsible>
+                      <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-md hover:bg-primary/5 transition-colors group">
+                        <span className="font-mono text-xs text-foreground font-bold text-left">
+                          Berapa lama response time?
+                        </span>
+                        <HiChevronDown className="w-4 h-4 text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="px-3 pb-3">
+                        <p className="font-mono text-[11px] text-muted-foreground leading-relaxed">
+                          Biasanya dalam 24 jam di hari kerja. Untuk proyek urgent, kami akan memberikan response lebih cepat jika memungkinkan.
+                        </p>
+                      </CollapsibleContent>
+                    </Collapsible>
+                    <div className="border-t border-border/30" />
+                    <Collapsible>
+                      <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-md hover:bg-primary/5 transition-colors group">
+                        <span className="font-mono text-xs text-foreground font-bold text-left">
+                          Apakah menerima proyek remote?
+                        </span>
+                        <HiChevronDown className="w-4 h-4 text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="px-3 pb-3">
+                        <p className="font-mono text-[11px] text-muted-foreground leading-relaxed">
+                          Ya, 100% remote-friendly. Klien dari seluruh Indonesia dan internasional. Kami menggunakan tools kolaborasi modern seperti Slack, Notion, dan GitHub.
+                        </p>
+                      </CollapsibleContent>
+                    </Collapsible>
+                    <div className="border-t border-border/30" />
+                    <Collapsible>
+                      <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-md hover:bg-primary/5 transition-colors group">
+                        <span className="font-mono text-xs text-foreground font-bold text-left">
+                          Minimum budget proyek?
+                        </span>
+                        <HiChevronDown className="w-4 h-4 text-muted-foreground group-data-[state=open]:rotate-180 transition-transform" />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="px-3 pb-3">
+                        <p className="font-mono text-[11px] text-muted-foreground leading-relaxed">
+                          Mulai dari Rp 5.000.000 untuk konsultasi. Proyek custom disesuaikan dengan scope dan complexity. Kami memberikan quotation transparan sebelum memulai.
+                        </p>
+                      </CollapsibleContent>
+                    </Collapsible>
                   </div>
                 </div>
               </ScrollReveal>
