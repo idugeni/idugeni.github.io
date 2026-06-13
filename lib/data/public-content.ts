@@ -148,47 +148,58 @@ export async function getProjectsIndexData() {
 export async function getProjectsIndexPageData({ category, status, tech, page = 1 }: ProjectsIndexPageParams = {}) {
   applyPublicContentCacheTags(CACHE_TAGS.projects);
 
-  const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
-  const safeCategory = category?.trim() || undefined;
-  const safeStatus = status?.trim() || undefined;
-  const safeTech = tech?.trim() || undefined;
-  const from = (safePage - 1) * PROJECT_PAGE_SIZE;
+  try {
+    const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+    const safeCategory = category?.trim() || undefined;
+    const safeStatus = status?.trim() || undefined;
+    const safeTech = tech?.trim() || undefined;
+    const from = (safePage - 1) * PROJECT_PAGE_SIZE;
 
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+    let idx = 1;
 
-  if (safeCategory) { conditions.push(`kategori = $${idx++}`); params.push(safeCategory); }
-  if (safeStatus) { conditions.push(`status = $${idx++}`); params.push(safeStatus); }
-  if (safeTech) { conditions.push(`$${idx} = ANY(tech_stack)`); params.push(safeTech); idx++; }
+    if (safeCategory) { conditions.push(`kategori = $${idx++}`); params.push(safeCategory); }
+    if (safeStatus) { conditions.push(`status = $${idx++}`); params.push(safeStatus); }
+    if (safeTech) { conditions.push(`$${idx} = ANY(tech_stack)`); params.push(safeTech); idx++; }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  const limitIdx = idx + 1;
-  const offsetIdx = idx + 2;
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const limitIdx = idx + 1;
+    const offsetIdx = idx + 2;
 
-  const [countResult, projectsResult, filterResult] = await Promise.all([
-    queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM projects ${whereClause}`, params),
-    queryPooler<any>(`SELECT id,nama,slug,deskripsi,kategori,status,featured,thumbnail_url,thumbnail_aspect_ratio,github_url,live_url,tech_stack,urutan,created_at,updated_at FROM projects ${whereClause} ORDER BY urutan LIMIT $${limitIdx} OFFSET $${offsetIdx}`, [...params, PROJECT_PAGE_SIZE, from]),
-    queryPooler<{ kategori: string | null; status: string | null; tech_stack: string[] | null }>(`SELECT DISTINCT kategori, status, tech_stack FROM projects ORDER BY urutan LIMIT 200`),
-  ]);
+    const [countResult, projectsResult, filterResult] = await Promise.all([
+      queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM projects ${whereClause}`, params),
+      queryPooler<any>(`SELECT id,nama,slug,deskripsi,kategori,status,featured,thumbnail_url,thumbnail_aspect_ratio,github_url,live_url,tech_stack,urutan,created_at,updated_at FROM projects ${whereClause} ORDER BY urutan LIMIT $${limitIdx} OFFSET $${offsetIdx}`, [...params, PROJECT_PAGE_SIZE, from]),
+      queryPooler<{ kategori: string | null; status: string | null; tech_stack: string[] | null }>(`SELECT DISTINCT kategori, status, tech_stack FROM projects ORDER BY urutan LIMIT 200`),
+    ]);
 
-  const totalItems = countResult[0]?.count ?? 0;
-  const totalPages = Math.max(1, Math.ceil(totalItems / PROJECT_PAGE_SIZE));
+    const totalItems = countResult[0]?.count ?? 0;
+    const totalPages = Math.max(1, Math.ceil(totalItems / PROJECT_PAGE_SIZE));
 
-  const categories = Array.from(new Set(filterResult.map((r) => r.kategori).filter(Boolean))).sort() as string[];
-  const statuses = Array.from(new Set(filterResult.map((r) => r.status).filter(Boolean))).sort() as string[];
-  const techStack = Array.from(new Set(filterResult.flatMap((r) => r.tech_stack ?? []).filter(Boolean))).sort() as string[];
+    const categories = Array.from(new Set(filterResult.map((r) => r.kategori).filter(Boolean))).sort() as string[];
+    const statuses = Array.from(new Set(filterResult.map((r) => r.status).filter(Boolean))).sort() as string[];
+    const techStack = Array.from(new Set(filterResult.flatMap((r) => r.tech_stack ?? []).filter(Boolean))).sort() as string[];
 
-  return {
-    projects: toCamelCase<Project[]>(projectsResult ?? []),
-    filters: { categories, statuses, techStack },
-    activeFilters: { category: safeCategory, status: safeStatus, tech: safeTech },
-    pagination: {
-      page: safePage, pageSize: PROJECT_PAGE_SIZE, totalItems, totalPages,
-      hasPreviousPage: safePage > 1, hasNextPage: safePage < totalPages,
-    },
-    error: null,
-  };
+    return {
+      projects: toCamelCase<Project[]>(projectsResult ?? []),
+      filters: { categories, statuses, techStack },
+      activeFilters: { category: safeCategory, status: safeStatus, tech: safeTech },
+      pagination: {
+        page: safePage, pageSize: PROJECT_PAGE_SIZE, totalItems, totalPages,
+        hasPreviousPage: safePage > 1, hasNextPage: safePage < totalPages,
+      },
+      error: null,
+    };
+  } catch (err) {
+    console.error("[getProjectsIndexPageData] Error:", err);
+    return {
+      projects: [],
+      filters: { categories: [], statuses: [], techStack: [] },
+      activeFilters: { category: undefined, status: undefined, tech: undefined },
+      pagination: { page: 1, pageSize: PROJECT_PAGE_SIZE, totalItems: 0, totalPages: 1, hasPreviousPage: false, hasNextPage: false },
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
 }
 
 export async function getServicesIndexData() {
