@@ -170,7 +170,7 @@ export async function getProjectsIndexPageData({ category, status, tech, page = 
     const [countResult, projectsResult, filterResult] = await Promise.all([
       queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM projects ${whereClause}`, params),
       queryPooler<any>(`SELECT id,nama,slug,deskripsi,kategori,status,featured,thumbnail_url,thumbnail_aspect_ratio,github_url,live_url,tech_stack,urutan,created_at,updated_at FROM projects ${whereClause} ORDER BY urutan LIMIT $${limitIdx} OFFSET $${offsetIdx}`, [...params, PROJECT_PAGE_SIZE, from]),
-      queryPooler<{ kategori: string | null; status: string | null; tech_stack: string[] | null }>(`SELECT DISTINCT kategori, status, tech_stack FROM projects ORDER BY urutan LIMIT 200`),
+      queryPooler<{ kategori: string | null; status: string | null }>(`SELECT DISTINCT kategori, status FROM projects`),
     ]);
 
     const totalItems = countResult[0]?.count ?? 0;
@@ -178,7 +178,7 @@ export async function getProjectsIndexPageData({ category, status, tech, page = 
 
     const categories = Array.from(new Set(filterResult.map((r) => r.kategori).filter(Boolean))).sort() as string[];
     const statuses = Array.from(new Set(filterResult.map((r) => r.status).filter(Boolean))).sort() as string[];
-    const techStack = Array.from(new Set(filterResult.flatMap((r) => r.tech_stack ?? []).filter(Boolean))).sort() as string[];
+    const techStack = Array.from(new Set((projectsResult ?? []).flatMap((r: any) => r.tech_stack ?? []).filter(Boolean))).sort() as string[];
 
     return {
       projects: toCamelCase<Project[]>(projectsResult ?? []),
