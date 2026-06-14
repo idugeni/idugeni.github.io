@@ -34,12 +34,7 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "verify": "npm run typecheck && npm run lint && npm run build",
-    "analyze": "set ANALYZE=true && npm run build",
-    "test": "playwright test",
-    "test:ui": "playwright test --ui",
-    "test:headed": "playwright test --headed",
-    "test:debug": "playwright test --debug",
-    "test:report": "playwright show-report"
+    "analyze": "set ANALYZE=true && npm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
