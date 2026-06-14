@@ -1,7 +1,5 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { cacheLife, cacheTag } from "next/cache";
-import { CACHE_TAGS } from "@/lib/cache/tags";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
 import { PublicLayout } from "@/components/layout/public-layout";
@@ -14,18 +12,7 @@ import { connection } from "next/server";
 
 type Props = { params: Promise<{ slug: string }> };
 
-const PROJECT_DETAIL_CACHE_LIFE = {
-  stale: 300,
-  revalidate: 300,
-  expire: 3_600,
-} as const;
-
-
-
 async function getProjectDetailData(slug: string) {
-  "use cache";
-  cacheLife(PROJECT_DETAIL_CACHE_LIFE);
-  cacheTag(CACHE_TAGS.projects);
 
   const rawProject = await queryPoolerSingle<Record<string, unknown>>(
     `SELECT * FROM projects WHERE slug=$1`,

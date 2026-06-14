@@ -1,7 +1,5 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { cacheLife, cacheTag } from "next/cache";
-import { CACHE_TAGS } from "@/lib/cache/tags";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
 import { PublicLayout } from "@/components/layout/public-layout";
@@ -14,15 +12,7 @@ import { connection } from "next/server";
 
 type Props = { params: Promise<{ slug: string }> };
 
-const BLOG_DETAIL_CACHE_LIFE = {
-  stale: 300,
-  revalidate: 300,
-  expire: 3_600,
-} as const;
 async function getBlogDetailData(slug: string) {
-  "use cache";
-  cacheLife(BLOG_DETAIL_CACHE_LIFE);
-  cacheTag(CACHE_TAGS.blog);
 
   const rawArticle = await queryPoolerSingle<Record<string, unknown>>(
     `SELECT * FROM blog_artikel WHERE slug=$1 AND status='published'`,
