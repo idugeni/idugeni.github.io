@@ -1,0 +1,133 @@
+# dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# next.js
+.next/
+out/
+.next/server/
+
+# env files
+.env
+.env*.local
+.env.production
+.env.development.local
+.env.test.local
+
+# playwright
+.playwright-cli/
+test-results/
+playwright-report/
+blob-report/
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# compiled output
+dist/
+tmp/
+out-tsc/
+build/
+*.tsbuildinfo
+
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IDE - Windsurf / Cascade
+.windsurf/
+.agents/
+.config/
+.local/
+
+# Replit
+.replit
+.replitignore
+.replit.nix
+replit.md
+.uptm/
+
+# testing
+coverage/
+.nyc_output/
+*.lcov
+.jest-cache/
+
+# misc
+.sass-cache/
+connect.lock
+libpeerconnection.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+testem.log
+typings/
+.eslintcache
+*.log
+
+# System Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.bak
+*.tmp
+*.swp
+
+# next-agents-md
+.next-docs/
+
+# Database & Local Dumps
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.dump
+backup.sql
+dump.sql
+db_backup/
+
+# Supabase Local State & Logs
+.supabase/
+supabase/.temp/
+supabase/logs/
+supabase/migrations/
+supabase/.branches/
+supabase/.functions/
+supabase/seed.sql
+
+# Local Temporary Scratch scripts
+scratch/
+
+# Local & Production Operations Scripts
+scripts/
+
+# Certificates & Keys
+*.pem
+*.key
+*.cert
+*.crt
+
+# Turborepo
+.turbo/

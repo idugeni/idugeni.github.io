@@ -1,0 +1,73 @@
+"use client";
+
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { HiOutlineHome, HiOutlineArrowLeft, HiOutlineLockClosed } from "react-icons/hi2";
+
+export default function UnauthorizedClient() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden dark">
+      {/* Background effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(239,68,68,0.05)_0%,transparent_70%)]" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-destructive/5 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-destructive/3 rounded-full blur-3xl animate-pulse delay-1000" />
+
+      <div className="relative z-10 text-center px-4 max-w-lg">
+        {/* Icon with glow effect */}
+        <div className="relative mb-8 flex justify-center">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-32 h-32 bg-destructive/10 rounded-full blur-3xl" />
+          </div>
+          <HiOutlineLockClosed className="relative w-24 h-24 md:w-32 md:h-32 text-destructive drop-shadow-[0_0_30px_rgba(239,68,68,0.5)]" strokeWidth={1.5} />
+        </div>
+
+        <h1 className="font-orbitron text-4xl md:text-5xl font-bold text-foreground mb-3">
+          ACCESS_DENIED
+        </h1>
+        <p className="font-mono text-sm text-muted-foreground mb-2">
+          Anda tidak memiliki izin untuk mengakses halaman ini.
+        </p>
+        <p className="font-mono text-xs text-destructive/70 mb-8">
+          ERROR_CODE: 403_FORBIDDEN // AUTHORIZATION_REQUIRED
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
+          <Link href="/" prefetch={false}>
+            <Button
+              variant="outline"
+              className="font-mono border-primary/50 hover:bg-primary/10"
+            >
+              <HiOutlineArrowLeft className="mr-2 h-4 w-4" /> GO_BACK
+            </Button>
+          </Link>
+          <Link href="/login" prefetch={false}>
+            <Button className="font-mono bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+              <HiOutlineLockClosed className="mr-2 h-4 w-4" /> LOGIN
+            </Button>
+          </Link>
+          <Link href="/" prefetch={false}>
+            <Button
+              variant="outline"
+              className="font-mono border-primary/50 hover:bg-primary/10"
+            >
+              <HiOutlineHome className="mr-2 h-4 w-4" /> HOME_BASE
+            </Button>
+          </Link>
+        </div>
+
+        {/* Terminal-style decoration */}
+        <div className="border border-destructive/30 bg-secondary/30 p-4 text-left font-mono text-xs text-muted-foreground/60 max-w-sm mx-auto">
+          <div className="text-destructive/70 mb-1">$ verify_access --check</div>
+          <div className="text-destructive/70">Error: Insufficient permissions</div>
+          <div className="text-muted-foreground/40 mt-1">Required: Administrator role</div>
+          <div className="text-muted-foreground/40">Current: Guest</div>
+          <div className="mt-2 text-xs">Action: Contact administrator or login with authorized account</div>
+          <div className="mt-3 flex items-center gap-1">
+            <span className="text-destructive">$</span>
+            <span className="w-2 h-4 bg-destructive/70 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
