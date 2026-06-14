@@ -10,6 +10,7 @@ import { ProjectJsonLd } from "@/components/seo/project-json-ld";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import type { Project } from "@/types/pages";
 import { renderRichHtml, richHtmlToPlainText } from "@/lib/content/rich-html";
+import { connection } from "next/server";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -19,16 +20,7 @@ const PROJECT_DETAIL_CACHE_LIFE = {
   expire: 3_600,
 } as const;
 
-async function getProjectSlugs() {
-  "use cache";
-  cacheLife(PROJECT_DETAIL_CACHE_LIFE);
-  cacheTag(CACHE_TAGS.projects);
 
-  const rows = await queryPooler<{ slug: string }>(
-    `SELECT slug FROM projects WHERE slug IS NOT NULL ORDER BY urutan`
-  );
-  return rows.map((r) => r.slug).filter(Boolean);
-}
 
 async function getProjectDetailData(slug: string) {
   "use cache";
@@ -56,12 +48,10 @@ async function getProjectDetailData(slug: string) {
   return { project, relatedProjects, processedDescription };
 }
 
-export async function generateStaticParams() {
-  const slugs = await getProjectSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
+
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  await connection();
   try {
     const { slug } = await params;
     const detail = await getProjectDetailData(slug);
@@ -106,6 +96,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProjectDetailPage({ params }: Props) {
+  // Force full server render — prevents PPR streaming crash causing blank pages
+  await connection();
+
   const { slug } = await params;
 
   let detail;

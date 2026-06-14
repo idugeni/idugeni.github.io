@@ -10,6 +10,7 @@ import { ArticleJsonLd } from "@/components/seo/article-json-ld";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import type { BlogArticle, BlogComment } from "@/types/pages";
 import { renderRichHtml } from "@/lib/content/rich-html";
+import { connection } from "next/server";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -18,18 +19,6 @@ const BLOG_DETAIL_CACHE_LIFE = {
   revalidate: 300,
   expire: 3_600,
 } as const;
-
-async function getBlogSlugs() {
-  "use cache";
-  cacheLife(BLOG_DETAIL_CACHE_LIFE);
-  cacheTag(CACHE_TAGS.blog);
-
-  const rows = await queryPooler<{ slug: string }>(
-    `SELECT slug FROM blog_artikel WHERE status='published' AND slug IS NOT NULL ORDER BY published_at DESC`
-  );
-  return rows.map((r) => r.slug).filter(Boolean);
-}
-
 async function getBlogDetailData(slug: string) {
   "use cache";
   cacheLife(BLOG_DETAIL_CACHE_LIFE);
@@ -63,12 +52,8 @@ async function getBlogDetailData(slug: string) {
   return { article, comments, relatedArticles, processedContent };
 }
 
-export async function generateStaticParams() {
-  const slugs = await getBlogSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  await connection();
   try {
     const { slug } = await params;
     const detail = await getBlogDetailData(slug);
@@ -113,6 +98,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BlogDetailPage({ params }: Props) {
+  // Force full server render — prevents PPR streaming crash causing blank pages
+  await connection();
+
   const { slug } = await params;
 
   let detail;

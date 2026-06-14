@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { ServiceDetailClient } from "@/components/pages/services/service-detail-client";
+import { connection } from "next/server";
 import { CACHE_TAGS } from "@/lib/cache/tags";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
@@ -64,6 +65,9 @@ function ServiceDetailFallback() {
 }
 
 async function ServiceDetailContent({ params }: { params: ServiceDetailParams }) {
+  // Force full server render — prevents PPR streaming crash causing blank pages
+  await connection();
+
   const { slug } = await params;
   let data;
 
@@ -117,6 +121,7 @@ export async function generateMetadata({
 }: {
   params: ServiceDetailParams;
 }): Promise<Metadata> {
+  await connection();
   try {
     const { slug } = await params;
     const data = await getServiceMetadata(slug);
