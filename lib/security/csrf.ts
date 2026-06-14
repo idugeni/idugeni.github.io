@@ -50,7 +50,11 @@ async function verifyCSRFToken(token: string): Promise<boolean> {
   return validateCSRFToken(token)
 }
 
-export async function getCSRFToken(): Promise<string> {
+/**
+ * Read existing CSRF token from cookie (READ-ONLY, safe for Server Components).
+ * Returns null if no valid token exists yet.
+ */
+export async function getCSRFToken(): Promise<string | null> {
   const cookieStore = await cookies()
   const existingToken = cookieStore.get("csrf_token")
   
@@ -58,6 +62,15 @@ export async function getCSRFToken(): Promise<string> {
     return existingToken.value
   }
   
+  return null
+}
+
+/**
+ * Generate a new CSRF token and set it as a cookie.
+ * MUST only be called from a Route Handler or Server Action.
+ */
+export async function setCSRFToken(): Promise<string> {
+  const cookieStore = await cookies()
   const newToken = await generateCSRFToken()
   cookieStore.set("csrf_token", newToken, {
     httpOnly: true,
@@ -66,7 +79,6 @@ export async function getCSRFToken(): Promise<string> {
     maxAge: 60 * 60 * 24, // 24 hours
     path: "/",
   })
-  
   return newToken
 }
 

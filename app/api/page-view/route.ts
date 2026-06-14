@@ -29,10 +29,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid page view payload" }, { status: 400 });
     }
 
+    const userAgent = request.headers.get("user-agent") || null;
+
     const supabase = createServiceClient();
     const { error } = await supabase.from("page_views").insert({
       halaman: parsed.data.halaman,
       referrer: parsed.data.referrer || null,
+      ip_address: ip !== "unknown" ? ip : null,
+      user_agent: userAgent,
     });
 
     if (error) {
