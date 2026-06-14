@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { AuthRuntimeFallback } from "@/components/auth/AuthRuntimeFallback";
 import { UpdatePasswordClient } from "./update-password-client";
+
+export const metadata: Metadata = {
+  title: "Update Password",
+};
 
 function AuthRouteFallback() {
   return (

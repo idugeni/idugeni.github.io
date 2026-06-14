@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About",
   description:
     "Kenali Eliyanto Sarage — Full Stack Developer, UI/UX Designer, dan AI Engineer dengan 5+ tahun pengalaman membangun solusi digital premium untuk bisnis modern.",
   openGraph: {
-    title: "About",
     description:
       "Full Stack Developer, UI/UX Designer, dan AI Engineer dengan 5+ tahun pengalaman membangun solusi digital premium untuk bisnis modern.",
     url: "https://irnk.codes/about",

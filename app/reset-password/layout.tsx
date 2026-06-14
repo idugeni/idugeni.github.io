@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Reset Password",
   description:
     "Reset password akun IRNK Codes. Kirim permintaan reset untuk mendapatkan link pemulihan password melalui email yang terdaftar.",
   robots: {
@@ -9,7 +8,6 @@ export const metadata: Metadata = {
     follow: false,
   },
   openGraph: {
-    title: "Reset Password",
     description: "Reset password akun IRNK Codes melalui email yang terdaftar.",
     url: "https://irnk.codes/reset-password",
   },

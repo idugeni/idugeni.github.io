@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { AuthRuntimeFallback } from "@/components/auth/AuthRuntimeFallback";
 import { LoginClient } from "./login-client";
+
+export const metadata: Metadata = {
+  title: "Login",
+};
 
 function AuthRouteFallback() {
   return (

@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Gallery",
   description:
     "Arsip visual karya desain dan proyek Eliyanto Sarage — screenshot aplikasi, UI mockup, dan dokumentasi visual dari berbagai proyek digital premium.",
   openGraph: {
-    title: "Gallery",
     description:
       "Arsip visual karya desain dan proyek — screenshot aplikasi, UI mockup, dan dokumentasi visual dari berbagai proyek digital premium.",
     url: "https://irnk.codes/gallery",

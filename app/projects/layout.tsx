@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Projects",
   description:
     "Koleksi proyek unggulan Eliyanto Sarage — aplikasi web, mobile, dan AI yang dibangun dengan teknologi modern seperti Next.js, React, dan Python.",
   openGraph: {
-    title: "Projects",
     description:
       "Koleksi proyek unggulan — aplikasi web, mobile, dan AI yang dibangun dengan teknologi modern seperti Next.js, React, dan Python.",
     url: "https://irnk.codes/projects",
