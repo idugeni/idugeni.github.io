@@ -69,47 +69,59 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const detail = await getBlogDetailData(slug);
+  try {
+    const { slug } = await params;
+    const detail = await getBlogDetailData(slug);
 
-  if (!detail) {
-    return { title: "Artikel Tidak Ditemukan" };
+    if (!detail) {
+      return { title: "Artikel Tidak Ditemukan" };
+    }
+
+    const { article } = detail;
+    const baseUrl = "https://irnk.codes";
+
+    return {
+      title: article.judul,
+      description: article.ringkasan,
+      authors: [{ name: "Eliyanto Sarage" }],
+      openGraph: {
+        title: article.judul,
+        description: article.ringkasan,
+        type: "article",
+        publishedTime: article.publishedAt ?? undefined,
+        authors: ["Eliyanto Sarage"],
+        url: `${baseUrl}/blog/${article.slug}`,
+        images: article.thumbnailUrl
+          ? [{ url: article.thumbnailUrl, width: 1200, height: 630, alt: article.judul }]
+          : undefined,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: article.judul,
+        description: article.ringkasan,
+        images: article.thumbnailUrl ? [article.thumbnailUrl] : undefined,
+        creator: "@idugeni",
+      },
+      alternates: {
+        canonical: `${baseUrl}/blog/${article.slug}`,
+      },
+    };
+  } catch (error) {
+    console.error("[blog-detail] generateMetadata failed:", error);
+    return { title: "Blog" };
   }
-
-  const { article } = detail;
-  const baseUrl = "https://irnk.codes";
-
-  return {
-    title: article.judul,
-    description: article.ringkasan,
-    authors: [{ name: "Eliyanto Sarage" }],
-    openGraph: {
-      title: article.judul,
-      description: article.ringkasan,
-      type: "article",
-      publishedTime: article.publishedAt ?? undefined,
-      authors: ["Eliyanto Sarage"],
-      url: `${baseUrl}/blog/${article.slug}`,
-      images: article.thumbnailUrl
-        ? [{ url: article.thumbnailUrl, width: 1200, height: 630, alt: article.judul }]
-        : undefined,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: article.judul,
-      description: article.ringkasan,
-      images: article.thumbnailUrl ? [article.thumbnailUrl] : undefined,
-      creator: "@idugeni",
-    },
-    alternates: {
-      canonical: `${baseUrl}/blog/${article.slug}`,
-    },
-  };
 }
 
 export default async function BlogDetailPage({ params }: Props) {
   const { slug } = await params;
-  const detail = await getBlogDetailData(slug);
+  let detail;
+
+  try {
+    detail = await getBlogDetailData(slug);
+  } catch (error) {
+    console.error("[blog-detail] Failed to fetch blog data:", error);
+    throw error; // Let error.tsx handle this
+  }
 
   if (!detail) {
     notFound();

@@ -65,7 +65,14 @@ function ServiceDetailFallback() {
 
 async function ServiceDetailContent({ params }: { params: ServiceDetailParams }) {
   const { slug } = await params;
-  const data = await getServiceDetailData(slug);
+  let data;
+
+  try {
+    data = await getServiceDetailData(slug);
+  } catch (error) {
+    console.error("[service-detail] Failed to fetch service data:", error);
+    throw error; // Let error.tsx handle this
+  }
 
   if (!data) {
     notFound();
@@ -93,20 +100,25 @@ export async function generateMetadata({
 }: {
   params: ServiceDetailParams;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  const data = await getServiceMetadata(slug);
+  try {
+    const { slug } = await params;
+    const data = await getServiceMetadata(slug);
 
-  if (!data) {
+    if (!data) {
+      return {
+        title: "Service Not Found",
+        description: "The requested service could not be found.",
+      };
+    }
+
     return {
-      title: "Service Not Found",
-      description: "The requested service could not be found.",
+      title: data.nama,
+      description: data.deskripsi_pendek,
     };
+  } catch (error) {
+    console.error("[service-detail] generateMetadata failed:", error);
+    return { title: "Services" };
   }
-
-  return {
-    title: data.nama,
-    description: data.deskripsi_pendek,
-  };
 }
 
 export default function ServiceDetailPage({

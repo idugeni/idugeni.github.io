@@ -106,45 +106,63 @@ function enhanceHighlightedCode(html: string, language: string) {
     .replace("<code", `<code class="language-${escapeHtml(language)}"`);
 }
 
-export async function renderRichHtml(content: string | null | undefined) {
+export async function renderRichHtml(content: string | null | undefined): Promise<string> {
   if (!content) return "";
 
-  const normalizedHtml = normalizePlainTextToHtml(content);
-  const safeHtml = addHeadingIds(sanitizeRichHtml(normalizedHtml));
-  const highlightedBlocks: string[] = [];
+  // Timeout guard: if Shiki takes too long, fall back to raw content
+  const timeoutMs = 5000; // 5 seconds
+  
+  const renderPromise = (async () => {
+    const normalizedHtml = normalizePlainTextToHtml(content);
+    const safeHtml = addHeadingIds(sanitizeRichHtml(normalizedHtml));
+    const highlightedBlocks: string[] = [];
 
-  const htmlWithPlaceholders = safeHtml.replace(
-    CODE_BLOCK_PATTERN,
-    (_match, preAttrs: string, codeAttrs: string, rawCode: string) => {
-      const language = getCodeLanguage(`${preAttrs} ${codeAttrs}`);
-      const code = decodeHtml(rawCode.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]*>/g, ""));
-      const placeholder = `___IRNK_CODE_BLOCK_${highlightedBlocks.length}___`;
-      highlightedBlocks.push(JSON.stringify({ code, language }));
-      return placeholder;
-    },
-  );
+    const htmlWithPlaceholders = safeHtml.replace(
+      CODE_BLOCK_PATTERN,
+      (_match, preAttrs: string, codeAttrs: string, rawCode: string) => {
+        const language = getCodeLanguage(`${preAttrs} ${codeAttrs}`);
+        const code = decodeHtml(rawCode.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]*>/g, ""));
+        const placeholder = `___IRNK_CODE_BLOCK_${highlightedBlocks.length}___`;
+        highlightedBlocks.push(JSON.stringify({ code, language }));
+        return placeholder;
+      },
+    );
 
-  const highlightedHtml = await Promise.all(
-    highlightedBlocks.map(async (payload) => {
-      const { code, language } = JSON.parse(payload) as { code: string; language: string };
-      try {
-        const html = await codeToHtml(code, {
-          lang: language,
-          themes: {
-            light: "github-light",
-            dark: "github-dark",
-          },
-        });
-        return enhanceHighlightedCode(html, language);
-      } catch {
-        const escapedCode = escapeHtml(code);
-        return `<pre data-language="TEXT"><code class="language-text">${escapedCode}</code></pre>`;
-      }
-    }),
-  );
+    const highlightedHtml = await Promise.all(
+      highlightedBlocks.map(async (payload) => {
+        const { code, language } = JSON.parse(payload) as { code: string; language: string };
+        try {
+          const html = await codeToHtml(code, {
+            lang: language,
+            themes: {
+              light: "github-light",
+              dark: "github-dark",
+            },
+          });
+          return enhanceHighlightedCode(html, language);
+        } catch {
+          const escapedCode = escapeHtml(code);
+          return `<pre data-language="TEXT"><code class="language-text">${escapedCode}</code></pre>`;
+        }
+      }),
+    );
 
-  return highlightedHtml.reduce(
-    (html, block, index) => html.replace(`___IRNK_CODE_BLOCK_${index}___`, block),
-    htmlWithPlaceholders,
-  );
+    return highlightedHtml.reduce(
+      (html, block, index) => html.replace(`___IRNK_CODE_BLOCK_${index}___`, block),
+      htmlWithPlaceholders,
+    );
+  })();
+
+  const timeoutPromise = new Promise<string>((_, reject) => {
+    setTimeout(() => reject(new Error(`renderRichHtml timeout after ${timeoutMs}ms`)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([renderPromise, timeoutPromise]);
+  } catch (error) {
+    console.error("[renderRichHtml] Timeout or error, falling back to raw content:", error);
+    // Fall back to basic HTML without syntax highlighting
+    const normalizedHtml = normalizePlainTextToHtml(content);
+    return addHeadingIds(sanitizeRichHtml(normalizedHtml));
+  }
 }

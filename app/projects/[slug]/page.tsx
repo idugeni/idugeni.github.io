@@ -62,53 +62,66 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const detail = await getProjectDetailData(slug);
+  try {
+    const { slug } = await params;
+    const detail = await getProjectDetailData(slug);
 
-  if (!detail) {
-    return { title: "Proyek Tidak Ditemukan" };
+    if (!detail) {
+      return { title: "Proyek Tidak Ditemukan" };
+    }
+
+    const { project } = detail;
+    const baseUrl = "https://irnk.codes";
+    const description = richHtmlToPlainText(project.deskripsi);
+
+    return {
+      title: project.nama,
+      description,
+      authors: [{ name: "Eliyanto Sarage" }],
+      openGraph: {
+        title: project.nama,
+        description,
+        type: "article",
+        authors: ["Eliyanto Sarage"],
+        url: `${baseUrl}/projects/${slug}`,
+        images: project.thumbnailUrl
+          ? [{ url: project.thumbnailUrl, width: 1200, height: 630, alt: project.nama }]
+          : undefined,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: project.nama,
+        description,
+        images: project.thumbnailUrl ? [project.thumbnailUrl] : undefined,
+        creator: "@idugeni",
+      },
+      alternates: {
+        canonical: `${baseUrl}/projects/${slug}`,
+      },
+    };
+  } catch (error) {
+    console.error("[project-detail] generateMetadata failed:", error);
+    return { title: "Projects" };
   }
-
-  const { project } = detail;
-  const baseUrl = "https://irnk.codes";
-  const description = richHtmlToPlainText(project.deskripsi);
-
-  return {
-    title: project.nama,
-    description,
-    authors: [{ name: "Eliyanto Sarage" }],
-    openGraph: {
-      title: project.nama,
-      description,
-      type: "article",
-      authors: ["Eliyanto Sarage"],
-      url: `${baseUrl}/projects/${slug}`,
-      images: project.thumbnailUrl
-        ? [{ url: project.thumbnailUrl, width: 1200, height: 630, alt: project.nama }]
-        : undefined,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: project.nama,
-      description,
-      images: project.thumbnailUrl ? [project.thumbnailUrl] : undefined,
-      creator: "@idugeni",
-    },
-    alternates: {
-      canonical: `${baseUrl}/projects/${slug}`,
-    },
-  };
 }
 
 export default async function ProjectDetailPage({ params }: Props) {
   const { slug } = await params;
-  const detail = await getProjectDetailData(slug);
+  let detail;
+
+  try {
+    detail = await getProjectDetailData(slug);
+  } catch (error) {
+    console.error("[project-detail] Failed to fetch project data:", error);
+    throw error; // Let error.tsx handle this
+  }
 
   if (!detail) {
     notFound();
   }
 
   const { project, relatedProjects, processedDescription } = detail;
+
   const projectJsonLd = {
     ...project,
     deskripsi: richHtmlToPlainText(project.deskripsi),
