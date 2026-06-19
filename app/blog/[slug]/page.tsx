@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { cacheLife, cacheTag } from "next/cache";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
 import { PublicLayout } from "@/components/layout/public-layout";
@@ -12,6 +13,10 @@ import { renderRichHtml } from "@/lib/content/rich-html";
 type Props = { params: Promise<{ slug: string }> };
 
 async function getBlogDetailData(slug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("blog", `blog:${slug}`);
+
   const rawArticle = await queryPoolerSingle<Record<string, unknown>>(
     `SELECT * FROM blog_artikel WHERE slug=$1 AND status='published'`,
     [slug]
@@ -40,13 +45,31 @@ async function getBlogDetailData(slug: string) {
   return { article, comments, relatedArticles, processedContent };
 }
 
+async function getBlogMetadataData(slug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("blog", `blog:${slug}`);
+
+  const rawArticle = await queryPoolerSingle<Record<string, unknown>>(
+    `SELECT judul, ringkasan, slug, published_at AS "publishedAt", thumbnail_url AS "thumbnailUrl" FROM blog_artikel WHERE slug=$1 AND status='published'`,
+    [slug]
+  );
+
+  return rawArticle ? toCamelCase<BlogArticle>(rawArticle) : null;
+}
+
+export async function generateStaticParams() {
+  const rows = await queryPooler<{ slug: string }>(
+    `SELECT slug FROM blog_artikel WHERE status='published' ORDER BY published_at DESC LIMIT 100`
+  );
+
+  return rows.map((article) => ({ slug: article.slug }));
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { slug } = await params;
-    const article = await queryPoolerSingle<BlogArticle>(
-      `SELECT judul, ringkasan, slug, "publishedAt", "thumbnailUrl" FROM blog_artikel WHERE slug=$1 AND status='published'`,
-      [slug]
-    );
+    const article = await getBlogMetadataData(slug);
 
     if (!article) {
       return { title: "Artikel Tidak Ditemukan" };

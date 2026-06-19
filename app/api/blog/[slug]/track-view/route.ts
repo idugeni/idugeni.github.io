@@ -4,7 +4,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { rateLimit } from "@/lib/rate-limit";
 
 const blogViewParamsSchema = z.object({
-  id: z.string().uuid(),
+  slug: z.string().uuid(),
 });
 
 function getRequestIp(request: NextRequest) {
@@ -23,18 +23,19 @@ function noStoreJson(data: unknown, status = 200) {
   });
 }
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const parsed = blogViewParamsSchema.safeParse(await params);
     if (!parsed.success) {
       return noStoreJson({ jumlahView: 0, jumlahLike: 0 }, 200);
     }
 
+    const articleId = parsed.data.slug;
     const serviceClient = createServiceClient();
     const { data, error } = await serviceClient
       .from("blog_artikel")
       .select("jumlah_view, jumlah_like")
-      .eq("id", parsed.data.id)
+      .eq("id", articleId)
       .eq("status", "published")
       .maybeSingle();
 
@@ -51,18 +52,19 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   }
 }
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const parsed = blogViewParamsSchema.safeParse(await params);
     if (!parsed.success) {
       return new NextResponse(null, { status: 204 });
     }
 
+    const articleId = parsed.data.slug;
     const ip = getRequestIp(request);
-    await rateLimit(`${ip}:${parsed.data.id}`, "blog-view", { max: 10, window: 60 * 60 * 1000 });
+    await rateLimit(`${ip}:${articleId}`, "blog-view", { max: 10, window: 60 * 60 * 1000 });
 
     const serviceClient = createServiceClient();
-    await serviceClient.rpc("increment_view", { article_id: parsed.data.id });
+    await serviceClient.rpc("increment_view", { article_id: articleId });
   } catch {
     // Public telemetry must never break page UX or create visible browser console errors.
   }
