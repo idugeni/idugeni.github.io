@@ -3,23 +3,59 @@ import type { Metadata } from "next";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
 import { PublicLayout } from "@/components/layout/public-layout";
-import { BlogDetailClient } from "@/components/pages/blog/blog-detail-client";
-import { ArticleJsonLd } from "@/components/seo/article-json-ld";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import type { BlogArticle, BlogComment } from "@/types/pages";
-import { renderRichHtml } from "@/lib/content/rich-html";
+
+export const dynamic = "force-dynamic";
+
+const BASE_URL = "https://irnk.codes";
 
 type Props = { params: Promise<{ slug: string }> };
 
-async function getBlogDetailData(slug: string) {
+type BlogDetail = {
+  article: BlogArticle;
+  comments: BlogComment[];
+  relatedArticles: BlogArticle[];
+};
+
+function toPlainText(value: unknown) {
+  return String(value ?? "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<\/h[1-6]>/gi, "\n\n")
+    .replace(/<\/li>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function getParagraphs(content: unknown) {
+  const text = toPlainText(content);
+  return text ? text.split(/\n{2,}/).map((item) => item.trim()).filter(Boolean) : [];
+}
+
+function safeImageSource(value: unknown) {
+  const src = typeof value === "string" ? value.trim() : "";
+  if (!src) return null;
+  if (src.startsWith("/") || /^https?:\/\//i.test(src)) return src;
+  return null;
+}
+
+async function getBlogDetailData(slug: string): Promise<BlogDetail | null> {
   const rawArticle = await queryPoolerSingle<Record<string, unknown>>(
     `SELECT * FROM blog_artikel WHERE slug=$1 AND status='published'`,
     [slug]
   );
 
-  if (!rawArticle) {
-    return null;
-  }
+  if (!rawArticle) return null;
 
   const [rawComments, rawRelated] = await Promise.all([
     queryPooler<Record<string, unknown>>(
@@ -32,12 +68,11 @@ async function getBlogDetailData(slug: string) {
     ),
   ]);
 
-  const article = toCamelCase<BlogArticle>(rawArticle);
-  const comments = toCamelCase<BlogComment[]>(rawComments);
-  const relatedArticles = toCamelCase<BlogArticle[]>(rawRelated);
-  const processedContent = await renderRichHtml(article.konten);
-
-  return { article, comments, relatedArticles, processedContent };
+  return {
+    article: toCamelCase<BlogArticle>(rawArticle),
+    comments: toCamelCase<BlogComment[]>(rawComments),
+    relatedArticles: toCamelCase<BlogArticle[]>(rawRelated),
+  };
 }
 
 async function getBlogMetadataData(slug: string) {
@@ -49,49 +84,23 @@ async function getBlogMetadataData(slug: string) {
   return rawArticle ? toCamelCase<BlogArticle>(rawArticle) : null;
 }
 
-export async function generateStaticParams() {
-  const rows = await queryPooler<{ slug: string }>(
-    `SELECT slug FROM blog_artikel WHERE status='published' ORDER BY published_at DESC LIMIT 100`
-  );
-
-  return rows.map((article) => ({ slug: article.slug }));
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { slug } = await params;
     const article = await getBlogMetadataData(slug);
 
-    if (!article) {
-      return { title: "Artikel Tidak Ditemukan" };
-    }
-
-    const baseUrl = "https://irnk.codes";
+    if (!article) return { title: "Artikel Tidak Ditemukan" };
 
     return {
       title: article.judul,
       description: article.ringkasan,
-      authors: [{ name: "Eliyanto Sarage" }],
+      alternates: { canonical: `${BASE_URL}/blog/${article.slug}` },
       openGraph: {
         title: article.judul,
         description: article.ringkasan,
         type: "article",
-        publishedTime: typeof article.publishedAt === "string" ? article.publishedAt : article.publishedAt ? new Date(article.publishedAt as string).toISOString() : undefined,
-        authors: ["Eliyanto Sarage"],
-        url: `${baseUrl}/blog/${article.slug}`,
-        images: article.thumbnailUrl
-          ? [{ url: article.thumbnailUrl, width: 1200, height: 630, alt: article.judul }]
-          : undefined,
-      },
-      twitter: {
-        card: "summary_large_image",
-        title: article.judul,
-        description: article.ringkasan,
-        images: article.thumbnailUrl ? [article.thumbnailUrl] : undefined,
-        creator: "@idugeni",
-      },
-      alternates: {
-        canonical: `${baseUrl}/blog/${article.slug}`,
+        url: `${BASE_URL}/blog/${article.slug}`,
+        images: article.thumbnailUrl ? [{ url: article.thumbnailUrl, alt: article.judul }] : undefined,
       },
     };
   } catch (error) {
@@ -102,39 +111,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogDetailPage({ params }: Props) {
   const { slug } = await params;
+  let detail: BlogDetail | null = null;
 
-  let detail;
   try {
     detail = await getBlogDetailData(slug);
   } catch (error) {
     console.error("[blog-detail] Failed to fetch blog data:", error);
-    return (
-      <PublicLayout>
-        <div className="flex min-h-[60vh] items-center justify-center px-4">
-          <div className="text-center max-w-md">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10">
-              <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <h2 className="mb-2 text-2xl font-bold text-foreground">Gagal Memuat Artikel</h2>
-            <p className="mb-6 text-sm text-muted-foreground">
-              Server sedang mengalami gangguan. Silakan refresh halaman dalam beberapa saat.
-            </p>
-            <a href="/blog" className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
-              Kembali ke Blog
-            </a>
-          </div>
-        </div>
-      </PublicLayout>
-    );
   }
 
-  if (!detail) {
-    notFound();
-  }
+  if (!detail) notFound();
 
-  const { article, comments, relatedArticles, processedContent } = detail;
+  const { article, comments, relatedArticles } = detail;
+  const paragraphs = getParagraphs(article.konten || article.ringkasan);
+  const thumbnail = safeImageSource(article.thumbnailUrl);
 
   return (
     <PublicLayout>
@@ -145,13 +134,66 @@ export default async function BlogDetailPage({ params }: Props) {
           { name: article.judul, url: `/blog/${article.slug}` },
         ]}
       />
-      <ArticleJsonLd article={article} commentCount={comments.length} />
-      <BlogDetailClient
-        article={article}
-        comments={comments}
-        relatedArticles={relatedArticles}
-        processedContent={processedContent}
-      />
+      <article className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+        <a href="/blog" className="mb-8 inline-flex text-sm font-mono text-primary hover:underline">
+          BACK_TO_FEED
+        </a>
+        <div className="mb-6 flex flex-wrap items-center gap-3 text-xs font-mono uppercase text-muted-foreground">
+          <span>{article.kategoriNama || "General"}</span>
+          <span>•</span>
+          <span>{article.waktuBaca || 5} min read</span>
+          <span>•</span>
+          <span>{article.jumlahView || 0} views</span>
+        </div>
+        <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground md:text-6xl">
+          {article.judul}
+        </h1>
+        {article.ringkasan && (
+          <p className="mb-10 text-lg leading-8 text-muted-foreground md:text-xl">
+            {article.ringkasan}
+          </p>
+        )}
+        {thumbnail && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={thumbnail}
+            alt={article.judul}
+            className="mb-10 aspect-video w-full rounded-2xl border border-border object-cover"
+            loading="eager"
+          />
+        )}
+        <div className="space-y-6 text-base leading-8 text-foreground md:text-lg">
+          {paragraphs.map((paragraph, index) => (
+            <p key={index}>{paragraph}</p>
+          ))}
+        </div>
+        {comments.length > 0 && (
+          <section className="mt-14 border-t border-border pt-8">
+            <h2 className="mb-4 text-2xl font-bold">Komentar</h2>
+            <div className="space-y-4">
+              {comments.slice(0, 10).map((comment) => (
+                <div key={String(comment.id)} className="rounded-xl border border-border bg-secondary/30 p-4">
+                  <p className="font-mono text-sm text-primary">{comment.namaKomentator}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{toPlainText(comment.isiKomentar)}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+        {relatedArticles.length > 0 && (
+          <section className="mt-14 border-t border-border pt-8">
+            <h2 className="mb-4 text-2xl font-bold">Artikel Terkait</h2>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {relatedArticles.map((related) => (
+                <a key={String(related.id)} href={`/blog/${related.slug}`} className="rounded-xl border border-border bg-secondary/30 p-4 hover:border-primary/60">
+                  <h3 className="font-semibold text-foreground">{related.judul}</h3>
+                  {related.ringkasan && <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{related.ringkasan}</p>}
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+      </article>
     </PublicLayout>
   );
 }
