@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { cacheLife, cacheTag } from "next/cache";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
 import { PublicLayout } from "@/components/layout/public-layout";
@@ -13,10 +12,6 @@ import { renderRichHtml, richHtmlToPlainText } from "@/lib/content/rich-html";
 type Props = { params: Promise<{ slug: string }> };
 
 async function getProjectDetailData(slug: string) {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("projects", `project:${slug}`);
-
   const rawProject = await queryPoolerSingle<Record<string, unknown>>(
     `SELECT * FROM projects WHERE slug=$1`,
     [slug]
@@ -39,10 +34,6 @@ async function getProjectDetailData(slug: string) {
 }
 
 async function getProjectMetadataData(slug: string) {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("projects", `project:${slug}`);
-
   const rawProject = await queryPoolerSingle<Record<string, unknown>>(
     `SELECT nama, deskripsi, slug, thumbnail_url AS "thumbnailUrl" FROM projects WHERE slug=$1`,
     [slug]

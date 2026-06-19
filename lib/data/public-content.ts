@@ -1,15 +1,8 @@
-import { cacheLife, cacheTag } from "next/cache";
 import { sql } from "kysely";
-import { CACHE_TAGS } from "@/lib/cache/tags";
 import { db } from "@/lib/db/kysely";
 import { toCamelCase } from "@/lib/utils/case";
 import type { BlogArticle, BlogCategory, GalleryItem, Project, Service, Testimonial } from "@/types/pages";
 
-const PUBLIC_CONTENT_CACHE_LIFE = {
-  stale: 300,
-  revalidate: 300,
-  expire: 3_600,
-} as const;
 const BLOG_PAGE_SIZE = 9;
 const PROJECT_PAGE_SIZE = 9;
 
@@ -25,22 +18,8 @@ export interface ProjectsIndexPageParams {
   page?: number;
 }
 
-function applyPublicContentCacheTags(...tags: Array<(typeof CACHE_TAGS)[keyof typeof CACHE_TAGS]>) {
-  cacheLife(PUBLIC_CONTENT_CACHE_LIFE);
-  cacheTag(...tags);
-}
 
 export async function getHomeData() {
-  "use cache";
-  applyPublicContentCacheTags(
-    CACHE_TAGS.home,
-    CACHE_TAGS.projects,
-    CACHE_TAGS.services,
-    CACHE_TAGS.testimonials,
-    CACHE_TAGS.blog,
-    CACHE_TAGS.gallery,
-  );
-
   const [projectsResult, servicesResult, testimonialsResult, articlesResult, galleryResult] = await Promise.allSettled([
     db
       .selectFrom("projects")
@@ -96,9 +75,6 @@ export async function getHomeData() {
 }
 
 export async function getBlogIndexData() {
-  "use cache";
-  applyPublicContentCacheTags(CACHE_TAGS.blog);
-
   const [articles, categories] = await Promise.all([
     db
       .selectFrom("blog_artikel")
@@ -122,9 +98,6 @@ export async function getBlogIndexData() {
 }
 
 export async function getBlogIndexPageData({ category, page = 1 }: BlogIndexPageParams = {}) {
-  "use cache";
-  applyPublicContentCacheTags(CACHE_TAGS.blog);
-
   const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
   const safeCategory = category?.trim() || undefined;
   const from = (safePage - 1) * BLOG_PAGE_SIZE;
@@ -191,9 +164,6 @@ export async function getBlogIndexPageData({ category, page = 1 }: BlogIndexPage
 }
 
 export async function getProjectsIndexData() {
-  "use cache";
-  applyPublicContentCacheTags(CACHE_TAGS.projects);
-
   const projects = await db
     .selectFrom("projects")
     .select(["id","nama","slug","deskripsi","kategori","status","featured","thumbnail_url","github_url","live_url","tech_stack","urutan","created_at","updated_at"])
@@ -274,9 +244,6 @@ export async function getProjectsIndexPageData({ category, status, tech, page = 
 }
 
 export async function getServicesIndexData() {
-  "use cache";
-  applyPublicContentCacheTags(CACHE_TAGS.services);
-
   const services = await db
     .selectFrom("services")
     .select(["id","nama","slug","deskripsi_pendek","deskripsi_panjang","icon","harga_mulai","fitur","aktif","urutan","created_at","updated_at"])
@@ -289,9 +256,6 @@ export async function getServicesIndexData() {
 }
 
 export async function getGalleryIndexData() {
-  "use cache";
-  applyPublicContentCacheTags(CACHE_TAGS.gallery);
-
   const items = await db
     .selectFrom("gallery")
     .select(["id","judul","deskripsi","file_url","thumbnail_url","tipe","kategori","urutan","created_at"])

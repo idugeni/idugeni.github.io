@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { cacheLife, cacheTag } from "next/cache";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
 import { PublicLayout } from "@/components/layout/public-layout";
@@ -13,10 +12,6 @@ import { renderRichHtml } from "@/lib/content/rich-html";
 type Props = { params: Promise<{ slug: string }> };
 
 async function getBlogDetailData(slug: string) {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("blog", `blog:${slug}`);
-
   const rawArticle = await queryPoolerSingle<Record<string, unknown>>(
     `SELECT * FROM blog_artikel WHERE slug=$1 AND status='published'`,
     [slug]
@@ -46,10 +41,6 @@ async function getBlogDetailData(slug: string) {
 }
 
 async function getBlogMetadataData(slug: string) {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("blog", `blog:${slug}`);
-
   const rawArticle = await queryPoolerSingle<Record<string, unknown>>(
     `SELECT judul, ringkasan, slug, published_at AS "publishedAt", thumbnail_url AS "thumbnailUrl" FROM blog_artikel WHERE slug=$1 AND status='published'`,
     [slug]

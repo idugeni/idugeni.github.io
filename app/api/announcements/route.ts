@@ -1,20 +1,8 @@
 import { NextResponse } from "next/server";
-import { cacheLife, cacheTag } from "next/cache";
-import { CACHE_TAGS } from "@/lib/cache/tags";
 import { createPublicClient } from "@/lib/supabase/public";
 import type { Announcement } from "@/actions/announcements";
 
-const PUBLIC_ANNOUNCEMENTS_CACHE_LIFE = {
-  stale: 60,
-  revalidate: 300,
-  expire: 3_600,
-} as const;
-
 async function getPublicAnnouncementsData(): Promise<Announcement[]> {
-  "use cache";
-  cacheLife(PUBLIC_ANNOUNCEMENTS_CACHE_LIFE);
-  cacheTag(CACHE_TAGS.announcements);
-
   const supabase = createPublicClient();
   const now = new Date().toISOString();
   const { data, error } = await supabase

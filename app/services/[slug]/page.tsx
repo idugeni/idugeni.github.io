@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { cacheLife, cacheTag } from "next/cache";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { ServiceDetailClient } from "@/components/pages/services/service-detail-client";
@@ -11,10 +10,6 @@ import type { Service } from "@/types/pages";
 type ServiceDetailParams = Promise<{ slug: string }>;
 
 async function getServiceMetadata(slug: string) {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("services", `service:${slug}`);
-
   return await queryPoolerSingle<{ nama: string; deskripsi_pendek: string }>(
     `SELECT nama, deskripsi_pendek FROM services WHERE slug=$1 AND aktif=true`,
     [slug]
@@ -22,10 +17,6 @@ async function getServiceMetadata(slug: string) {
 }
 
 async function getServiceDetailData(slug: string) {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("services", `service:${slug}`);
-
   const rawService = await queryPoolerSingle<Record<string, unknown>>(
     `SELECT * FROM services WHERE slug=$1 AND aktif=true`,
     [slug]

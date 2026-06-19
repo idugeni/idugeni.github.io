@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Mono, Orbitron } from "next/font/google";
-import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "@/components/ui/sonner";
@@ -128,19 +127,13 @@ export default function RootLayout({
         className={`${inter.variable} font-sans antialiased overflow-x-hidden min-h-screen flex flex-col`}
         suppressHydrationWarning
       >
-        <Suspense fallback={<div style={{ minHeight: "100vh" }} />}>
-          <CSRFBoundary>
-            <ZoomLock />
-            <Suspense fallback={null}>
-              <AnnouncementBanner />
-            </Suspense>
-            {children}
-            <Suspense fallback={null}>
-              <AnnouncementModal />
-            </Suspense>
-            <Toaster />
-          </CSRFBoundary>
-        </Suspense>
+        <CSRFBoundary>
+          <ZoomLock />
+          <AnnouncementBanner />
+          {children}
+          <AnnouncementModal />
+          <Toaster />
+        </CSRFBoundary>
         <WebVitalsReporter />
         <Analytics />
         <SpeedInsights />

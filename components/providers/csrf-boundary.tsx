@@ -1,4 +1,3 @@
-import { connection } from "next/server";
 import { getCSRFToken } from "@/lib/security/csrf";
 import { CSRFProvider } from "@/components/providers/csrf-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,7 +13,6 @@ import type { ReactNode } from "react";
  * via the /api/csrf-token route handler on the client side.
  */
 export async function CSRFBoundary({ children }: { children: ReactNode }) {
-  await connection();
   const csrfToken = await getCSRFToken(); // read-only, returns null if no cookie
 
   return (

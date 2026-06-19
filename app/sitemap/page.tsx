@@ -1,10 +1,8 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cacheLife, cacheTag } from "next/cache";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { CACHE_TAGS } from "@/lib/cache/tags";
 import { createPublicClient } from "@/lib/supabase/public";
 
 export const metadata: Metadata = {
@@ -20,17 +18,7 @@ interface SitemapSection {
   links: { href: string; label: string; description?: string }[];
 }
 
-const SITEMAP_CACHE_LIFE = {
-  stale: 300,
-  revalidate: 300,
-  expire: 3_600,
-} as const;
-
 async function getSitemapSections(): Promise<SitemapSection[]> {
-  "use cache";
-  cacheLife(SITEMAP_CACHE_LIFE);
-  cacheTag(CACHE_TAGS.blog, CACHE_TAGS.projects, CACHE_TAGS.services);
-
   const supabase = createPublicClient();
   const [articlesResult, projectsResult, servicesResult] = await Promise.all([
     supabase
