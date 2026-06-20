@@ -28,6 +28,10 @@ function toClientBoolean(value: unknown): boolean {
   return value === true || value === "true";
 }
 
+function toClientPlain<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
 async function BlogContent({ searchParams }: { searchParams: AdminBlogSearchParams }) {
   let pageData = null;
   let stats = null;
@@ -103,11 +107,11 @@ async function BlogContent({ searchParams }: { searchParams: AdminBlogSearchPara
       />
 
       <BlogListClient
-        initialArticles={transformedArticles}
-        categories={categories || []}
-        stats={stats!}
-        filters={pageData!.filters}
-        pagination={pageData!.pagination}
+        initialArticles={toClientPlain(transformedArticles)}
+        categories={toClientPlain(categories || [])}
+        stats={toClientPlain(stats!)}
+        filters={toClientPlain(pageData!.filters)}
+        pagination={toClientPlain(pageData!.pagination)}
       />
     </div>
   );
