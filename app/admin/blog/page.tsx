@@ -1,17 +1,59 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { getAdminBlogArticlesPage, getBlogStats } from "@/actions/blog";
+import { requireAdmin } from "@/lib/auth/rbac";
+import { queryPooler } from "@/lib/db/pooler";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/server";
 import { Edit, Eye, Loader2Icon, Plus, Star, Tag } from "@/lib/icons";
 
 export const metadata: Metadata = { title: "Blog" };
 
 type AdminBlogSearchParams = Promise<Record<string, string | string[] | undefined>>;
-type AdminBlogArticle = Awaited<ReturnType<typeof getAdminBlogArticlesPage>>["articles"][number];
+
+type BlogStatus = "draft" | "published";
+
+type AdminBlogArticle = {
+  id: string;
+  judul: string;
+  slug: string;
+  ringkasan: string | null;
+  konten: string | null;
+  thumbnail_url: string | null;
+  status: BlogStatus;
+  featured: boolean | string | null;
+  jumlah_view: number | string | null;
+  jumlah_like: number | string | null;
+  waktu_baca: number | string | null;
+  published_at: string | Date | null;
+  created_at: string | Date | null;
+  kategori: Category | null;
+};
+
 type Category = { id: string; nama: string; warna: string | null };
+
+type BlogStats = { total: number; published: number; draft: number; featured: number };
+
+type BlogPagination = { page: number; pageSize: number; totalItems: number; totalPages: number };
+
+type BlogPageData = {
+  articles: AdminBlogArticle[];
+  stats: BlogStats;
+  categories: Category[];
+  pagination: BlogPagination;
+};
+
+const ADMIN_BLOG_PAGE_SIZE = 20;
+const SORT_COLUMNS: Record<string, string> = {
+  date: "created_at",
+  views: "jumlah_view",
+  likes: "jumlah_like",
+  title: "judul",
+};
+
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
 
 function toClientDate(value: unknown): string | null {
   if (!value) return null;
@@ -29,20 +71,6 @@ function toClientBoolean(value: unknown): boolean {
   return value === true || value === "true";
 }
 
-function getArticleCategory(article: AdminBlogArticle): Category | null {
-  const kategori = Array.isArray(article.kategori)
-    ? article.kategori[0] ?? null
-    : article.kategori ?? null;
-
-  if (!kategori) return null;
-
-  return {
-    id: String(kategori.id),
-    nama: String(kategori.nama),
-    warna: kategori.warna ? String(kategori.warna) : null,
-  };
-}
-
 function formatDate(value: unknown) {
   const dateValue = toClientDate(value);
   if (!dateValue) return "UNPUBLISHED";
@@ -58,6 +86,127 @@ function formatDate(value: unknown) {
 function excerpt(article: AdminBlogArticle) {
   const source = article.ringkasan || article.konten || "";
   return String(source).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function getTotalPages(totalItems: number, pageSize: number) {
+  return Math.max(1, Math.ceil(totalItems / pageSize));
+}
+
+async function getAdminBlogReadModel(rawParams: Record<string, string | string[] | undefined>): Promise<BlogPageData> {
+  await requireAdmin();
+
+  const pageParam = Number(firstParam(rawParams.page));
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
+  const q = firstParam(rawParams.q)?.trim().slice(0, 100);
+  const statusParam = firstParam(rawParams.status);
+  const category = firstParam(rawParams.category);
+  const featured = firstParam(rawParams.featured);
+  const sortParam = firstParam(rawParams.sort) ?? "date";
+  const orderParam = firstParam(rawParams.order) === "asc" ? "ASC" : "DESC";
+  const sortColumn = SORT_COLUMNS[sortParam] ?? SORT_COLUMNS.date;
+
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let idx = 1;
+
+  if (q) {
+    conditions.push(`a.judul ILIKE $${idx++}`);
+    params.push(`%${q}%`);
+  }
+
+  if (statusParam === "published" || statusParam === "draft") {
+    conditions.push(`a.status = $${idx++}`);
+    params.push(statusParam);
+  }
+
+  if (category && /^[0-9a-fA-F-]{36}$/.test(category)) {
+    conditions.push(`a.kategori_id = $${idx++}`);
+    params.push(category);
+  }
+
+  if (featured === "true") {
+    conditions.push("a.featured = true");
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const countRows = await queryPooler<{ count: number }>(
+    `SELECT COUNT(*)::int AS count FROM blog_artikel a ${whereClause}`,
+    params,
+  );
+  const totalItems = toClientNumber(countRows[0]?.count);
+  const totalPages = getTotalPages(totalItems, ADMIN_BLOG_PAGE_SIZE);
+  const safePage = Math.min(page, totalPages);
+  const offset = (safePage - 1) * ADMIN_BLOG_PAGE_SIZE;
+
+  const limitIdx = idx++;
+  const offsetIdx = idx++;
+  const articles = await queryPooler<AdminBlogArticle>(
+    `SELECT
+      a.id, a.judul, a.slug, a.ringkasan, a.konten, a.thumbnail_url,
+      a.status, a.featured, a.jumlah_view, a.jumlah_like, a.waktu_baca,
+      a.published_at, a.created_at,
+      CASE WHEN k.id IS NOT NULL
+        THEN json_build_object('id', k.id, 'nama', k.nama, 'warna', k.warna)
+        ELSE NULL
+      END AS kategori
+    FROM blog_artikel a
+    LEFT JOIN kategori k ON a.kategori_id = k.id
+    ${whereClause}
+    ORDER BY a.${sortColumn} ${orderParam}
+    LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+    [...params, ADMIN_BLOG_PAGE_SIZE, offset],
+  );
+
+  const [statsRows, categories] = await Promise.all([
+    queryPooler<BlogStats>(
+      `SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE status = 'published')::int AS published,
+        COUNT(*) FILTER (WHERE status = 'draft')::int AS draft,
+        COUNT(*) FILTER (WHERE featured = true)::int AS featured
+      FROM blog_artikel`,
+    ),
+    queryPooler<Category>(`SELECT id, nama, warna FROM kategori ORDER BY nama ASC`),
+  ]);
+
+  const stats = statsRows[0] ?? { total: 0, published: 0, draft: 0, featured: 0 };
+
+  return {
+    articles: articles.map((article) => ({
+      ...article,
+      featured: toClientBoolean(article.featured),
+      jumlah_view: toClientNumber(article.jumlah_view),
+      jumlah_like: toClientNumber(article.jumlah_like),
+      waktu_baca: toClientNumber(article.waktu_baca),
+      published_at: toClientDate(article.published_at),
+      created_at: toClientDate(article.created_at),
+      kategori: article.kategori
+        ? {
+            id: String(article.kategori.id),
+            nama: String(article.kategori.nama),
+            warna: article.kategori.warna ? String(article.kategori.warna) : null,
+          }
+        : null,
+    })),
+    stats: {
+      total: toClientNumber(stats.total),
+      published: toClientNumber(stats.published),
+      draft: toClientNumber(stats.draft),
+      featured: toClientNumber(stats.featured),
+    },
+    categories: categories.map((categoryItem) => ({
+      id: String(categoryItem.id),
+      nama: String(categoryItem.nama),
+      warna: categoryItem.warna ? String(categoryItem.warna) : null,
+    })),
+    pagination: {
+      page: safePage,
+      pageSize: ADMIN_BLOG_PAGE_SIZE,
+      totalItems,
+      totalPages,
+    },
+  };
 }
 
 function StatCard({ label, value }: { label: string; value: number }) {
@@ -81,47 +230,44 @@ function ErrorPanel({ message }: { message: string }) {
   );
 }
 
+function BlogHeader() {
+  return (
+    <AdminPageHeader
+      eyebrow="EDITORIAL_CONTROL_CENTER"
+      title="Blog"
+      subtitle="Manage editorial transmissions, categories, status pipeline, featured placement, and SEO publication signals."
+      actions={
+        <>
+          <Button asChild variant="outline" className="rounded-none font-mono">
+            <Link href="/admin/categories" prefetch={false}>
+              <Tag className="mr-2 h-4 w-4" /> CATEGORIES
+            </Link>
+          </Button>
+          <Button asChild className="rounded-none bg-primary font-mono text-primary-foreground hover:bg-primary/90">
+            <Link href="/admin/blog/new" prefetch={false}>
+              <Plus className="mr-2 h-4 w-4" /> NEW_TRANSMISSION
+            </Link>
+          </Button>
+        </>
+      }
+    />
+  );
+}
+
 async function BlogContent({ searchParams }: { searchParams: AdminBlogSearchParams }) {
   try {
     const params = await searchParams;
-    const [pageData, stats] = await Promise.all([
-      getAdminBlogArticlesPage(params),
-      getBlogStats(),
-    ]);
-
-    const supabase = await createClient();
-    const { data: categories } = await supabase
-      .from("kategori")
-      .select("id, nama, warna")
-      .order("nama");
+    const pageData = await getAdminBlogReadModel(params);
 
     return (
       <div className="space-y-6">
-        <AdminPageHeader
-          eyebrow="EDITORIAL_CONTROL_CENTER"
-          title="Blog"
-          subtitle="Manage editorial transmissions, categories, status pipeline, featured placement, and SEO publication signals."
-          actions={
-            <>
-              <Button asChild variant="outline" className="rounded-none font-mono">
-                <Link href="/admin/categories" prefetch={false}>
-                  <Tag className="mr-2 h-4 w-4" /> CATEGORIES
-                </Link>
-              </Button>
-              <Button asChild className="rounded-none bg-primary font-mono text-primary-foreground hover:bg-primary/90">
-                <Link href="/admin/blog/new" prefetch={false}>
-                  <Plus className="mr-2 h-4 w-4" /> NEW_TRANSMISSION
-                </Link>
-              </Button>
-            </>
-          }
-        />
+        <BlogHeader />
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Total" value={toClientNumber(stats.total)} />
-          <StatCard label="Published" value={toClientNumber(stats.published)} />
-          <StatCard label="Draft" value={toClientNumber(stats.draft)} />
-          <StatCard label="Featured" value={toClientNumber(stats.featured)} />
+          <StatCard label="Total" value={pageData.stats.total} />
+          <StatCard label="Published" value={pageData.stats.published} />
+          <StatCard label="Draft" value={pageData.stats.draft} />
+          <StatCard label="Featured" value={pageData.stats.featured} />
         </div>
 
         <div className="rounded-none border border-border/50 bg-card/70">
@@ -133,7 +279,7 @@ async function BlogContent({ searchParams }: { searchParams: AdminBlogSearchPara
               </p>
             </div>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
-              SERVER_RENDERED_SAFE_MODE
+              SERVER_RENDERED_READ_MODEL
             </p>
           </div>
 
@@ -157,7 +303,6 @@ async function BlogContent({ searchParams }: { searchParams: AdminBlogSearchPara
                   </tr>
                 ) : (
                   pageData.articles.map((article) => {
-                    const category = getArticleCategory(article);
                     const isPublished = article.status === "published";
                     const isFeatured = toClientBoolean(article.featured);
 
@@ -177,13 +322,13 @@ async function BlogContent({ searchParams }: { searchParams: AdminBlogSearchPara
                           </div>
                         </td>
                         <td className="px-5 py-5">
-                          {category ? (
+                          {article.kategori ? (
                             <span className="inline-flex items-center gap-2 border border-border/50 bg-secondary px-2 py-1 font-mono text-[11px]">
                               <span
                                 className="h-2.5 w-2.5 rounded-full"
-                                style={{ backgroundColor: category.warna || "hsl(var(--primary))" }}
+                                style={{ backgroundColor: article.kategori.warna || "hsl(var(--primary))" }}
                               />
-                              {category.nama}
+                              {article.kategori.nama}
                             </span>
                           ) : (
                             <span className="border border-border/50 px-2 py-1 font-mono text-[11px] text-muted-foreground">NO_CATEGORY</span>
@@ -228,7 +373,7 @@ async function BlogContent({ searchParams }: { searchParams: AdminBlogSearchPara
         </div>
 
         <div className="sr-only" aria-hidden="true">
-          Loaded {categories?.length ?? 0} blog categories.
+          Loaded {pageData.categories.length} blog categories.
         </div>
       </div>
     );
@@ -237,18 +382,7 @@ async function BlogContent({ searchParams }: { searchParams: AdminBlogSearchPara
 
     return (
       <div className="space-y-6">
-        <AdminPageHeader
-          eyebrow="EDITORIAL_CONTROL_CENTER"
-          title="Blog"
-          subtitle="The admin blog shell is available, but the data pipeline returned an error."
-          actions={
-            <Button asChild className="rounded-none bg-primary font-mono text-primary-foreground hover:bg-primary/90">
-              <Link href="/admin/blog/new" prefetch={false}>
-                <Plus className="mr-2 h-4 w-4" /> NEW_TRANSMISSION
-              </Link>
-            </Button>
-          }
-        />
+        <BlogHeader />
         <ErrorPanel message={message} />
       </div>
     );
