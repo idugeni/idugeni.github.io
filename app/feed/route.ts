@@ -3,6 +3,19 @@ import { siteConfig } from "@/lib/config/site";
 import { markdownToHtml, truncateHtml } from "./utils/markdown";
 import { buildArticleHtml } from "./utils/template";
 
+function escapeXml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+function safeCdata(value: unknown): string {
+  return String(value ?? "").replace(/]]>/g, "]]]]><![CDATA[>");
+}
+
 interface BlogArticle {
   id: string;
   judul: string;
@@ -105,15 +118,15 @@ export async function GET() {
 
       return `
     <item>
-      <title><![CDATA[${article.judul}]]></title>
-      <link>${articleUrl}</link>
-      <guid isPermaLink="true">${articleUrl}</guid>
-      <description><![CDATA[${article.ringkasan}]]></description>
-      <content:encoded><![CDATA[${enhancedHtml}]]></content:encoded>
-      <pubDate>${pubDate}</pubDate>
-      <author>${siteConfig.contact.email} (${siteConfig.owner.name})</author>
-      ${article.kategori_nama ? `<category>${article.kategori_nama}</category>` : ""}
-      <dc:creator>${siteConfig.owner.name}</dc:creator>
+      <title><![CDATA[${safeCdata(article.judul)}]]></title>
+      <link>${escapeXml(articleUrl)}</link>
+      <guid isPermaLink="true">${escapeXml(articleUrl)}</guid>
+      <description><![CDATA[${safeCdata(article.ringkasan)}]]></description>
+      <content:encoded><![CDATA[${safeCdata(enhancedHtml)}]]></content:encoded>
+      <pubDate>${escapeXml(pubDate)}</pubDate>
+      <author>${escapeXml(`${siteConfig.contact.email} (${siteConfig.owner.name})`)}</author>
+      ${article.kategori_nama ? `<category>${escapeXml(article.kategori_nama)}</category>` : ""}
+      <dc:creator>${escapeXml(siteConfig.owner.name)}</dc:creator>
     </item>`;
     })
     .join("");
@@ -124,18 +137,18 @@ export async function GET() {
   xmlns:content="http://purl.org/rss/1.0/modules/content/"
   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
-    <title>${siteConfig.name} — Blog</title>
-    <link>${siteConfig.url}/blog</link>
-    <description>${siteConfig.seo.description}</description>
+    <title>${escapeXml(`${siteConfig.name} — Blog`)}</title>
+    <link>${escapeXml(`${siteConfig.url}/blog`)}</link>
+    <description>${escapeXml(siteConfig.seo.description)}</description>
     <language>id</language>
-    <managingEditor>${siteConfig.contact.email} (${siteConfig.owner.name})</managingEditor>
-    <webMaster>${siteConfig.contact.email} (${siteConfig.owner.name})</webMaster>
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-    <atom:link href="${siteConfig.url}/feed" rel="self" type="application/rss+xml"/>
+    <managingEditor>${escapeXml(`${siteConfig.contact.email} (${siteConfig.owner.name})`)}</managingEditor>
+    <webMaster>${escapeXml(`${siteConfig.contact.email} (${siteConfig.owner.name})`)}</webMaster>
+    <lastBuildDate>${escapeXml(new Date().toUTCString())}</lastBuildDate>
+    <atom:link href="${escapeXml(`${siteConfig.url}/feed`)}" rel="self" type="application/rss+xml"/>
     <image>
-      <url>${siteConfig.url}/irnk.png</url>
-      <title>${siteConfig.name}</title>
-      <link>${siteConfig.url}</link>
+      <url>${escapeXml(`${siteConfig.url}/irnk.png`)}</url>
+      <title>${escapeXml(siteConfig.name)}</title>
+      <link>${escapeXml(siteConfig.url)}</link>
     </image>${items}
   </channel>
 </rss>`;
