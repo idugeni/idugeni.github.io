@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { BackToTop } from "@/components/ui/back-to-top";
 import { CustomCursor } from "@/components/ui/custom-cursor";
-import { LoadingScreen } from "@/components/ui/loading-screen";
 
 function trackPageView(pathname: string) {
   if (typeof window === "undefined") return;
@@ -47,7 +46,6 @@ export function PublicLayoutClient() {
 
   return (
     <>
-      <LoadingScreen />
       <CustomCursor />
       <BackToTop />
     </>
