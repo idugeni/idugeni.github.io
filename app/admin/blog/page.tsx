@@ -12,6 +12,22 @@ export const metadata: Metadata = { title: "Blog" };
 
 type AdminBlogSearchParams = Promise<Record<string, string | string[] | undefined>>;
 
+function toClientDate(value: unknown): string | null {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "string") return value;
+  return String(value);
+}
+
+function toClientNumber(value: unknown): number {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : 0;
+}
+
+function toClientBoolean(value: unknown): boolean {
+  return value === true || value === "true";
+}
+
 async function BlogContent({ searchParams }: { searchParams: AdminBlogSearchParams }) {
   let pageData = null;
   let stats = null;
@@ -53,12 +69,12 @@ async function BlogContent({ searchParams }: { searchParams: AdminBlogSearchPara
     konten: article.konten,
     thumbnail_url: article.thumbnail_url,
     status: article.status,
-    featured: article.featured,
-    jumlah_view: article.jumlah_view,
-    jumlah_like: article.jumlah_like,
-    waktu_baca: article.waktu_baca,
-    publishedAt: article.published_at,
-    createdAt: article.created_at,
+    featured: toClientBoolean(article.featured),
+    jumlah_view: toClientNumber(article.jumlah_view),
+    jumlah_like: toClientNumber(article.jumlah_like),
+    waktu_baca: toClientNumber(article.waktu_baca),
+    publishedAt: toClientDate(article.published_at),
+    createdAt: toClientDate(article.created_at) ?? "",
     kategori: Array.isArray(article.kategori)
       ? article.kategori[0] ?? null
       : article.kategori ?? null,
