@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
+import { PageHeader } from "@/components/ui/page-header";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { TableOfContents, type TocItem } from "@/components/ui/table-of-contents";
 import { Shield, Database, Cookie, UserCheck, Mail, Clock } from "@/lib/icons";
@@ -34,43 +36,53 @@ export default function Privacy() {
           { name: "Privacy Policy", url: "/privacy" },
         ]}
       />
-      <div className="pt-4 pb-16 min-h-screen relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <TableOfContents items={privacyToc} title="TABLE_OF_CONTENTS" />
-          {/* Header */}
-          <ScrollReveal>
-            <div className="mb-12 max-w-4xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Shield className="w-8 h-8 text-primary" />
-                <h1 className="text-4xl md:text-5xl font-orbitron font-bold neon-text">
-                  PRIVACY_POLICY
-                </h1>
-              </div>
-              <p className="font-mono text-sm text-muted-foreground">
-                Kebijakan Privasi // Data Protection Framework
-              </p>
-              <div className="flex items-center gap-2 mt-4 font-mono text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                <span>LAST_UPDATED: Mei 2026</span>
-              </div>
-            </div>
-          </ScrollReveal>
+      <div className="relative min-h-screen overflow-hidden pb-20 pt-4">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-96 bg-[radial-gradient(circle_at_top,rgba(6,182,212,0.12),transparent_55%)]" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <PageHeader
+            badge="~/legal --privacy"
+            badgeIcon={<Shield className="h-4 w-4" />}
+            title="PRIVACY_POLICY"
+            description="Kerangka perlindungan data IRNK Codes: data yang dikumpulkan, penggunaan, cookies, keamanan, hak pengguna, dan kanal permintaan privasi."
+          />
 
-          {/* Introduction */}
-          <ScrollReveal delay={100}>
-            <div className="glass-card p-8 mb-8 max-w-4xl">
-              <p className="font-mono text-sm text-muted-foreground leading-relaxed">
-                Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi
-                informasi pribadi Anda saat menggunakan website ini. Kami berkomitmen untuk menjaga
-                kerahasiaan dan keamanan data Anda sesuai dengan peraturan perlindungan data yang berlaku
-                di Indonesia.
-              </p>
-            </div>
-          </ScrollReveal>
+          <div className="lg:flex lg:items-start lg:gap-8">
+            <TableOfContents items={privacyToc} title="TABLE_OF_CONTENTS" />
+            <div className="min-w-0 flex-1">
+              {/* Introduction */}
+              <ScrollReveal delay={100}>
+                <section className="glass-card relative mb-8 overflow-hidden p-6 md:p-8">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+                  <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Tracking</p>
+                      <p className="mt-2 font-orbitron text-sm font-bold text-primary">NO_ADS</p>
+                    </div>
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Transport</p>
+                      <p className="mt-2 font-orbitron text-sm font-bold text-primary">HTTPS/TLS</p>
+                    </div>
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Cookies</p>
+                      <p className="mt-2 font-orbitron text-sm font-bold text-primary">ESSENTIAL</p>
+                    </div>
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Updated</p>
+                      <p className="mt-2 font-orbitron text-sm font-bold text-primary">MEI 2026</p>
+                    </div>
+                  </div>
+                  <p className="font-mono text-sm leading-relaxed text-muted-foreground md:text-base">
+                    Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi
+                    informasi pribadi Anda saat menggunakan website ini. Kami berkomitmen untuk menjaga
+                    kerahasiaan dan keamanan data Anda sesuai dengan peraturan perlindungan data yang berlaku
+                    di Indonesia.
+                  </p>
+                </section>
+              </ScrollReveal>
 
           {/* Section 1 */}
           <ScrollReveal delay={150}>
-            <div id="data-collection" className="glass-card p-8 mb-8 scroll-mt-24">
+            <div id="data-collection" className="glass-card mb-8 p-6 scroll-mt-24 md:p-8">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   01
@@ -134,7 +146,7 @@ export default function Privacy() {
 
           {/* Section 2 */}
           <ScrollReveal delay={200}>
-            <div id="data-usage" className="glass-card p-8 mb-8 scroll-mt-24">
+            <div id="data-usage" className="glass-card mb-8 p-6 scroll-mt-24 md:p-8">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   02
@@ -173,7 +185,7 @@ export default function Privacy() {
 
           {/* Section 3 */}
           <ScrollReveal delay={250}>
-            <div id="cookies" className="glass-card p-8 mb-8 scroll-mt-24">
+            <div id="cookies" className="glass-card mb-8 p-6 scroll-mt-24 md:p-8">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   03
@@ -210,7 +222,7 @@ export default function Privacy() {
 
           {/* Section 4 */}
           <ScrollReveal delay={300}>
-            <div id="data-security" className="glass-card p-8 mb-8 scroll-mt-24">
+            <div id="data-security" className="glass-card mb-8 p-6 scroll-mt-24 md:p-8">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   04
@@ -245,7 +257,7 @@ export default function Privacy() {
 
           {/* Section 5 */}
           <ScrollReveal delay={350}>
-            <div id="user-rights" className="glass-card p-8 mb-8 scroll-mt-24">
+            <div id="user-rights" className="glass-card mb-8 p-6 scroll-mt-24 md:p-8">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   05
@@ -292,7 +304,7 @@ export default function Privacy() {
 
           {/* Section 6 */}
           <ScrollReveal delay={400}>
-            <div id="data-retention" className="glass-card p-8 mb-8 scroll-mt-24">
+            <div id="data-retention" className="glass-card mb-8 p-6 scroll-mt-24 md:p-8">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   06
@@ -323,7 +335,7 @@ export default function Privacy() {
 
           {/* Section 7 - Contact */}
           <ScrollReveal delay={450}>
-            <div id="contact-privacy" className="glass-card p-8 border-primary/30 scroll-mt-24">
+            <div id="contact-privacy" className="glass-card border-primary/30 p-6 scroll-mt-24 md:p-8">
               <div className="flex items-center gap-3 mb-6 border-b border-primary/20 pb-4">
                 <div className="w-8 h-8 bg-primary/10 border border-primary/30 flex items-center justify-center font-orbitron text-primary text-sm font-bold">
                   07
@@ -338,9 +350,9 @@ export default function Privacy() {
                   Jika Anda memiliki pertanyaan, keluhan, atau permintaan terkait kebijakan privasi ini
                   atau pemrosesan data pribadi Anda, silakan hubungi kami melalui:
                 </p>
-                <div className="bg-secondary/30 border border-primary/10 p-6">
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
                   <div className="space-y-2">
-                    <p className="flex items-center gap-2">
+                    <p className="flex flex-wrap items-center gap-2">
                       <Mail className="w-4 h-4 text-primary" />
                       <span className="text-foreground">Email: {siteConfig.contact.email}</span>
                     </p>
@@ -349,7 +361,7 @@ export default function Privacy() {
                     </p>
                   </div>
                 </div>
-                <p className="text-xs border-l-2 border-primary/30 pl-4 mt-4">
+                <p className="text-xs border-l-2 border-primary/30 pl-4 mt-4 leading-relaxed">
                   Kebijakan privasi ini dapat diperbarui sewaktu-waktu. Perubahan signifikan akan
                   diinformasikan melalui website ini. Penggunaan berkelanjutan atas website ini setelah
                   perubahan dianggap sebagai persetujuan Anda terhadap kebijakan yang diperbarui.
@@ -357,6 +369,25 @@ export default function Privacy() {
               </div>
             </div>
           </ScrollReveal>
+
+              <ScrollReveal delay={520}>
+                <section className="mt-8 rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-background/60 to-secondary/30 p-6 text-center md:p-8">
+                  <p className="font-orbitron text-lg font-bold text-primary">DATA_REQUEST_CHANNEL</p>
+                  <p className="mx-auto mt-3 max-w-2xl font-mono text-sm leading-relaxed text-muted-foreground">
+                    Gunakan kanal resmi untuk permintaan akses, koreksi, penghapusan, atau pertanyaan terkait pemrosesan data.
+                  </p>
+                  <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+                    <Link href="/contact" className="rounded-full border border-primary/40 bg-primary/10 px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-primary transition hover:bg-primary/15">
+                      Contact IRNK
+                    </Link>
+                    <Link href="/terms" className="rounded-full border border-border/50 px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-muted-foreground transition hover:border-primary/30 hover:text-primary">
+                      Terms of Service
+                    </Link>
+                  </div>
+                </section>
+              </ScrollReveal>
+            </div>
+          </div>
         </div>
       </div>
     </PublicLayout>
