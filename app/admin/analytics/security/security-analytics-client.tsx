@@ -177,7 +177,7 @@ export default function SecurityAnalyticsDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="h-[280px]">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={220}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={220}>
                   <AreaChart data={auditData?.dailyAudits || []} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorAudits" x1="0" y1="0" x2="0" y2="1">
@@ -212,7 +212,7 @@ export default function SecurityAnalyticsDashboard() {
                 {auditData?.actionCounts && auditData.actionCounts.length > 0 ? (
                   <div className="w-full h-full flex flex-col justify-center items-center">
                     <div className="w-full h-[180px]">
-                      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={160}>
+                      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={160}>
                         <PieChart>
                           <Pie
                             data={auditData.actionCounts}
