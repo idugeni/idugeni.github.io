@@ -293,6 +293,8 @@ export function TiptapEditor({ content, onChange, placeholder }: TiptapEditorPro
       StarterKit.configure({
         heading: false,
         codeBlock: false,
+        link: false,
+        underline: false,
       }),
       Heading.configure({
         levels: [1, 2, 3],

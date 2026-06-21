@@ -96,7 +96,7 @@ export function AnalyticsChart({ data, total30d, avg30d, peakDay, peakViews, low
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
             <div className="relative h-[380px] w-full rounded-none border border-border/40 bg-background/35 p-3 md:p-4">
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.12)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.10)_1px,transparent_1px)] bg-[size:42px_42px] opacity-40" />
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
                 <ComposedChart data={data} margin={{ top: 18, right: 18, left: -8, bottom: 4 }} barCategoryGap="28%">
                   <defs>
                     <linearGradient id="trafficViewsGradient" x1="0" y1="0" x2="0" y2="1">

@@ -34,6 +34,18 @@ function getLevelColor(level: string) {
   }
 }
 
+const logDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  dateStyle: "medium",
+  timeStyle: "medium",
+  timeZone: "UTC",
+});
+
+function formatLogDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "INVALID_DATE";
+  return `${logDateFormatter.format(date)} UTC`;
+}
+
 export function ErrorLogsTable({ logs }: ErrorLogsTableProps) {
   if (logs.length === 0) {
     return (
@@ -60,7 +72,7 @@ export function ErrorLogsTable({ logs }: ErrorLogsTableProps) {
               <span className="text-primary">{log.module}</span>
             </div>
             <span className="text-muted-foreground whitespace-nowrap">
-              {new Date(log.created_at).toLocaleString()}
+              {formatLogDate(log.created_at)}
             </span>
           </div>
           

@@ -191,6 +191,7 @@ export default function SitemapPage() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={false}
                     className="glass-card flex items-center gap-3 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-primary/5"
                   >
                     <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
