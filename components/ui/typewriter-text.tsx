@@ -18,7 +18,7 @@ export function TypewriterText({
   delayBeforeType = 500,
   className = "",
 }: TypewriterTextProps) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(words[0] ?? "");
   const [wordIndex, setWordIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
