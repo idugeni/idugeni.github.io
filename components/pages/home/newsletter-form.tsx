@@ -71,7 +71,10 @@ export function NewsletterForm() {
                 className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
               >
                 <Input
+                  id="home-newsletter-email"
+                  name="email"
                   type="email"
+                  autoComplete="email"
                   placeholder="email@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
