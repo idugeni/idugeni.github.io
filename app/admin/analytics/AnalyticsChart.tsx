@@ -1,6 +1,7 @@
 "use client";
 
-import { Area, Bar, CartesianGrid, ComposedChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useEffect, useRef, useState } from "react";
+import { Area, Bar, CartesianGrid, ComposedChart, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
 import { Activity, BarChart, MonitorUp, Target } from "@/lib/icons";
 
 interface AnalyticsChartProps {
@@ -46,6 +47,28 @@ function ActiveDot(props: { cx?: number; cy?: number }) {
   return <circle cx={cx} cy={cy} r={5} fill="hsl(var(--primary))" stroke="hsl(var(--background))" strokeWidth={3} className="drop-shadow-[0_0_14px_hsl(var(--primary))]" />;
 }
 
+function useChartSize(height: number) {
+  const frameRef = useRef<HTMLDivElement | null>(null);
+  const [size, setSize] = useState({ width: 0, height });
+
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+
+    const updateSize = () => {
+      const width = Math.floor(frame.getBoundingClientRect().width);
+      if (width > 0) setSize({ width, height });
+    };
+
+    updateSize();
+    const resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver.observe(frame);
+    return () => resizeObserver.disconnect();
+  }, [height]);
+
+  return { frameRef, size };
+}
+
 export function AnalyticsChart({ data, total30d, avg30d, peakDay, peakViews, lowestDay, lowestViews }: AnalyticsChartProps) {
   const kpis = [
     { label: "30D_TOTAL", value: compact(total30d), icon: Activity, tone: "text-primary" },
@@ -57,6 +80,8 @@ export function AnalyticsChart({ data, total30d, avg30d, peakDay, peakViews, low
     ["LOWEST", formatDate(lowestDay), compact(lowestViews), "text-primary"],
     ["AVG_LINE", "30D", avg30d.toFixed(1), "text-amber-400"],
   ] as const;
+
+  const { frameRef, size } = useChartSize(348);
 
   return (
     <section className="relative overflow-hidden rounded-none border border-primary/25 bg-card/80 shadow-[0_0_50px_hsl(var(--primary)/0.08)] backdrop-blur-xl">
@@ -94,10 +119,10 @@ export function AnalyticsChart({ data, total30d, avg30d, peakDay, peakViews, low
           <div className="flex h-[380px] items-center justify-center rounded-none border border-dashed border-border/60 bg-background/35 font-mono text-sm text-muted-foreground">NO_TRAFFIC_DATA</div>
         ) : (
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
-            <div className="relative h-[380px] w-full rounded-none border border-border/40 bg-background/35 p-3 md:p-4">
+            <div ref={frameRef} className="relative h-[380px] w-full rounded-none border border-border/40 bg-background/35 p-3 md:p-4">
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.12)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.10)_1px,transparent_1px)] bg-[size:42px_42px] opacity-40" />
-              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={240}>
-                <ComposedChart data={data} margin={{ top: 18, right: 18, left: -8, bottom: 4 }} barCategoryGap="28%">
+              {size.width > 0 ? (
+                <ComposedChart width={size.width} height={size.height} data={data} margin={{ top: 18, right: 18, left: -8, bottom: 4 }} barCategoryGap="28%">
                   <defs>
                     <linearGradient id="trafficViewsGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.74} />
@@ -117,7 +142,9 @@ export function AnalyticsChart({ data, total30d, avg30d, peakDay, peakViews, low
                   <Bar dataKey="views" fill="url(#trafficBarGradient)" radius={[7, 7, 0, 0]} maxBarSize={28} />
                   <Area type="monotone" dataKey="views" stroke="hsl(var(--primary))" strokeWidth={3} fill="url(#trafficViewsGradient)" activeDot={<ActiveDot />} />
                 </ComposedChart>
-              </ResponsiveContainer>
+              ) : (
+                <div className="h-full animate-pulse bg-primary/5" aria-hidden="true" />
+              )}
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">

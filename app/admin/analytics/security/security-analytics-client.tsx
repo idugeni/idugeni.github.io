@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   getSecurityAuditSummary,
   detectAccessAnomalies,
@@ -10,7 +10,6 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  ResponsiveContainer,
   AreaChart,
   Area,
   XAxis,
@@ -26,7 +25,31 @@ import { AlertTriangle, Clock, Database, Loader2Icon, Lock, Shield } from "@/lib
 
 const COLORS = ["#06b6d4", "#eab308", "#ef4444", "#10b981", "#8b5cf6", "#3b82f6"];
 
+function useMeasuredChartSize(height: number) {
+  const frameRef = useRef<HTMLDivElement | null>(null);
+  const [size, setSize] = useState({ width: 0, height });
+
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+
+    const updateSize = () => {
+      const width = Math.floor(frame.getBoundingClientRect().width);
+      if (width > 0) setSize({ width, height });
+    };
+
+    updateSize();
+    const resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver.observe(frame);
+    return () => resizeObserver.disconnect();
+  }, [height]);
+
+  return { frameRef, size };
+}
+
 export default function SecurityAnalyticsDashboard() {
+  const dailyChart = useMeasuredChartSize(280);
+  const actionChart = useMeasuredChartSize(180);
   const [isScanning, setIsScanning] = useState(false);
   const [auditData, setAuditData] = useState<SecurityAuditSummary | null>(null);
   const [anomaliesData, setAnomaliesData] = useState<SecurityAnomaliesReport | null>(null);
@@ -176,9 +199,9 @@ export default function SecurityAnalyticsDashboard() {
                   Frequency of administrative audit logs in the last 30 days
                 </CardDescription>
               </CardHeader>
-              <CardContent className="h-[280px]">
-                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={220}>
-                  <AreaChart data={auditData?.dailyAudits || []} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+              <CardContent ref={dailyChart.frameRef} className="h-[280px]">
+                {dailyChart.size.width > 0 ? (
+                  <AreaChart width={dailyChart.size.width} height={dailyChart.size.height} data={auditData?.dailyAudits || []} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorAudits" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} />
@@ -194,7 +217,9 @@ export default function SecurityAnalyticsDashboard() {
                     />
                     <Area type="monotone" dataKey="count" stroke="#06b6d4" strokeWidth={2} fillOpacity={1} fill="url(#colorAudits)" />
                   </AreaChart>
-                </ResponsiveContainer>
+                ) : (
+                  <div className="h-full animate-pulse bg-primary/5" aria-hidden="true" />
+                )}
               </CardContent>
             </Card>
 
@@ -211,9 +236,9 @@ export default function SecurityAnalyticsDashboard() {
               <CardContent className="h-[280px] flex flex-col justify-center items-center">
                 {auditData?.actionCounts && auditData.actionCounts.length > 0 ? (
                   <div className="w-full h-full flex flex-col justify-center items-center">
-                    <div className="w-full h-[180px]">
-                      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={160}>
-                        <PieChart>
+                    <div ref={actionChart.frameRef} className="w-full h-[180px]">
+                      {actionChart.size.width > 0 ? (
+                        <PieChart width={actionChart.size.width} height={actionChart.size.height}>
                           <Pie
                             data={auditData.actionCounts}
                             cx="50%"
@@ -232,7 +257,9 @@ export default function SecurityAnalyticsDashboard() {
                             contentStyle={{ backgroundColor: "#111827", borderColor: "#1f2937", color: "#f3f4f6" }}
                           />
                         </PieChart>
-                      </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full animate-pulse bg-primary/5" aria-hidden="true" />
+                      )}
                     </div>
                     {/* Legend */}
                     <div className="flex flex-wrap justify-center gap-3 pt-3 font-mono text-[9px] uppercase">
