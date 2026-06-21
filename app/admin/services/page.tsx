@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getAdminServicesPage, getServiceStats } from "@/actions/services";
+import { getAdminServicesReadModel, getServiceStatsReadModel } from "@/lib/data/admin/services";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2Icon } from "@/lib/icons";
@@ -19,8 +19,8 @@ async function ServicesContent({ searchParams }: { searchParams: AdminServicesSe
   try {
     const params = await searchParams;
     const [pd, st] = await Promise.all([
-      getAdminServicesPage(params),
-      getServiceStats(),
+      getAdminServicesReadModel(params),
+      getServiceStatsReadModel(),
     ]);
     pageData = pd;
     stats = st;

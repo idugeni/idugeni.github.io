@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getAdminBlogCategoriesPage } from "@/actions/blog";
+import { getAdminBlogCategoriesReadModel } from "@/lib/data/admin/categories";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
 import { Plus, Tag, Loader2Icon } from "@/lib/icons";
@@ -14,7 +14,7 @@ async function CategoriesContent() {
   let error: string | null = null;
 
   try {
-    pageData = await getAdminBlogCategoriesPage();
+    pageData = await getAdminBlogCategoriesReadModel();
   } catch (err) {
     error = err instanceof Error ? err.message : "Failed to load categories";
   }

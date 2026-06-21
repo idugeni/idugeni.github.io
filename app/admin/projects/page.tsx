@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getAdminProjectsPage, getProjectStats } from "@/actions/projects";
+import { getAdminProjectsReadModel, getProjectCategoriesReadModel, getProjectStatsReadModel } from "@/lib/data/admin/projects";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/server";
 import { Plus, Loader2Icon } from "@/lib/icons";
 import Link from "next/link";
 import { ProjectListClient } from "./ProjectListClient";
@@ -20,20 +19,14 @@ async function ProjectsContent({ searchParams }: { searchParams: AdminProjectsSe
 
   try {
     const params = await searchParams;
-    const [pd, st] = await Promise.all([
-      getAdminProjectsPage(params),
-      getProjectStats(),
+    const [pd, st, cats] = await Promise.all([
+      getAdminProjectsReadModel(params),
+      getProjectStatsReadModel(),
+      getProjectCategoriesReadModel(),
     ]);
     pageData = pd;
     stats = st;
-
-    const supabase = await createClient();
-    const { data: categoryRows } = await supabase
-      .from("projects")
-      .select("kategori")
-      .not("kategori", "is", null)
-      .order("kategori");
-    categories = Array.from(new Set((categoryRows ?? []).map((row) => row.kategori).filter(Boolean) as string[]));
+    categories = cats;
   } catch (err) {
     error = err instanceof Error ? err.message : "Failed to load projects data";
   }

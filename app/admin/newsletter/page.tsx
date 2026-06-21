@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getAdminNewsletterSubscribersPage, getNewsletterStats } from "@/actions/newsletter";
+import { getAdminNewsletterSubscribersReadModel, getNewsletterStatsReadModel } from "@/lib/data/admin/newsletter";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Loader2Icon } from "@/lib/icons";
 import { NewsletterListClient } from "./NewsletterListClient";
@@ -34,8 +34,8 @@ async function NewsletterContent({ searchParams }: { searchParams: SearchParams 
   try {
     const filters = normalizeSearchParams(await searchParams);
     const [pd, st] = await Promise.all([
-      getAdminNewsletterSubscribersPage(filters),
-      getNewsletterStats(),
+      getAdminNewsletterSubscribersReadModel(filters),
+      getNewsletterStatsReadModel(),
     ]);
     pageData = pd;
     stats = st;
