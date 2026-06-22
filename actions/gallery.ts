@@ -210,8 +210,8 @@ export async function getGalleryStats() {
   }>(`
     SELECT
       COUNT(*)::int AS total,
-      COUNT(*) FILTER (WHERE tipe::text LIKE 'image/%')::int AS images,
-      COUNT(*) FILTER (WHERE tipe::text LIKE 'video/%')::int AS videos
+      COUNT(*) FILTER (WHERE tipe = 'foto')::int AS images,
+      COUNT(*) FILTER (WHERE tipe = 'video')::int AS videos
     FROM gallery
   `);
 

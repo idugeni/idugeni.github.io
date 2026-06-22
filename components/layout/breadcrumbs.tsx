@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { HiOutlineHome, HiOutlineChevronRight } from "react-icons/hi2";
 
 const labelMap: Record<string, string> = {
@@ -16,9 +13,7 @@ const labelMap: Record<string, string> = {
   terms: "Terms of Service",
 };
 
-export function Breadcrumbs() {
-  const pathname = usePathname();
-
+export function Breadcrumbs({ pathname }: { pathname: string }) {
   if (pathname === "/") return null;
 
   const segments = pathname.split("/").filter(Boolean);
@@ -27,7 +22,6 @@ export function Breadcrumbs() {
     const href = "/" + segments.slice(0, index + 1).join("/");
     const label = labelMap[segment] || decodeURIComponent(segment).replace(/-/g, " ");
     const isLast = index === segments.length - 1;
-
     return { href, label, isLast };
   });
 
@@ -43,19 +37,13 @@ export function Breadcrumbs() {
             <div key={crumb.href} className="flex items-center gap-2.5">
               <HiOutlineChevronRight className="w-3 h-3 text-primary/40 shrink-0" />
               {crumb.isLast ? (
-                <span className="font-mono text-xs text-primary font-bold capitalize truncate max-w-[250px]">
-                  {crumb.label}
-                </span>
+                <span className="font-mono text-xs text-primary font-bold capitalize truncate max-w-[250px]">{crumb.label}</span>
               ) : (
-                <Link href={crumb.href} prefetch={false} className="font-mono text-xs text-muted-foreground hover:text-primary transition-colors capitalize">
-                  {crumb.label}
-                </Link>
+                <Link href={crumb.href} prefetch={false} className="font-mono text-xs text-muted-foreground hover:text-primary transition-colors capitalize">{crumb.label}</Link>
               )}
             </div>
           ))}
-          <span className="ml-auto font-mono text-[9px] text-muted-foreground/30 hidden md:block shrink-0">
-            {pathname}
-          </span>
+          <span className="ml-auto font-mono text-[9px] text-muted-foreground/30 hidden md:block shrink-0">{pathname}</span>
         </div>
       </div>
     </nav>

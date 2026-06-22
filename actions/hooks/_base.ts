@@ -23,8 +23,9 @@ export function useQuery<T, A extends unknown[]>(
     try {
       const result = await actionRef.current(...argsRef.current);
       setData(toCamelCase<T>(result));
-    } catch {
+    } catch (e) {
       setData(null);
+      setError(e instanceof Error ? e : new Error(String(e)));
     } finally {
       setIsLoading(false);
     }

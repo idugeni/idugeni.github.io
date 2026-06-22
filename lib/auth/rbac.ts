@@ -49,7 +49,7 @@ export function withTimeout<T>(
  * Wrapped in React cache() for request-bound memoization.
  */
 export const requireAdmin = cache(async () => {
-  if (process.env.DEV_BYPASS_AUTH === "true") {
+  if (process.env.NODE_ENV !== "production" && process.env.DEV_BYPASS_AUTH === "true") {
     return { email: "irnk.codes@proton.me" } as any;
   }
   const supabase = await createClient();
