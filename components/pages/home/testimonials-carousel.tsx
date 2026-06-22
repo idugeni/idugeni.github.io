@@ -66,8 +66,7 @@ function MarqueeRow({ testimonials, direction }: { testimonials: Testimonial[]; 
   const pausedRef = useRef(false);
   const animationRef = useRef<number>(0);
 
-  // Repeat enough times to fill any screen + have seamless loop
-  const repeatCount = 4;
+  const repeatCount = 2;
   const items = Array.from({ length: repeatCount }, () => testimonials).flat();
 
   const animate = useCallback(() => {

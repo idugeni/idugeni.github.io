@@ -16,7 +16,7 @@ export function NeonBorder({ children, className, active = false, ...props }: Ne
       )}
       {...props}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:animate-[neon-scan_2s_ease-in-out_infinite]" style={{ transform: 'rotate(45deg) scale(2) translateY(-120%)' }} />
+      <div className="neon-scan-beam absolute inset-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:animate-[neon-scan_2s_ease-in-out_infinite]" />
       <div className="h-full w-full bg-card/90 backdrop-blur-sm rounded-[7px] relative z-10">
         {children}
       </div>

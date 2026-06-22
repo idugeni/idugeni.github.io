@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { HiOutlineBars3, HiOutlineXMark, HiOutlineChevronDown } from "react-icons/hi2";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { navLinks } from "./nav-links";
@@ -40,6 +40,8 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
 
+  const closeMobileMenu = useCallback(() => setIsOpen(false), []);
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-primary/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -49,7 +51,6 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-1">
           {navLinks.map((link) => (
             <div
@@ -90,13 +91,11 @@ export function Navbar() {
           </Link>
         </nav>
 
-        {/* Mobile Toggle */}
         <Button variant="ghost" size="icon" className="lg:hidden text-primary" onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <HiOutlineXMark className="w-6 h-6" /> : <HiOutlineBars3 className="w-6 h-6" />}
         </Button>
       </div>
 
-      {/* Mobile Nav */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent side="left" className="w-fit max-w-[80vw] bg-background border-r border-primary/20 p-0 flex flex-col">
           <SheetHeader className="p-4 border-b border-primary/20 shrink-0">
@@ -104,7 +103,7 @@ export function Navbar() {
               IRNK
             </SheetTitle>
           </SheetHeader>
-          <div className="flex flex-col gap-1 p-4 overflow-y-auto flex-1">
+          <nav className="flex flex-col gap-1 p-4 overflow-y-auto flex-1" aria-label="Mobile navigation">
             {navLinks.map((link) => (
               <div key={link.href + link.label}>
                 <Link href={link.href} prefetch={false}>
@@ -115,7 +114,7 @@ export function Navbar() {
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground"
                     )}
-                    onClick={() => setIsOpen(false)}
+                    onClick={closeMobileMenu}
                   >
                     {link.label}
                   </span>
@@ -126,7 +125,7 @@ export function Navbar() {
                       <Link key={item.label} href={item.href} prefetch={false}>
                         <span
                           className="block font-mono text-xs text-muted-foreground/70 p-2 hover:text-primary transition-colors"
-                          onClick={() => setIsOpen(false)}
+                          onClick={closeMobileMenu}
                         >
                           → {item.label}
                         </span>
@@ -137,11 +136,11 @@ export function Navbar() {
               </div>
             ))}
             <Link href="/contact" prefetch={false}>
-              <Button className="w-full bg-primary text-primary-foreground font-mono mt-3" onClick={() => setIsOpen(false)}>
+              <Button className="w-full bg-primary text-primary-foreground font-mono mt-3" onClick={closeMobileMenu}>
                 CONTACT
               </Button>
             </Link>
-          </div>
+          </nav>
         </SheetContent>
       </Sheet>
     </header>

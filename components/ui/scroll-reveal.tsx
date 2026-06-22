@@ -35,10 +35,9 @@ export function ScrollReveal({
       ([entry]) => {
         if (entry.isIntersecting) {
           if (delay) {
-            setTimeout(() => el.classList.add("sr-visible"), delay);
-          } else {
-            el.classList.add("sr-visible");
+            el.style.transitionDelay = `${delay}ms`;
           }
+          el.classList.add("sr-visible");
           observer.unobserve(el);
         }
       },

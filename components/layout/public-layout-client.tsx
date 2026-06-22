@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { BackToTop } from "@/components/ui/back-to-top";
-import { CustomCursor } from "@/components/ui/custom-cursor";
+
+const CustomCursor = dynamic(
+  () => import("@/components/ui/custom-cursor").then((m) => m.CustomCursor),
+  { ssr: false }
+);
 
 function trackPageView(pathname: string) {
   if (typeof window === "undefined") return;
