@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 interface Particle {
   x: number;
@@ -12,22 +12,13 @@ interface Particle {
 
 export function ParticleBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [reducedMotion, setReducedMotion] = useState(true);
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(mq.matches);
-
-    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-
-  useEffect(() => {
-    if (reducedMotion) return;
-
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mq.matches) return;
 
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
@@ -184,15 +175,12 @@ export function ParticleBackground() {
       observer.disconnect();
       cancelAnimationFrame(animationFrameId);
     };
-  }, [reducedMotion]);
-
-  if (reducedMotion) return null;
+  }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 w-full h-full max-w-[100vw] max-h-[100vh] pointer-events-none z-10"
-      style={{ willChange: "transform" }}
+      className="fixed inset-0 w-full h-full pointer-events-none z-10"
     />
   );
 }
