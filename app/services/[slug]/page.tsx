@@ -44,11 +44,14 @@ export const getServiceDetailData = cache(async function getServiceDetailData(sl
 });
 
 export async function generateStaticParams() {
+  if (!process.env.DATABASE_URL) {
+    return [{ slug: "_placeholder" }];
+  }
   const rows = await queryPooler<{ slug: string }>(
     `SELECT slug FROM services WHERE aktif=true ORDER BY urutan ASC LIMIT 100`
   );
 
-  return rows.map((service) => ({ slug: service.slug }));
+  return rows.length > 0 ? rows.map((service) => ({ slug: service.slug })) : [{ slug: "_placeholder" }];
 }
 
 async function ServiceDetailContent({ params }: { params: ServiceDetailParams }) {
