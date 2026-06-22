@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface Particle {
   x: number;
@@ -10,14 +10,21 @@ interface Particle {
   opacity: number;
 }
 
-const REDUCED_MOTION = typeof window !== "undefined"
-  && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
 export function ParticleBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [reducedMotion, setReducedMotion] = useState(true);
 
   useEffect(() => {
-    if (REDUCED_MOTION) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+
+    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    if (reducedMotion) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -177,9 +184,9 @@ export function ParticleBackground() {
       observer.disconnect();
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [reducedMotion]);
 
-  if (REDUCED_MOTION) return null;
+  if (reducedMotion) return null;
 
   return (
     <canvas
