@@ -37,8 +37,6 @@ export function PublicLayoutClient() {
   const lastTrackedPathRef = useRef<string | null>(null);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-
     if (lastTrackedPathRef.current === pathname) return;
     lastTrackedPathRef.current = pathname;
     trackPageView(pathname);
