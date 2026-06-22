@@ -3,12 +3,16 @@ import { Pool } from "pg";
 let pool: Pool | null = null;
 
 function createPool(): Pool {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL environment variable is not set");
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error(
+      "DATABASE_URL environment variable is not set. " +
+      "Pooler-based queries are unavailable without a direct database connection."
+    );
   }
 
   const p = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
     max: 10,
     min: 0,
     idleTimeoutMillis: 30_000,              // Match Supabase default (30s)

@@ -1,14 +1,14 @@
 import "server-only"
 import { cookies } from "next/headers"
 
-const CSRF_SECRET = process.env.CSRF_SECRET || process.env.DATABASE_SECRET_KEY
+const CSRF_SECRET = process.env.CSRF_SECRET || process.env.SUPABASE_SECRET_KEY
 
 if (process.env.NODE_ENV === "production" && !CSRF_SECRET) {
-  throw new Error("CSRF_SECRET or DATABASE_SECRET_KEY must be set in production")
+  throw new Error("CSRF_SECRET or SUPABASE_SECRET_KEY must be set in production")
 }
 
 function getCSRFSecret(): string {
-  if (!CSRF_SECRET) throw new Error("CSRF_SECRET or DATABASE_SECRET_KEY is not configured")
+  if (!CSRF_SECRET) throw new Error("CSRF_SECRET or SUPABASE_SECRET_KEY is not configured")
   return CSRF_SECRET
 }
 

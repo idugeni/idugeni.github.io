@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 const serverSchema = z.object({
-  DATABASE_URL: z.string().url(),
-  DATABASE_SECRET_KEY: z.string().min(1),
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   ADMIN_EMAILS: z.string().min(1),
@@ -21,12 +19,17 @@ const serverSchema = z.object({
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
   SUPABASE_SECRET_KEY: z.string().min(1).optional(),
+  SUPABASE_JWKS_URL: z.string().url().optional(),
 
-  // Rate Limiting & Caching (Upstash Redis)
+  // Database (optional — set in deployment environment if needed)
+  DATABASE_URL: z.string().url().optional(),
+  DATABASE_SECRET_KEY: z.string().min(1).optional(),
+
+  // Rate Limiting & Caching (Upstash Redis — optional)
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
 
-  // Security (CSRF Protection)
+  // Security (CSRF Protection — optional, falls back to SUPABASE_SECRET_KEY)
   CSRF_SECRET: z.string().min(32).optional(),
 });
 
