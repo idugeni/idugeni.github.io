@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface GlitchTextProps extends React.HTMLAttributes<HTMLHeadingElement> {
@@ -8,15 +8,36 @@ interface GlitchTextProps extends React.HTMLAttributes<HTMLHeadingElement> {
 
 export function GlitchText({ text, className, ...props }: GlitchTextProps) {
   const [isGlitching, setIsGlitching] = useState(false);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        mountedRef.current = false;
+      } else {
+        mountedRef.current = true;
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+
     const interval = setInterval(() => {
+      if (!mountedRef.current || document.hidden) return;
       if (Math.random() > 0.7) {
         setIsGlitching(true);
-        setTimeout(() => setIsGlitching(false), 200 + Math.random() * 300);
+        setTimeout(() => {
+          if (mountedRef.current) setIsGlitching(false);
+        }, 200 + Math.random() * 300);
       }
     }, 2000);
-    return () => clearInterval(interval);
+
+    return () => {
+      mountedRef.current = false;
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, []);
 
   return (

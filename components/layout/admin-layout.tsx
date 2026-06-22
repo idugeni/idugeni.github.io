@@ -272,27 +272,6 @@ export function AdminLayout({ children, pathname }: { children: ReactNode; pathn
   }, [isMobileMenuOpen, closeMobileMenu]);
 
 
-  useEffect(() => {
-    const segments = pathname
-      .split("/")
-      .filter(Boolean)
-      .map(segment => {
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment);
-        if (isUUID) return "Detail";
-        return segment
-          .replace(/-/g, " ")
-          .replace(/\b\w/g, char => char.toUpperCase());
-      });
-
-    if (segments.length > 0) {
-      const titleParts = [...segments].reverse();
-      document.title = `${titleParts.join(" | ")} — IRNK Codes`;
-    } else {
-      document.title = "Admin — IRNK Codes";
-    }
-  }, [pathname]);
-
-
   return (
     <div className="dark min-h-[100dvh] bg-background text-foreground">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.13),transparent_30%),radial-gradient(circle_at_bottom_right,hsl(var(--accent)/0.10),transparent_28%)]" />

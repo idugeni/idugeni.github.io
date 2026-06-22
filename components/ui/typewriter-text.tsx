@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 interface TypewriterTextProps {
   words: string[];
@@ -21,48 +21,53 @@ export function TypewriterText({
   const [text, setText] = useState(words[0] ?? "");
   const [wordIndex, setWordIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isWaiting, setIsWaiting] = useState(false);
+  const mountedRef = useRef(true);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const clearTimeouts = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
-    if (words.length === 0) return;
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      clearTimeouts();
+    };
+  }, [clearTimeouts]);
 
-    if (isWaiting) return;
+  useEffect(() => {
+    if (words.length === 0 || !mountedRef.current) return;
 
     const currentWord = words[wordIndex];
 
-    const timeout = setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
+      if (!mountedRef.current) return;
+
       if (isDeleting) {
         setText(currentWord.substring(0, text.length - 1));
         if (text.length === 1) {
           setIsDeleting(false);
           setWordIndex((prev) => (prev + 1) % words.length);
-          setIsWaiting(true);
-          setTimeout(() => setIsWaiting(false), delayBeforeType);
+          timeoutRef.current = setTimeout(() => {
+            if (mountedRef.current) setIsDeleting(true);
+          }, delayBeforeType);
         }
       } else {
         setText(currentWord.substring(0, text.length + 1));
         if (text.length === currentWord.length) {
-          setIsWaiting(true);
-          setTimeout(() => {
-            setIsDeleting(true);
-            setIsWaiting(false);
+          timeoutRef.current = setTimeout(() => {
+            if (mountedRef.current) setIsDeleting(true);
           }, delayBeforeDelete);
         }
       }
     }, isDeleting ? deletingSpeed : typingSpeed);
 
-    return () => clearTimeout(timeout);
-  }, [
-    text,
-    wordIndex,
-    isDeleting,
-    isWaiting,
-    words,
-    typingSpeed,
-    deletingSpeed,
-    delayBeforeDelete,
-    delayBeforeType,
-  ]);
+    return () => clearTimeouts();
+  }, [text, wordIndex, isDeleting, words, typingSpeed, deletingSpeed, delayBeforeDelete, delayBeforeType, clearTimeouts]);
 
   return (
     <span className={className}>
