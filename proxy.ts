@@ -2,24 +2,23 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+
 type SupabaseUserResult = {
   user: Awaited<ReturnType<ReturnType<typeof createSupabaseProxyClient>["auth"]["getUser"]>>["data"]["user"] | null;
 };
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-
 function createSupabaseProxyClient(request: NextRequest, response: NextResponse) {
   return createServerClient(
-    supabaseUrl,
-    supabaseKey,
+    supabaseUrl!,
+    supabaseKey!,
     {
       cookies: {
         getAll() {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          // Only set cookies on the outgoing response; incoming request cookies are read-only.
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
           });
@@ -126,13 +125,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization)
-     * - favicon.ico, icon.png, apple-icon.png (favicon files)
-     * - public folder assets (images, manifest, etc.)
-     */
     "/((?!_next/static|_next/image|favicon\\.ico|icon\\.png|apple-icon\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|json|xml)$).*)",
   ],
 };

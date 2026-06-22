@@ -3,8 +3,8 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { cache } from "react";
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
 
 /**
  * Creates a Supabase server client with cookie-based auth.
@@ -17,12 +17,12 @@ export const createClient = cache(async () => {
   try {
     cookieStore = await cookies();
   } catch {
-    return createSupabaseClient(supabaseUrl, supabaseKey, {
+    return createSupabaseClient(supabaseUrl!, supabaseKey!, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
   }
 
-  return createServerClient(supabaseUrl, supabaseKey, {
+  return createServerClient(supabaseUrl!, supabaseKey!, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
