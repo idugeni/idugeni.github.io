@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { getAdminServicesReadModel, getServiceStatsReadModel } from "@/lib/data/admin/services";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
@@ -70,7 +71,8 @@ function ServicesLoading() {
   );
 }
 
-export default function AdminServices({ searchParams }: { searchParams: AdminServicesSearchParams }) {
+export default async function AdminServices({ searchParams }: { searchParams: AdminServicesSearchParams }) {
+  await connection();
   return (
     <Suspense fallback={<ServicesLoading />}>
       <ServicesContent searchParams={searchParams} />

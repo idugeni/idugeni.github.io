@@ -1,16 +1,18 @@
 import Link from "next/link";
 import Image from "next/image";
+import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
 import { toPlainText, safeImageSource } from "@/lib/utils/html";
 import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
+import { siteConfig } from "@/lib/config/site";
+import { CACHE_TAGS } from "@/lib/cache/tags";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import type { Project } from "@/types/pages";
-
-const BASE_URL = "https://irnk.codes";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -19,7 +21,11 @@ type ProjectDetail = {
   relatedProjects: Project[];
 };
 
-async function getProjectDetailData(slug: string): Promise<ProjectDetail | null> {
+export const getProjectDetailData = cache(async function getProjectDetailData(slug: string): Promise<ProjectDetail | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`project-${slug}`, CACHE_TAGS.projects);
+
   const rawProject = await queryPoolerSingle<Record<string, unknown>>(
     `SELECT * FROM projects WHERE slug=$1`,
     [slug]
@@ -37,21 +43,13 @@ async function getProjectDetailData(slug: string): Promise<ProjectDetail | null>
     project,
     relatedProjects: toCamelCase<Project[]>(rawRelatedProjects),
   };
-}
-
-async function getProjectMetadataData(slug: string) {
-  const rawProject = await queryPoolerSingle<Record<string, unknown>>(
-    `SELECT nama, deskripsi, slug, thumbnail_url AS "thumbnailUrl" FROM projects WHERE slug=$1`,
-    [slug]
-  );
-
-  return rawProject ? toCamelCase<Project>(rawProject) : null;
-}
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { slug } = await params;
-    const project = await getProjectMetadataData(slug);
+    const detail = await getProjectDetailData(slug);
+    const project = detail?.project;
 
     if (!project) return { title: "Proyek Tidak Ditemukan" };
 
@@ -60,17 +58,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: project.nama,
       description,
-      alternates: { canonical: `${BASE_URL}/projects/${slug}` },
+      alternates: { canonical: `${siteConfig.url}/projects/${slug}` },
       openGraph: {
         title: project.nama,
         description,
         type: "article",
-        url: `${BASE_URL}/projects/${slug}`,
+        url: `${siteConfig.url}/projects/${slug}`,
         images: project.thumbnailUrl ? [{ url: project.thumbnailUrl, alt: project.nama }] : undefined,
       },
     };
-  } catch (error) {
-    console.error("[project-detail] generateMetadata failed:", error);
+  } catch {
     return { title: "Projects" };
   }
 }

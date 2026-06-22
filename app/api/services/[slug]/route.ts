@@ -1,36 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
-import { toCamelCase } from "@/lib/utils/case";
-import type { Service } from "@/types/pages";
+import { NextResponse } from "next/server";
+import { getServiceDetailData } from "@/app/services/[slug]/page";
 
 export async function GET(
-  request: NextRequest,
+  _request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
 
   try {
-    const rawService = await queryPoolerSingle<Record<string, unknown>>(
-      `SELECT * FROM services WHERE slug=$1 AND aktif=true`,
-      [slug]
-    );
+    const detail = await getServiceDetailData(slug);
 
-    if (!rawService) {
+    if (!detail) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
 
-    const service = toCamelCase<Service>(rawService);
-    const rawRelated = await queryPooler<Record<string, unknown>>(
-      `SELECT * FROM services WHERE aktif=true AND id != $1 ORDER BY urutan LIMIT 3`,
-      [service.id as string]
-    );
-
-    const relatedServices = toCamelCase<Service[]>(rawRelated);
-
-    return NextResponse.json({
-      service,
-      relatedServices,
-    });
+    return NextResponse.json(detail);
   } catch (error) {
     console.error("[api/services/[slug]] Error:", error);
     return NextResponse.json({ error: "server_error" }, { status: 500 });

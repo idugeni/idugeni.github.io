@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { getGalleryItemBySlug } from "@/actions/gallery";
 import { GalleryEditClient } from "./GalleryEditClient";
 
 type EditGalleryParams = Promise<{ slug: string }>;
 
 export async function generateMetadata({ params }: { params: EditGalleryParams }) {
+  await connection();
   const { slug } = await params;
   return {
     title: `Edit Gallery ${slug}`,
@@ -13,6 +15,7 @@ export async function generateMetadata({ params }: { params: EditGalleryParams }
 }
 
 export default async function AdminGalleryEdit({ params }: { params: EditGalleryParams }) {
+  await connection();
   const { slug } = await params;
   let item;
   try {

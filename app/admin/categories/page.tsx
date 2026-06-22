@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { getAdminBlogCategoriesReadModel } from "@/lib/data/admin/categories";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
@@ -57,7 +58,8 @@ function CategoriesLoading() {
   );
 }
 
-export default function AdminBlogCategoriesPage() {
+export default async function AdminBlogCategoriesPage() {
+  await connection();
   return (
     <Suspense fallback={<CategoriesLoading />}>
       <CategoriesContent />

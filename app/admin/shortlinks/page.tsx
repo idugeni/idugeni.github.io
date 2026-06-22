@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { getAdminShortlinks, getShortlinkStats } from "@/actions/shortlinks";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
@@ -93,7 +94,8 @@ function ShortlinksLoading() {
   );
 }
 
-export default function AdminShortlinks({ searchParams }: { searchParams: SearchParams }) {
+export default async function AdminShortlinks({ searchParams }: { searchParams: SearchParams }) {
+  await connection();
   return (
     <Suspense fallback={<ShortlinksLoading />}>
       <ShortlinksContent searchParams={searchParams} />

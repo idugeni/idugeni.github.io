@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import {
   getAdminContactMessagesPage,
   getContactMessageServices,
@@ -92,7 +93,8 @@ function MessagesLoading() {
   );
 }
 
-export default function AdminMessages({ searchParams }: { searchParams: AdminMessagesSearchParams }) {
+export default async function AdminMessages({ searchParams }: { searchParams: AdminMessagesSearchParams }) {
+  await connection();
   return (
     <Suspense fallback={<MessagesLoading />}>
       <MessagesContent searchParams={searchParams} />

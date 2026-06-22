@@ -1,6 +1,10 @@
+"use cache";
+
+import { cacheLife, cacheTag } from "next/cache";
 import { sql } from "kysely";
 import { db } from "@/lib/db/kysely";
 import { toCamelCase } from "@/lib/utils/case";
+import { CACHE_TAGS } from "@/lib/cache/tags";
 import type { BlogArticle, BlogCategory, GalleryItem, Project, Service, Testimonial } from "@/types/pages";
 
 const BLOG_PAGE_SIZE = 9;
@@ -19,8 +23,10 @@ export interface ProjectsIndexPageParams {
   page?: number;
 }
 
-
 export async function getHomeData() {
+  cacheLife("hours");
+  cacheTag(CACHE_TAGS.home, CACHE_TAGS.projects, CACHE_TAGS.services, CACHE_TAGS.testimonials, CACHE_TAGS.blog, CACHE_TAGS.gallery);
+
   const [projectsResult, servicesResult, testimonialsResult, articlesResult, galleryResult] = await Promise.allSettled([
     db
       .selectFrom("projects")
@@ -75,30 +81,10 @@ export async function getHomeData() {
   };
 }
 
-export async function getBlogIndexData() {
-  const [articles, categories] = await Promise.all([
-    db
-      .selectFrom("blog_artikel")
-      .select(["id","judul","slug","ringkasan","thumbnail_url","kategori_id","status","featured","published_at","jumlah_like","jumlah_view","waktu_baca","created_at","updated_at"])
-      .where("status", "=", "published")
-      .orderBy("created_at", "desc")
-      .limit(24)
-      .execute(),
-    db
-      .selectFrom("kategori")
-      .select(["id","nama","slug","created_at"])
-      .orderBy("nama", "asc")
-      .execute(),
-  ]);
-
-  return {
-    articles: toCamelCase<BlogArticle[]>(articles),
-    categories: toCamelCase<BlogCategory[]>(categories),
-    error: null,
-  };
-}
-
 export async function getBlogIndexPageData({ category, q, page = 1 }: BlogIndexPageParams = {}) {
+  cacheLife("hours");
+  cacheTag(CACHE_TAGS.blog);
+
   const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
   const safeCategory = category?.trim() || undefined;
   const safeQuery = q?.trim() || undefined;
@@ -191,18 +177,10 @@ export async function getBlogIndexPageData({ category, q, page = 1 }: BlogIndexP
   };
 }
 
-export async function getProjectsIndexData() {
-  const projects = await db
-    .selectFrom("projects")
-    .select(["id","nama","slug","deskripsi","kategori","status","featured","thumbnail_url","github_url","live_url","tech_stack","urutan","created_at","updated_at"])
-    .orderBy("urutan", "asc")
-    .limit(48)
-    .execute();
-
-  return { projects: toCamelCase<Project[]>(projects), error: null };
-}
-
 export async function getProjectsIndexPageData({ category, status, tech, page = 1 }: ProjectsIndexPageParams = {}) {
+  cacheLife("hours");
+  cacheTag(CACHE_TAGS.projects);
+
   try {
     const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
     const safeCategory = category?.trim() || undefined;
@@ -272,6 +250,9 @@ export async function getProjectsIndexPageData({ category, status, tech, page = 
 }
 
 export async function getServicesIndexData() {
+  cacheLife("hours");
+  cacheTag(CACHE_TAGS.services);
+
   const services = await db
     .selectFrom("services")
     .select(["id","nama","slug","deskripsi_pendek","deskripsi_panjang","icon","harga_mulai","fitur","aktif","urutan","created_at","updated_at"])
@@ -284,6 +265,9 @@ export async function getServicesIndexData() {
 }
 
 export async function getGalleryIndexData() {
+  cacheLife("hours");
+  cacheTag(CACHE_TAGS.gallery);
+
   const items = await db
     .selectFrom("gallery")
     .select(["id","judul","deskripsi","file_url","thumbnail_url","tipe","kategori","urutan","created_at"])

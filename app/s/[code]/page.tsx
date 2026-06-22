@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { connection } from "next/server";
 import { headers } from "next/headers";
 import type { ShortlinkAccessResult } from "@/actions/shortlinks";
 import { getShortlinkByCode, incrementShortlinkClick } from "@/actions/shortlinks";
@@ -10,6 +11,7 @@ import { WarningPage } from "./WarningPage";
 import { PasswordGate } from "./PasswordGate";
 
 async function ShortlinkContent({ params }: { params: Promise<{ code: string }> }) {
+  await connection();
   const { code } = await params;
   const result: ShortlinkAccessResult = await getShortlinkByCode(code);
 
@@ -121,6 +123,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ code: string }>;
 }): Promise<Metadata> {
+  await connection();
   const { code } = await params;
   const result: ShortlinkAccessResult = await getShortlinkByCode(code);
 
@@ -152,11 +155,12 @@ export async function generateMetadata({
 }
 
 
-export default function ShortlinkRedirect({
+export default async function ShortlinkRedirect({
   params,
 }: {
   params: Promise<{ code: string }>;
 }) {
+  await connection();
   return (
     <Suspense fallback={<ShortlinkLoading />}>
       <ShortlinkContent params={params} />

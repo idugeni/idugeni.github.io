@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { getAdminTestimonialsPage, getTestimonialStats } from "@/actions/testimonials";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Loader2Icon } from "@/lib/icons";
@@ -81,7 +82,8 @@ function TestimonialsLoading() {
   );
 }
 
-export default function AdminTestimonials({ searchParams }: { searchParams: SearchParams }) {
+export default async function AdminTestimonials({ searchParams }: { searchParams: SearchParams }) {
+  await connection();
   return (
     <Suspense fallback={<TestimonialsLoading />}>
       <TestimonialsContent searchParams={searchParams} />

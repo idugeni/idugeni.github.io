@@ -26,6 +26,7 @@ function createContentSecurityPolicy() {
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  cacheComponents: true,
   images: {
     formats: ["image/avif", "image/webp"],
     qualities: [60, 75, 85],

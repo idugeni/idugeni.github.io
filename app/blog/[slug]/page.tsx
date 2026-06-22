@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
@@ -8,12 +9,11 @@ import { toCamelCase } from "@/lib/utils/case";
 import { toPlainText, safeImageSource } from "@/lib/utils/html";
 import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
 import { siteConfig } from "@/lib/config/site";
+import { CACHE_TAGS } from "@/lib/cache/tags";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { ShareButtons } from "@/components/pages/blog/share-buttons";
 import type { BlogArticle, BlogComment } from "@/types/pages";
-
-const BASE_URL = "https://irnk.codes";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -23,7 +23,11 @@ type BlogDetail = {
   relatedArticles: BlogArticle[];
 };
 
-const getBlogDetailData = cache(async function getBlogDetailData(slug: string): Promise<BlogDetail | null> {
+export const getBlogDetailData = cache(async function getBlogDetailData(slug: string): Promise<BlogDetail | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`blog-${slug}`, CACHE_TAGS.blog);
+
   const rawArticle = await queryPoolerSingle<Record<string, unknown>>(
     `SELECT * FROM blog_artikel WHERE slug=$1 AND status='published'`,
     [slug]
@@ -60,18 +64,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: article.judul,
       description: article.ringkasan,
-      alternates: { canonical: `${BASE_URL}/blog/${article.slug}` },
+      alternates: { canonical: `${siteConfig.url}/blog/${article.slug}` },
       openGraph: {
         title: article.judul,
         description: article.ringkasan,
         type: "article",
-        url: `${BASE_URL}/blog/${article.slug}`,
+        url: `${siteConfig.url}/blog/${article.slug}`,
         publishedTime: article.publishedAt ?? undefined,
         images: article.thumbnailUrl ? [{ url: article.thumbnailUrl, alt: article.judul }] : undefined,
       },
     };
-  } catch (error) {
-    console.error("[blog-detail] generateMetadata failed:", error);
+  } catch {
     return { title: "Blog" };
   }
 }
@@ -128,7 +131,7 @@ export default async function BlogDetailPage({ params }: Props) {
         </div>
         <div className="mb-6">
           <ShareButtons
-            url={`${BASE_URL}/blog/${article.slug}`}
+            url={`${siteConfig.url}/blog/${article.slug}`}
             title={article.judul}
           />
         </div>

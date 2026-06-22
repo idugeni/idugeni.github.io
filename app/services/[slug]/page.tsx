@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PublicLayout } from "@/components/layout/public-layout";
@@ -6,26 +8,28 @@ import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { ServiceDetailClient } from "@/components/pages/services/service-detail-client";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
+import { siteConfig } from "@/lib/config/site";
+import { CACHE_TAGS } from "@/lib/cache/tags";
 import type { Service } from "@/types/pages";
 
 type ServiceDetailParams = Promise<{ slug: string }>;
 
-async function getServiceMetadata(slug: string) {
-  return await queryPoolerSingle<{ nama: string; deskripsi_pendek: string }>(
-    `SELECT nama, deskripsi_pendek FROM services WHERE slug=$1 AND aktif=true`,
-    [slug]
-  );
-}
+type ServiceDetail = {
+  service: Service;
+  relatedServices: Service[];
+};
 
-async function getServiceDetailData(slug: string) {
+export const getServiceDetailData = cache(async function getServiceDetailData(slug: string): Promise<ServiceDetail | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(`service-${slug}`, CACHE_TAGS.services);
+
   const rawService = await queryPoolerSingle<Record<string, unknown>>(
     `SELECT * FROM services WHERE slug=$1 AND aktif=true`,
     [slug]
   );
 
-  if (!rawService) {
-    return null;
-  }
+  if (!rawService) return null;
 
   const service = toCamelCase<Service>(rawService);
   const rawRelated = await queryPooler<Record<string, unknown>>(
@@ -37,7 +41,7 @@ async function getServiceDetailData(slug: string) {
     service,
     relatedServices: toCamelCase<Service[]>(rawRelated),
   };
-}
+});
 
 export async function generateStaticParams() {
   const rows = await queryPooler<{ slug: string }>(
@@ -49,7 +53,7 @@ export async function generateStaticParams() {
 
 async function ServiceDetailContent({ params }: { params: ServiceDetailParams }) {
   const { slug } = await params;
-  let data;
+  let data: ServiceDetail | null = null;
 
   try {
     data = await getServiceDetailData(slug);
@@ -103,7 +107,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   try {
     const { slug } = await params;
-    const data = await getServiceMetadata(slug);
+    const detail = await getServiceDetailData(slug);
+    const data = detail?.service;
 
     if (!data) {
       return {
@@ -114,10 +119,9 @@ export async function generateMetadata({
 
     return {
       title: data.nama,
-      description: data.deskripsi_pendek,
+      description: data.deskripsiPendek,
     };
-  } catch (error) {
-    console.error("[service-detail] generateMetadata failed:", error);
+  } catch {
     return { title: "Services" };
   }
 }

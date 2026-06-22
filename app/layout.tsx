@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Inter, Space_Mono, Orbitron } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -128,12 +129,14 @@ export default function RootLayout({
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           <script dangerouslySetInnerHTML={{ __html: "if(history.scrollRestoration)history.scrollRestoration='manual';window.scrollTo(0,0);" }} />
         </head>
-        <CSRFBoundary>
-          <AnnouncementBanner />
-          {children}
-          <AnnouncementModal />
-          <Toaster />
-        </CSRFBoundary>
+        <Suspense>
+          <CSRFBoundary>
+            <AnnouncementBanner />
+            {children}
+            <AnnouncementModal />
+            <Toaster />
+          </CSRFBoundary>
+        </Suspense>
         <WebVitalsReporter />
         <Analytics />
         <SpeedInsights />

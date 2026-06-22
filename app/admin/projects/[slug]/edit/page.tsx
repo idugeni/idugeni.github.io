@@ -6,6 +6,7 @@ import { connection } from "next/server";
 type EditProjectParams = Promise<{ slug: string }>;
 
 export async function generateMetadata({ params }: { params: EditProjectParams }) {
+  await connection();
   const { slug } = await params;
   return {
     title: `Edit Project ${slug}`,

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { getAnnouncementById } from "@/actions/announcements";
 import { AnnouncementForm } from "../../AnnouncementForm";
 
@@ -10,6 +11,7 @@ interface EditPageProps {
 }
 
 export default async function EditAnnouncementPage({ params }: EditPageProps) {
+  await connection();
   const { id } = await params;
   const announcement = await getAnnouncementById(id);
 

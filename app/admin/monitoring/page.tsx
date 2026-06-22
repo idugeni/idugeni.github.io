@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { getErrorLogStats, getErrorLogs } from "@/actions/monitoring";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -220,7 +221,8 @@ function MonitoringLoading() {
   );
 }
 
-export default function AdminMonitoring() {
+export default async function AdminMonitoring() {
+  await connection();
   return (
     <Suspense fallback={<MonitoringLoading />}>
       <MonitoringContent />

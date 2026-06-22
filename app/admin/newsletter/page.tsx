@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { getAdminNewsletterSubscribersReadModel, getNewsletterStatsReadModel } from "@/lib/data/admin/newsletter";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Loader2Icon } from "@/lib/icons";
@@ -26,15 +27,15 @@ function normalizeSearchParams(searchParams: Awaited<SearchParams>) {
   };
 }
 
-async function NewsletterContent({ searchParams }: { searchParams: SearchParams }) {
+async function NewsletterContent() {
+  await connection();
   let pageData = null;
   let stats = null;
   let error: string | null = null;
 
   try {
-    const filters = normalizeSearchParams(await searchParams);
     const [pd, st] = await Promise.all([
-      getAdminNewsletterSubscribersReadModel(filters),
+      getAdminNewsletterSubscribersReadModel({ sort: "date", order: "desc", page: 1, pageSize: 10 }),
       getNewsletterStatsReadModel(),
     ]);
     pageData = pd;
@@ -78,10 +79,11 @@ function NewsletterLoading() {
   );
 }
 
-export default function AdminNewsletter({ searchParams }: { searchParams: SearchParams }) {
+export default async function AdminNewsletter() {
+  await connection();
   return (
     <Suspense fallback={<NewsletterLoading />}>
-      <NewsletterContent searchParams={searchParams} />
+      <NewsletterContent />
     </Suspense>
   );
 }

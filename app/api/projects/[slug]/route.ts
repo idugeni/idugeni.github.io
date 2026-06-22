@@ -1,37 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
-import { toCamelCase } from "@/lib/utils/case";
+import { NextResponse } from "next/server";
 import { renderRichHtml } from "@/lib/content/rich-html";
-import type { Project } from "@/types/pages";
+import { getProjectDetailData } from "@/app/projects/[slug]/page";
 
 export async function GET(
-  request: NextRequest,
+  _request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
 
   try {
-    const rawProject = await queryPoolerSingle<Record<string, unknown>>(
-      `SELECT * FROM projects WHERE slug=$1`,
-      [slug]
-    );
+    const detail = await getProjectDetailData(slug);
 
-    if (!rawProject) {
+    if (!detail) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
 
-    const project = toCamelCase<Project>(rawProject);
-    const rawRelatedProjects = await queryPooler<Record<string, unknown>>(
-      `SELECT * FROM projects WHERE kategori=$1 AND id != $2 LIMIT 3`,
-      [project.kategori as string, project.id as string]
-    );
-
-    const relatedProjects = toCamelCase<Project[]>(rawRelatedProjects);
-    const processedDescription = await renderRichHtml(project.deskripsi);
+    const processedDescription = await renderRichHtml(detail.project.deskripsi);
 
     return NextResponse.json({
-      project,
-      relatedProjects,
+      ...detail,
       processedDescription,
     });
   } catch (error) {

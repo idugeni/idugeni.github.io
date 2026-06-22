@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { queryPooler } from "@/lib/db/pooler";
@@ -398,7 +399,8 @@ function BlogLoading() {
   );
 }
 
-export default function AdminBlog({ searchParams }: { searchParams: AdminBlogSearchParams }) {
+export default async function AdminBlog({ searchParams }: { searchParams: AdminBlogSearchParams }) {
+  await connection();
   return (
     <Suspense fallback={<BlogLoading />}>
       <BlogContent searchParams={searchParams} />

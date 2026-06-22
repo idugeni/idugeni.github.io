@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { getAdminProjectsReadModel, getProjectCategoriesReadModel, getProjectStatsReadModel } from "@/lib/data/admin/projects";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
@@ -92,7 +93,8 @@ function ProjectsLoading() {
   );
 }
 
-export default function AdminProjects({ searchParams }: { searchParams: AdminProjectsSearchParams }) {
+export default async function AdminProjects({ searchParams }: { searchParams: AdminProjectsSearchParams }) {
+  await connection();
   return (
     <Suspense fallback={<ProjectsLoading />}>
       <ProjectsContent searchParams={searchParams} />

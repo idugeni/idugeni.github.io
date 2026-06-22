@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { getTrashShortlinks } from "@/actions/shortlinks";
 import { Loader2Icon } from "@/lib/icons";
@@ -46,7 +47,8 @@ function TrashLoading() {
   );
 }
 
-export default function AdminShortlinksTrash() {
+export default async function AdminShortlinksTrash() {
+  await connection();
   return (
     <Suspense fallback={<TrashLoading />}>
       <TrashContent />

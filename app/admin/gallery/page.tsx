@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { getGallery, getGalleryStats } from "@/actions/gallery";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { GalleryListClient } from "./GalleryListClient";
 export const metadata: Metadata = { title: "Gallery" };
 
 export default async function AdminGallery() {
+  await connection();
   // Fetch gallery items
   const items = await getGallery();
   

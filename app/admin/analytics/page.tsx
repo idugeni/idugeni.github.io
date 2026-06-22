@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { getAnalyticsSummary, getPageViewsChart, getRouteSegments, getTopPages, getTopReferrers, getRecentPageViews } from "@/actions/analytics";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -235,7 +236,8 @@ function AnalyticsLoading() {
   );
 }
 
-export default function AdminAnalytics() {
+export default async function AdminAnalytics() {
+  await connection();
   return (
     <Suspense fallback={<AnalyticsLoading />}>
       <AnalyticsContent />

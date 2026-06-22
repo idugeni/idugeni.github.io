@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { Loader2Icon } from "@/lib/icons";
 import { AdminPageContent } from "./admin-page-content";
 
@@ -11,7 +12,8 @@ function DashboardLoading() {
   );
 }
 
-export default function Dashboard() {
+export default async function Dashboard() {
+  await connection();
   return (
     <Suspense fallback={<DashboardLoading />}>
       <AdminPageContent />

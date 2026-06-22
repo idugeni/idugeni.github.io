@@ -1,9 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import { FiGithub, FiInstagram, FiMail } from "react-icons/fi";
 import { siteConfig } from "@/lib/config/site";
 
+function CurrentYear() {
+  return <>{new Date().getFullYear()}</>;
+}
+
 export function Footer() {
-  const YEAR = new Date().getFullYear();
   return (
     <footer className="border-t border-primary/20 bg-background/80 backdrop-blur-sm mt-auto relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -73,7 +78,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-6 border-t border-primary/10 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-muted-foreground font-mono text-[10px]">
-            © {YEAR} {siteConfig.name}. All rights reserved.
+            © <CurrentYear /> {siteConfig.name}. All rights reserved.
           </div>
           <div className="text-muted-foreground font-mono text-[10px]">
             Crafted by {siteConfig.owner.name}

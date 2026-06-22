@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { getAdminAnnouncements, type Announcement } from "@/actions/announcements";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AnnouncementsClient } from "./AnnouncementsClient";
@@ -75,7 +76,8 @@ function AnnouncementsLoading() {
   );
 }
 
-export default function AdminAnnouncementsPage() {
+export default async function AdminAnnouncementsPage() {
+  await connection();
   return (
     <Suspense fallback={<AnnouncementsLoading />}>
       <AnnouncementsContent />

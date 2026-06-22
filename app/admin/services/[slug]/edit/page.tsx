@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { getServiceBySlug } from "@/actions/services";
 import { ServiceForm } from "../../ServiceForm";
 
 type EditServiceParams = Promise<{ slug: string }>;
 
 export async function generateMetadata({ params }: { params: EditServiceParams }) {
+  await connection();
   const { slug } = await params;
   return {
     title: `Edit Service ${slug}`,
@@ -13,6 +15,7 @@ export async function generateMetadata({ params }: { params: EditServiceParams }
 }
 
 export default async function AdminServiceEdit({ params }: { params: EditServiceParams }) {
+  await connection();
   const { slug } = await params;
   let service;
   try {

@@ -251,8 +251,7 @@ function SidebarLogout() {
   );
 }
 
-export function AdminLayout({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
+export function AdminLayout({ children, pathname }: { children: ReactNode; pathname: string }) {
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileSidebarRef = useRef<HTMLDivElement>(null);

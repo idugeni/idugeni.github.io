@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { BlogNewClient } from "./BlogNewClient";
 
@@ -7,6 +8,7 @@ export const metadata = {
 };
 
 export default async function AdminBlogNewPage() {
+  await connection();
   const supabase = await createClient();
   const { data: categories } = await supabase
     .from("kategori")
