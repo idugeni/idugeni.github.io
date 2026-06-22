@@ -89,6 +89,7 @@ export async function getBlogArticles(filters?: { kategori?: string; search?: st
     ) comment_counts ON ba.id = comment_counts.artikel_id
     ${whereClause}
     ORDER BY ba.created_at DESC
+    LIMIT 500
   `, params);
 }
 
@@ -523,11 +524,13 @@ export async function createBlogComment(data: Record<string, unknown>) {
     throw new Error("Data komentar tidak valid: " + parsed.error.issues[0].message);
   }
 
+  const sanitizedContent = sanitizeRichHtml(parsed.data.isi_komentar);
+
   const [comment] = await queryPooler(
     `INSERT INTO blog_komentar (artikel_id, nama_komentator, email_komentator, isi_komentar)
      VALUES ($1, $2, $3, $4)
      RETURNING *`,
-    [parsed.data.artikel_id, parsed.data.nama_komentator, parsed.data.email_komentator, parsed.data.isi_komentar],
+    [parsed.data.artikel_id, parsed.data.nama_komentator, parsed.data.email_komentator, sanitizedContent],
   );
   if (!comment) throw new Error("Failed to create comment");
   return comment;

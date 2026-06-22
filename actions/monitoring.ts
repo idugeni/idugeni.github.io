@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createLogger } from "@/lib/logger";
 import { queryPooler } from "@/lib/db/pooler";
+import { requireAdmin } from "@/lib/auth/rbac";
 import { z } from "zod";
 
 const log = createLogger("monitoring-actions");
@@ -33,6 +34,7 @@ const paginationSchema = z.object({
 export async function getErrorLogs(
   params: z.input<typeof paginationSchema>,
 ): Promise<{ data: ErrorLogEntry[]; total: number }> {
+  await requireAdmin();
   const parsed = paginationSchema.parse(params);
   const offset = (parsed.page - 1) * parsed.limit;
 
@@ -86,6 +88,7 @@ export async function getErrorLogStats(): Promise<{
   byLevel: Record<string, number>;
   topModules: Array<{ module: string; count: number }>;
 }> {
+  await requireAdmin();
   const [totalResult, todayResult, weekResult] = await Promise.all([
     queryPooler<{ count: string }>(`SELECT COUNT(*) as count FROM error_logs`),
     queryPooler<{ count: string }>(
@@ -125,6 +128,7 @@ export async function getErrorLogStats(): Promise<{
  * Can be called from a cron job or manually from admin.
  */
 export async function cleanupErrorLogs(): Promise<{ deleted: number }> {
+  await requireAdmin();
   try {
     const [before] = await queryPooler<{ count: string }>(
       `SELECT COUNT(*) as count FROM error_logs WHERE created_at < now() - INTERVAL '30 days'`,

@@ -52,7 +52,7 @@ export async function getGallery(filters?: { tipe?: string; kategori?: string })
   if (filters?.kategori) { conditions.push(`kategori = $${idx}`); params.push(filters.kategori); idx++; }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  return queryPooler(`SELECT * FROM gallery ${where} ORDER BY urutan`, params);
+  return queryPooler(`SELECT * FROM gallery ${where} ORDER BY urutan LIMIT 200`, params);
 }
 
 export async function getGalleryItem(id: string) {

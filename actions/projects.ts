@@ -70,7 +70,7 @@ export async function getProjects(filters?: { kategori?: string; featured?: bool
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  return queryPooler(`SELECT * FROM projects ${where} ORDER BY urutan`, params);
+  return queryPooler(`SELECT * FROM projects ${where} ORDER BY urutan LIMIT 200`, params);
 }
 
 export async function getAdminProjectsPage(filters: Record<string, unknown> = {}) {

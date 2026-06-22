@@ -9,7 +9,7 @@ function createPool(): Pool {
 
   const p = new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: 5,
+    max: 10,
     min: 0,
     idleTimeoutMillis: 30_000,              // Match Supabase default (30s)
     connectionTimeoutMillis: 3_000,         // Faster fail for cold starts
@@ -21,13 +21,14 @@ function createPool(): Pool {
     ssl: { rejectUnauthorized: false },
   });
 
-  p.on("connect", () => {
-    console.log("[pooler] New connection established");
-  });
-
-  p.on("remove", () => {
-    console.log("[pooler] Connection removed from pool");
-  });
+  if (process.env.NODE_ENV !== "production") {
+    p.on("connect", () => {
+      console.log("[pooler] New connection established");
+    });
+    p.on("remove", () => {
+      console.log("[pooler] Connection removed from pool");
+    });
+  }
 
   p.on("error", (err: Error) => {
     console.error("[pooler] Unexpected idle client error:", err.message);
