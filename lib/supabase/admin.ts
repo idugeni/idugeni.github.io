@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "./types";
 
 /**
  * Admin client with service-role privileges.
@@ -23,7 +22,7 @@ export function createAdminClient() {
     );
   }
 
-  return createClient<Database>(supabaseUrl, supabaseSecretKey, {
+  return createClient(supabaseUrl, supabaseSecretKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
