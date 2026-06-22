@@ -97,7 +97,7 @@ export async function submitContactMessage(data: { nama: string; email: string; 
 
   const parsed = contactSchema.safeParse(data);
   if (!parsed.success) {
-    throw new Error("Data tidak valid: " + parsed.error.issues[0].message);
+    throw new Error("Invalid input");
   }
 
   const messagePayload = {
@@ -184,7 +184,9 @@ export async function getContactMessages(filters?: { dibaca?: boolean }) {
 export async function getAdminContactMessagesPage(rawFilters: unknown) {
   await requireAdmin();
 
-  const filters = adminMessagesFilterSchema.parse(rawFilters ?? {});
+  const filtersParsed = adminMessagesFilterSchema.safeParse(rawFilters ?? {});
+  if (!filtersParsed.success) throw new Error("Invalid input");
+  const filters = filtersParsed.data;
   const from = (filters.page - 1) * filters.pageSize;
 
   const conditions: string[] = [];
@@ -341,8 +343,12 @@ export async function markMessageReplied(id: string) {
 export async function bulkUpdateContactMessages(ids: string[], patch: { dibaca?: boolean; dibalas?: boolean }) {
   await requireAdmin();
 
-  const parsedIds = uuidArraySchema.parse(ids);
-  const parsedPatch = bulkPatchSchema.parse(patch);
+  const parsedIdsResult = uuidArraySchema.safeParse(ids);
+  if (!parsedIdsResult.success) throw new Error("Invalid input");
+  const parsedIds = parsedIdsResult.data;
+  const parsedPatchResult = bulkPatchSchema.safeParse(patch);
+  if (!parsedPatchResult.success) throw new Error("Invalid input");
+  const parsedPatch = parsedPatchResult.data;
   const updatePatch: ContactMessageUpdate = { ...parsedPatch };
 
   if (parsedPatch.dibalas === true) {
@@ -368,7 +374,9 @@ export async function bulkUpdateContactMessages(ids: string[], patch: { dibaca?:
 export async function bulkDeleteContactMessages(ids: string[]) {
   await requireAdmin();
 
-  const parsedIds = uuidArraySchema.parse(ids);
+  const parsedIdsResult = uuidArraySchema.safeParse(ids);
+  if (!parsedIdsResult.success) throw new Error("Invalid input");
+  const parsedIds = parsedIdsResult.data;
   const placeholders = parsedIds.map((_, i) => `$${i + 1}`).join(", ");
 
   // Fetch attachments for the messages to be deleted

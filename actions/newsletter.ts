@@ -174,7 +174,9 @@ export async function getNewsletterSubscribers() {
 export async function getAdminNewsletterSubscribersPage(rawFilters: unknown) {
   await requireAdmin();
 
-  const filters = adminNewsletterFilterSchema.parse(rawFilters ?? {});
+  const filtersParsed = adminNewsletterFilterSchema.safeParse(rawFilters ?? {});
+  if (!filtersParsed.success) throw new Error("Invalid input");
+  const filters = filtersParsed.data;
 
   const conditions: string[] = [];
   const params: unknown[] = [];
@@ -252,8 +254,12 @@ export async function getNewsletterStats() {
 
 export async function updateNewsletterSubscriberStatus(id: string, aktif: boolean) {
   await requireAdmin();
-  const parsedId = uuidSchema.parse(id);
-  const parsedPatch = newsletterPatchSchema.parse({ aktif });
+  const parsedIdResult = uuidSchema.safeParse(id);
+  if (!parsedIdResult.success) throw new Error("Invalid input");
+  const parsedId = parsedIdResult.data;
+  const parsedPatchResult = newsletterPatchSchema.safeParse({ aktif });
+  if (!parsedPatchResult.success) throw new Error("Invalid input");
+  const parsedPatch = parsedPatchResult.data;
 
   const unsubscribedAt = parsedPatch.aktif ? null : new Date().toISOString();
   await queryPooler(
@@ -266,8 +272,12 @@ export async function updateNewsletterSubscriberStatus(id: string, aktif: boolea
 
 export async function bulkUpdateNewsletterSubscribers(ids: string[], patch: { aktif: boolean }) {
   await requireAdmin();
-  const parsedIds = uuidArraySchema.parse(ids);
-  const parsedPatch = newsletterPatchSchema.parse(patch);
+  const parsedIdsResult = uuidArraySchema.safeParse(ids);
+  if (!parsedIdsResult.success) throw new Error("Invalid input");
+  const parsedIds = parsedIdsResult.data;
+  const parsedPatchResult = newsletterPatchSchema.safeParse(patch);
+  if (!parsedPatchResult.success) throw new Error("Invalid input");
+  const parsedPatch = parsedPatchResult.data;
 
   const unsubscribedAt = parsedPatch.aktif ? null : new Date().toISOString();
   const placeholders = parsedIds.map((_, i) => `$${i + 2}`).join(", ");
@@ -281,7 +291,9 @@ export async function bulkUpdateNewsletterSubscribers(ids: string[], patch: { ak
 
 export async function bulkDeleteNewsletterSubscribers(ids: string[]) {
   await requireAdmin();
-  const parsedIds = uuidArraySchema.parse(ids);
+  const parsedIdsResult = uuidArraySchema.safeParse(ids);
+  if (!parsedIdsResult.success) throw new Error("Invalid input");
+  const parsedIds = parsedIdsResult.data;
 
   const placeholders = parsedIds.map((_, i) => `$${i + 1}`).join(", ");
   await queryPooler(
@@ -299,7 +311,9 @@ const campaignSchema = z.object({
 
 export async function dispatchNewsletterCampaign(data: { subject: string; contentHtml: string }) {
   await requireAdmin();
-  const parsed = campaignSchema.parse(data);
+  const parsedResult = campaignSchema.safeParse(data);
+  if (!parsedResult.success) throw new Error("Invalid input");
+  const parsed = parsedResult.data;
 
   const subscribers = await queryPooler<{ email: string; nama: string | null; token_unsubscribe: string }>(
     `SELECT email, nama, token_unsubscribe FROM newsletter_subscribers WHERE aktif = $1 AND confirmed = $2`,

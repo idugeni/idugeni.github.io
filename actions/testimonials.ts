@@ -92,7 +92,9 @@ export async function getAllTestimonials() {
 export async function getAdminTestimonialsPage(rawFilters: unknown) {
   await requireAdmin();
 
-  const filters = adminTestimonialsFilterSchema.parse(rawFilters ?? {});
+  const filtersParsed = adminTestimonialsFilterSchema.safeParse(rawFilters ?? {});
+  if (!filtersParsed.success) throw new Error("Invalid input");
+  const filters = filtersParsed.data;
 
   const conditions: string[] = [];
   const params: unknown[] = [];
@@ -166,7 +168,7 @@ export async function createTestimonial(data: Record<string, unknown>) {
   await requireAdmin();
 
   const parsed = testimonialInputSchema.safeParse(data);
-  if (!parsed.success) throw new Error("Invalid testimonial data: " + parsed.error.issues[0].message);
+  if (!parsed.success) throw new Error("Invalid input");
 
   const payload = normalizeTestimonialPayload(parsed.data);
   const columns = Object.keys(payload);
@@ -184,9 +186,11 @@ export async function createTestimonial(data: Record<string, unknown>) {
 export async function updateTestimonial(id: string, data: Record<string, unknown>) {
   await requireAdmin();
 
-  const parsedId = uuidSchema.parse(id);
+  const parsedIdResult = uuidSchema.safeParse(id);
+  if (!parsedIdResult.success) throw new Error("Invalid input");
+  const parsedId = parsedIdResult.data;
   const parsed = testimonialUpdateSchema.safeParse(data);
-  if (!parsed.success) throw new Error("Invalid testimonial data: " + parsed.error.issues[0].message);
+  if (!parsed.success) throw new Error("Invalid input");
 
   const payload = normalizeTestimonialPayload(parsed.data);
   const columns = Object.keys(payload);
@@ -205,8 +209,12 @@ export async function updateTestimonial(id: string, data: Record<string, unknown
 export async function bulkUpdateTestimonials(ids: string[], patch: { tampil?: boolean; featured?: boolean }) {
   await requireAdmin();
 
-  const parsedIds = uuidArraySchema.parse(ids);
-  const parsedPatch = bulkTestimonialPatchSchema.parse(patch);
+  const parsedIdsResult = uuidArraySchema.safeParse(ids);
+  if (!parsedIdsResult.success) throw new Error("Invalid input");
+  const parsedIds = parsedIdsResult.data;
+  const parsedPatchResult = bulkTestimonialPatchSchema.safeParse(patch);
+  if (!parsedPatchResult.success) throw new Error("Invalid input");
+  const parsedPatch = parsedPatchResult.data;
   const columns = Object.keys(parsedPatch);
   const values = Object.values(parsedPatch);
   const setClauses = columns.map((col, i) => `${col} = $${i + 1}`).join(", ");
@@ -223,7 +231,9 @@ export async function bulkUpdateTestimonials(ids: string[], patch: { tampil?: bo
 export async function duplicateTestimonial(id: string) {
   await requireAdmin();
 
-  const parsedId = uuidSchema.parse(id);
+  const parsedIdResult = uuidSchema.safeParse(id);
+  if (!parsedIdResult.success) throw new Error("Invalid input");
+  const parsedId = parsedIdResult.data;
   const [source] = await queryPooler<TestimonialRow>(
     `SELECT * FROM testimonials WHERE id = $1`,
     [parsedId],
@@ -249,7 +259,9 @@ export async function duplicateTestimonial(id: string) {
 export async function deleteTestimonial(id: string) {
   await requireAdmin();
 
-  const parsed = uuidSchema.parse(id);
+  const parsedResult = uuidSchema.safeParse(id);
+  if (!parsedResult.success) throw new Error("Invalid input");
+  const parsed = parsedResult.data;
   await queryPooler(`DELETE FROM testimonials WHERE id = $1`, [parsed]);
   updatePublicContent([CACHE_TAGS.testimonials]);
   revalidatePath("/admin/testimonials");
@@ -259,7 +271,9 @@ export async function deleteTestimonial(id: string) {
 export async function bulkDeleteTestimonials(ids: string[]) {
   await requireAdmin();
 
-  const parsedIds = uuidArraySchema.parse(ids);
+  const parsedIdsResult = uuidArraySchema.safeParse(ids);
+  if (!parsedIdsResult.success) throw new Error("Invalid input");
+  const parsedIds = parsedIdsResult.data;
   const placeholders = parsedIds.map((_, i) => `$${i + 1}`).join(", ");
   await queryPooler(`DELETE FROM testimonials WHERE id IN (${placeholders})`, parsedIds);
   updatePublicContent([CACHE_TAGS.testimonials]);

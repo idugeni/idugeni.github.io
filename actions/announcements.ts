@@ -51,7 +51,9 @@ const updateAnnouncementSchema = createAnnouncementSchema.partial();
 
 export async function createAnnouncement(data: unknown): Promise<Announcement> {
   const admin = await requireAdmin();
-  const parsed = createAnnouncementSchema.parse(data);
+  const parsedResult = createAnnouncementSchema.safeParse(data);
+  if (!parsedResult.success) throw new Error("Invalid input");
+  const parsed = parsedResult.data;
 
   const startsAt = parsed.starts_at ? new Date(parsed.starts_at).toISOString() : new Date().toISOString();
   const endsAt = parsed.ends_at ? new Date(parsed.ends_at).toISOString() : null;
@@ -87,8 +89,12 @@ export async function createAnnouncement(data: unknown): Promise<Announcement> {
 
 export async function updateAnnouncement(id: string, data: unknown): Promise<Announcement> {
   await requireAdmin();
-  const parsedId = z.string().uuid().parse(id);
-  const parsed = updateAnnouncementSchema.parse(data);
+  const parsedIdResult = z.string().uuid().safeParse(id);
+  if (!parsedIdResult.success) throw new Error("Invalid input");
+  const parsedId = parsedIdResult.data;
+  const parsedResult = updateAnnouncementSchema.safeParse(data);
+  if (!parsedResult.success) throw new Error("Invalid input");
+  const parsed = parsedResult.data;
 
   const current = await queryPoolerSingle<Announcement>(
     "SELECT * FROM announcements WHERE id = $1",
@@ -149,7 +155,9 @@ export async function updateAnnouncement(id: string, data: unknown): Promise<Ann
 
 export async function deleteAnnouncement(id: string): Promise<{ success: boolean }> {
   await requireAdmin();
-  const parsedId = z.string().uuid().parse(id);
+  const parsedIdResult = z.string().uuid().safeParse(id);
+  if (!parsedIdResult.success) throw new Error("Invalid input");
+  const parsedId = parsedIdResult.data;
 
   await queryPooler("DELETE FROM announcements WHERE id = $1", [parsedId]);
 
@@ -167,7 +175,9 @@ export async function getAdminAnnouncements(): Promise<Announcement[]> {
 
 export async function getAnnouncementById(id: string): Promise<Announcement | null> {
   await requireAdmin();
-  const parsedId = z.string().uuid().parse(id);
+  const parsedIdResult = z.string().uuid().safeParse(id);
+  if (!parsedIdResult.success) throw new Error("Invalid input");
+  const parsedId = parsedIdResult.data;
   return await queryPoolerSingle<Announcement>(
     "SELECT * FROM announcements WHERE id = $1",
     [parsedId]

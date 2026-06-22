@@ -1,6 +1,3 @@
-"use client";
-
-import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import {
   SiTypescript,
   SiReact,
@@ -168,44 +165,28 @@ export function TechStackSection() {
   return (
     <section className="py-24 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <ScrollReveal>
+        <div className="sr-reveal">
           <div className="text-center mb-4">
             <span className="font-mono text-[10px] text-primary/70 tracking-widest">// CORE TECHNOLOGIES</span>
-            <h2 className="text-3xl md:text-4xl font-orbitron font-bold neon-text mt-2">
-              TECH_ARSENAL
-            </h2>
-            <p className="text-muted-foreground font-mono text-sm max-w-xl mx-auto mt-3">
-              Tools dan teknologi yang saya kuasai untuk membangun solusi
-              berkualitas tinggi.
-            </p>
+            <h2 className="text-3xl md:text-4xl font-orbitron font-bold neon-text mt-2">TECH_ARSENAL</h2>
+            <p className="text-muted-foreground font-mono text-sm max-w-xl mx-auto mt-3">Tools dan teknologi yang saya kuasai untuk membangun solusi berkualitas tinggi.</p>
           </div>
-        </ScrollReveal>
+        </div>
 
-        {/* Circuit Flow Animation - hidden on small screens */}
-        <ScrollReveal delay={100}>
-          <div className="hidden md:block">
-            <CircuitFlow />
-          </div>
-        </ScrollReveal>
+        <div className="sr-reveal" style={{ transitionDelay: "100ms" }}>
+          <div className="hidden md:block"><CircuitFlow /></div>
+        </div>
 
-        <ScrollReveal delay={200}>
+        <div className="sr-reveal" style={{ transitionDelay: "200ms" }}>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
             {techStack.map((tech) => (
-              <div
-                key={tech.name}
-                className="flex flex-col items-center justify-center p-4 border border-border/50 bg-secondary/30 hover:border-primary/50 hover:bg-primary/5 transition-all group cursor-default rounded-sm"
-              >
-                <tech.icon
-                  className="w-6 h-6 mb-3 opacity-60 group-hover:opacity-100 transition-all"
-                  style={{ color: tech.color }}
-                />
-                <span className="font-mono text-[10px] text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight">
-                  {tech.name}
-                </span>
+              <div key={tech.name} className="flex flex-col items-center justify-center p-4 border border-border/50 bg-secondary/30 hover:border-primary/50 hover:bg-primary/5 transition-all group cursor-default rounded-sm">
+                <tech.icon className="w-6 h-6 mb-3 opacity-60 group-hover:opacity-100 transition-all" style={{ color: tech.color }} />
+                <span className="font-mono text-[10px] text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight">{tech.name}</span>
               </div>
             ))}
           </div>
-        </ScrollReveal>
+        </div>
       </div>
     </section>
   );

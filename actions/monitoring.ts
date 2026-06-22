@@ -35,7 +35,9 @@ export async function getErrorLogs(
   params: z.input<typeof paginationSchema>,
 ): Promise<{ data: ErrorLogEntry[]; total: number }> {
   await requireAdmin();
-  const parsed = paginationSchema.parse(params);
+  const parsedResult = paginationSchema.safeParse(params);
+  if (!parsedResult.success) throw new Error("Invalid input");
+  const parsed = parsedResult.data;
   const offset = (parsed.page - 1) * parsed.limit;
 
   let whereClauses: string[] = [];

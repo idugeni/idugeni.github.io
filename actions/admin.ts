@@ -15,7 +15,7 @@ const uuidSchema = z.string().uuid();
 
 export async function adminLogin(data: { email: string; password: string }) {
   const parsed = adminLoginSchema.safeParse(data);
-  if (!parsed.success) throw new Error("Invalid login credentials: " + parsed.error.issues[0].message);
+  if (!parsed.success) throw new Error("Invalid input");
 
   await rateLimit(parsed.data.email, "login", { max: 5, window: 15 * 60 * 1000 });
 

@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AnnouncementBanner } from "@/components/public/AnnouncementBanner";
 import { AnnouncementModal } from "@/components/public/AnnouncementModal";
 import { CSRFBoundary } from "@/components/providers/csrf-boundary";
+import { ScrollRevealProvider } from "@/components/providers/scroll-reveal-provider";
 import { WebVitalsReporter } from "@/components/providers/web-vitals-reporter";
 import { siteConfig } from "@/lib/config/site";
 import "@/lib/env";
@@ -137,6 +138,7 @@ export default function RootLayout({
             <Toaster />
           </CSRFBoundary>
         </Suspense>
+        <ScrollRevealProvider />
         <WebVitalsReporter />
         <Analytics />
         <SpeedInsights />
