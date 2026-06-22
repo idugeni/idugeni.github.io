@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PublicLayout } from "@/components/layout/public-layout";
@@ -66,9 +67,9 @@ async function ServiceDetailContent({ params }: { params: ServiceDetailParams })
           <p className="mb-6 text-sm text-muted-foreground">
             Server sedang mengalami gangguan. Silakan refresh halaman dalam beberapa saat.
           </p>
-          <a href="/services" className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
+          <Link href="/services" className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
             Kembali ke Layanan
-          </a>
+          </Link>
         </div>
       </div>
     );

@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function BlogDetailError({
   error,
@@ -29,9 +30,9 @@ export default function BlogDetailError({
           <button onClick={reset} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
             Coba Lagi
           </button>
-          <a href="/blog" className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
+          <Link href="/blog" className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
             Kembali ke Blog
-          </a>
+          </Link>
         </div>
         {error.digest && (
           <p className="mt-4 font-mono text-xs text-muted-foreground/50">Error ID: {error.digest}</p>

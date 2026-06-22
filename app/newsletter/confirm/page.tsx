@@ -1,5 +1,6 @@
 import { queryPooler } from "@/lib/db/pooler";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle } from "@/lib/icons";
 
@@ -20,7 +21,7 @@ export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
             Token konfirmasi tidak ditemukan. Silakan periksa email Anda atau coba daftar ulang.
           </p>
           <Button asChild>
-            <a href="/">Kembali ke Beranda</a>
+            <Link href="/">Kembali ke Beranda</Link>
           </Button>
         </div>
       </div>
@@ -49,7 +50,7 @@ export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
               Token konfirmasi tidak valid atau sudah digunakan. Silakan hubungi admin jika Anda mengalami masalah.
             </p>
             <Button asChild>
-              <a href="/">Kembali ke Beranda</a>
+              <Link href="/">Kembali ke Beranda</Link>
             </Button>
           </div>
         </div>
@@ -73,10 +74,10 @@ export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
           </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild>
-              <a href="/blog">Baca Blog</a>
+              <Link href="/blog">Baca Blog</Link>
             </Button>
             <Button variant="outline" asChild>
-              <a href="/">Kembali ke Beranda</a>
+              <Link href="/">Kembali ke Beranda</Link>
             </Button>
           </div>
         </div>
@@ -93,7 +94,7 @@ export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
             Maaf, terjadi kesalahan saat memproses konfirmasi Anda. Silakan coba lagi atau hubungi admin.
           </p>
           <Button asChild>
-            <a href="/">Kembali ke Beranda</a>
+            <Link href="/">Kembali ke Beranda</Link>
           </Button>
         </div>
       </div>

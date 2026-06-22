@@ -3,7 +3,6 @@ import { Inter, Space_Mono, Orbitron } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "@/components/ui/sonner";
-import { ZoomLock } from "@/components/layout/ZoomLock";
 import { AnnouncementBanner } from "@/components/public/AnnouncementBanner";
 import { AnnouncementModal } from "@/components/public/AnnouncementModal";
 import { CSRFBoundary } from "@/components/providers/csrf-boundary";
@@ -37,8 +36,6 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   minimumScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   colorScheme: "dark",
 };
 
@@ -125,10 +122,12 @@ export default function RootLayout({
     <html lang="id" className="dark" suppressHydrationWarning>
       <body
         className={`${inter.variable} font-sans antialiased overflow-x-hidden min-h-screen flex flex-col`}
-        suppressHydrationWarning
       >
+        <head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        </head>
         <CSRFBoundary>
-          <ZoomLock />
           <AnnouncementBanner />
           {children}
           <AnnouncementModal />

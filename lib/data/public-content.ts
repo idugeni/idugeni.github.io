@@ -8,6 +8,7 @@ const PROJECT_PAGE_SIZE = 9;
 
 export interface BlogIndexPageParams {
   category?: string;
+  q?: string;
   page?: number;
 }
 
@@ -97,9 +98,10 @@ export async function getBlogIndexData() {
   };
 }
 
-export async function getBlogIndexPageData({ category, page = 1 }: BlogIndexPageParams = {}) {
+export async function getBlogIndexPageData({ category, q, page = 1 }: BlogIndexPageParams = {}) {
   const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
   const safeCategory = category?.trim() || undefined;
+  const safeQuery = q?.trim() || undefined;
   const from = (safePage - 1) * BLOG_PAGE_SIZE;
 
   let query = db
@@ -115,6 +117,22 @@ export async function getBlogIndexPageData({ category, page = 1 }: BlogIndexPage
     countQuery = countQuery.where("kategori_id", "=", safeCategory);
   }
 
+  if (safeQuery) {
+    const pattern = `%${safeQuery.replace(/[%_]/g, "\\$&")}%`;
+    query = query.where((eb) =>
+      eb.or([
+        eb("judul", "ilike", pattern),
+        eb("ringkasan", "ilike", pattern),
+      ])
+    );
+    countQuery = countQuery.where((eb) =>
+      eb.or([
+        eb("judul", "ilike", pattern),
+        eb("ringkasan", "ilike", pattern),
+      ])
+    );
+  }
+
   const [countResult, articlesResult, categoriesResult] = await Promise.all([
     countQuery
       .select((eb) => eb.fn.countAll().as("count"))
@@ -128,6 +146,15 @@ export async function getBlogIndexPageData({ category, page = 1 }: BlogIndexPage
       )
       .where("ba.status", "=", "published")
       .$if(!!safeCategory, (qb) => qb.where("ba.kategori_id", "=", safeCategory!))
+      .$if(!!safeQuery, (qb) => {
+        const pattern = `%${safeQuery!.replace(/[%_]/g, "\\$&")}%`;
+        return qb.where((eb) =>
+          eb.or([
+            eb("ba.judul", "ilike", pattern),
+            eb("ba.ringkasan", "ilike", pattern),
+          ])
+        );
+      })
       .select([
         "ba.id","ba.judul","ba.slug","ba.ringkasan","ba.thumbnail_url","ba.kategori_id","ba.status","ba.featured","ba.published_at","ba.jumlah_like","ba.jumlah_view","ba.waktu_baca","ba.created_at","ba.updated_at",
         (eb) => eb.fn.count("bk.id").as("comment_count"),
@@ -159,6 +186,7 @@ export async function getBlogIndexPageData({ category, page = 1 }: BlogIndexPage
       hasNextPage: safePage < totalPages,
     },
     activeCategory: safeCategory,
+    activeQuery: safeQuery,
     error: null,
   };
 }

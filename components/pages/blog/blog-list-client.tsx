@@ -3,10 +3,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { PageHeader } from "@/components/ui/page-header";
-import { HiClock, HiEye, HiHeart, HiSignal, HiTag, HiChatBubbleLeftRight } from "react-icons/hi2";
+import { HiClock, HiEye, HiHeart, HiSignal, HiTag, HiChatBubbleLeftRight, HiMagnifyingGlass, HiXMark } from "react-icons/hi2";
 import { FiChevronLeft, FiChevronRight, FiGrid, FiLayers } from "react-icons/fi";
 import type { BlogListClientProps } from "@/types/pages";
 import { formatCompactNumber } from "@/lib/utils";
@@ -27,8 +29,36 @@ export function BlogListClient({
   articles,
   categories,
   activeCategory,
+  activeQuery,
   pagination,
 }: BlogListClientProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [searchInput, setSearchInput] = useState(activeQuery ?? "");
+
+  const handleSearch = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      const params = new URLSearchParams(searchParams.toString());
+      const q = searchInput.trim();
+      if (q) {
+        params.set("q", q);
+      } else {
+        params.delete("q");
+      }
+      params.delete("page");
+      router.push(`/blog?${params.toString()}`);
+    },
+    [searchInput, searchParams, router]
+  );
+
+  const clearSearch = useCallback(() => {
+    setSearchInput("");
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("q");
+    params.delete("page");
+    router.push(`/blog?${params.toString()}`);
+  }, [searchParams, router]);
   const featuredArticle = articles[0] ?? null;
   const regularArticles = articles.slice(1);
   const activeCategoryName = categories.find((c) => c.id === activeCategory)?.nama;
@@ -260,6 +290,37 @@ export function BlogListClient({
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
               <ScrollReveal delay={200}>
+                <div className="rounded-xl bg-card/80 backdrop-blur-sm border border-border/20 p-5">
+                  <h3 className="font-orbitron font-bold text-sm mb-4 flex items-center gap-2 text-primary">
+                    <HiMagnifyingGlass className="w-4 h-4" />
+                    SEARCH
+                  </h3>
+                  <form onSubmit={handleSearch} className="relative">
+                    <input
+                      type="text"
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      placeholder="Cari artikel..."
+                      className="w-full bg-secondary/50 border border-border/50 rounded-md px-3 py-2 pr-9 font-mono text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-colors"
+                    />
+                    {searchInput && (
+                      <button
+                        type="button"
+                        onClick={clearSearch}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="Clear search"
+                      >
+                        <HiXMark className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </form>
+                  {activeQuery && (
+                    <p className="font-mono text-[10px] text-muted-foreground/60 mt-2">
+                      Hasil untuk: <span className="text-primary">&quot;{activeQuery}&quot;</span>
+                    </p>
+                  )}
+                </div>
+
                 <div className="rounded-xl bg-card/80 backdrop-blur-sm border border-border/20 p-5">
                   <h3 className="font-orbitron font-bold text-sm mb-4 flex items-center gap-2 text-primary">
                     <HiTag className="w-4 h-4" />

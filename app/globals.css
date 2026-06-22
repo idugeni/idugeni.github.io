@@ -188,12 +188,6 @@
     overflow-x: hidden;
   }
 
-  html[data-zoom-locked="true"],
-  html[data-zoom-locked="true"] body {
-    touch-action: manipulation;
-    overflow-x: hidden;
-  }
-
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
@@ -362,6 +356,25 @@ body::after {
 
 .animate-shake {
   animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Scroll Reveal — CSS-driven, no React state per instance */
+.sr-reveal {
+  opacity: 0;
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+  will-change: opacity, transform;
+}
+.sr-reveal.sr-visible {
+  opacity: 1;
+  transform: translate(0, 0) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sr-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 @keyframes loading-progress {
@@ -603,4 +616,26 @@ body::after {
   text-underline-offset: 3px;
 }
 
-/* Force PostCSS compilation reload */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-pulse,
+  .animate-bounce,
+  .animate-spin,
+  .animate-glitch,
+  .animate-fade-in-up,
+  .animate-shake {
+    animation: none !important;
+  }
+
+  body::after {
+    display: none;
+  }
+}

@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 interface BlogPageProps {
   searchParams?: Promise<{
     category?: string;
+    q?: string;
     page?: string;
   }>;
 }
@@ -21,8 +22,9 @@ interface BlogPageProps {
 async function BlogContent({ searchParams }: BlogPageProps) {
   const params = await searchParams;
   const page = Number(params?.page ?? "1");
-  const { articles, categories, pagination, activeCategory, error } = await getBlogIndexPageData({
+  const { articles, categories, pagination, activeCategory, activeQuery, error } = await getBlogIndexPageData({
     category: params?.category,
+    q: params?.q,
     page,
   });
 
@@ -39,6 +41,7 @@ async function BlogContent({ searchParams }: BlogPageProps) {
       articles={articles}
       categories={categories}
       activeCategory={activeCategory}
+      activeQuery={activeQuery}
       pagination={pagination}
     />
   );

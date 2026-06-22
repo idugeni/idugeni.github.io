@@ -1,12 +1,17 @@
+import Link from "next/link";
+import Image from "next/image";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
+import { toPlainText, safeImageSource } from "@/lib/utils/html";
+import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
+import { siteConfig } from "@/lib/config/site";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
+import { ShareButtons } from "@/components/pages/blog/share-buttons";
 import type { BlogArticle, BlogComment } from "@/types/pages";
-
-export const dynamic = "force-dynamic";
 
 const BASE_URL = "https://irnk.codes";
 
@@ -18,38 +23,7 @@ type BlogDetail = {
   relatedArticles: BlogArticle[];
 };
 
-function toPlainText(value: unknown) {
-  return String(value ?? "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<\/h[1-6]>/gi, "\n\n")
-    .replace(/<\/li>/gi, "\n")
-    .replace(/<[^>]*>/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-function getParagraphs(content: unknown) {
-  const text = toPlainText(content);
-  return text ? text.split(/\n{2,}/).map((item) => item.trim()).filter(Boolean) : [];
-}
-
-function safeImageSource(value: unknown) {
-  const src = typeof value === "string" ? value.trim() : "";
-  if (!src) return null;
-  if (src.startsWith("/") || /^https?:\/\//i.test(src)) return src;
-  return null;
-}
-
-async function getBlogDetailData(slug: string): Promise<BlogDetail | null> {
+const getBlogDetailData = cache(async function getBlogDetailData(slug: string): Promise<BlogDetail | null> {
   const rawArticle = await queryPoolerSingle<Record<string, unknown>>(
     `SELECT * FROM blog_artikel WHERE slug=$1 AND status='published'`,
     [slug]
@@ -73,21 +47,13 @@ async function getBlogDetailData(slug: string): Promise<BlogDetail | null> {
     comments: toCamelCase<BlogComment[]>(rawComments),
     relatedArticles: toCamelCase<BlogArticle[]>(rawRelated),
   };
-}
-
-async function getBlogMetadataData(slug: string) {
-  const rawArticle = await queryPoolerSingle<Record<string, unknown>>(
-    `SELECT judul, ringkasan, slug, published_at AS "publishedAt", thumbnail_url AS "thumbnailUrl" FROM blog_artikel WHERE slug=$1 AND status='published'`,
-    [slug]
-  );
-
-  return rawArticle ? toCamelCase<BlogArticle>(rawArticle) : null;
-}
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { slug } = await params;
-    const article = await getBlogMetadataData(slug);
+    const detail = await getBlogDetailData(slug);
+    const article = detail?.article;
 
     if (!article) return { title: "Artikel Tidak Ditemukan" };
 
@@ -100,6 +66,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description: article.ringkasan,
         type: "article",
         url: `${BASE_URL}/blog/${article.slug}`,
+        publishedTime: article.publishedAt ?? undefined,
         images: article.thumbnailUrl ? [{ url: article.thumbnailUrl, alt: article.judul }] : undefined,
       },
     };
@@ -122,8 +89,16 @@ export default async function BlogDetailPage({ params }: Props) {
   if (!detail) notFound();
 
   const { article, comments, relatedArticles } = detail;
-  const paragraphs = getParagraphs(article.konten || article.ringkasan);
+  const sanitizedContent = sanitizeRichHtml(article.konten || article.ringkasan);
   const thumbnail = safeImageSource(article.thumbnailUrl);
+
+  const publishedDate = article.publishedAt
+    ? new Date(article.publishedAt).toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
 
   return (
     <PublicLayout>
@@ -135,15 +110,27 @@ export default async function BlogDetailPage({ params }: Props) {
         ]}
       />
       <article className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-        <a href="/blog" className="mb-8 inline-flex text-sm font-mono text-primary hover:underline">
+        <Link href="/blog" className="mb-8 inline-flex text-sm font-mono text-primary hover:underline">
           BACK_TO_FEED
-        </a>
+        </Link>
         <div className="mb-6 flex flex-wrap items-center gap-3 text-xs font-mono uppercase text-muted-foreground">
           <span>{article.kategoriNama || "General"}</span>
+          {publishedDate && (
+            <>
+              <span>•</span>
+              <time dateTime={article.publishedAt ?? undefined}>{publishedDate}</time>
+            </>
+          )}
           <span>•</span>
           <span>{article.waktuBaca || 5} min read</span>
           <span>•</span>
           <span>{article.jumlahView || 0} views</span>
+        </div>
+        <div className="mb-6">
+          <ShareButtons
+            url={`${BASE_URL}/blog/${article.slug}`}
+            title={article.judul}
+          />
         </div>
         <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground md:text-6xl">
           {article.judul}
@@ -154,18 +141,38 @@ export default async function BlogDetailPage({ params }: Props) {
           </p>
         )}
         {thumbnail && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={thumbnail}
-            alt={article.judul}
-            className="mb-10 aspect-video w-full rounded-2xl border border-border object-cover"
-            loading="eager"
-          />
+          <div className="mb-10 aspect-video w-full relative rounded-2xl border border-border overflow-hidden">
+            <Image
+              src={thumbnail}
+              alt={article.judul}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 768px"
+              priority
+            />
+          </div>
         )}
-        <div className="space-y-6 text-base leading-8 text-foreground md:text-lg">
-          {paragraphs.map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
-          ))}
+        <div
+          className="irnk-prose"
+          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+        />
+        <div className="mt-14 border border-primary/20 bg-card/50 p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+            <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
+              <span className="font-orbitron text-lg font-bold text-primary">
+                {siteConfig.owner.name.split(" ").map((n) => n[0]).join("")}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-primary/70 mb-1">Ditulis oleh</p>
+              <p className="font-orbitron text-sm font-bold text-foreground">{siteConfig.owner.name}</p>
+              <p className="font-mono text-xs text-muted-foreground mt-1">{siteConfig.owner.title}</p>
+              <p className="font-mono text-xs text-muted-foreground/70 mt-2 leading-relaxed">{siteConfig.owner.bio}</p>
+            </div>
+            <Link href="/about" prefetch={false} className="shrink-0 font-mono text-xs text-primary hover:underline">
+              Lihat Profil →
+            </Link>
+          </div>
         </div>
         {comments.length > 0 && (
           <section className="mt-14 border-t border-border pt-8">
@@ -185,10 +192,10 @@ export default async function BlogDetailPage({ params }: Props) {
             <h2 className="mb-4 text-2xl font-bold">Artikel Terkait</h2>
             <div className="grid gap-4 sm:grid-cols-3">
               {relatedArticles.map((related) => (
-                <a key={String(related.id)} href={`/blog/${related.slug}`} className="rounded-xl border border-border bg-secondary/30 p-4 hover:border-primary/60">
+                <Link key={String(related.id)} href={`/blog/${related.slug}`} className="rounded-xl border border-border bg-secondary/30 p-4 hover:border-primary/60">
                   <h3 className="font-semibold text-foreground">{related.judul}</h3>
                   {related.ringkasan && <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{related.ringkasan}</p>}
-                </a>
+                </Link>
               ))}
             </div>
           </section>

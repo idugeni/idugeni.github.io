@@ -1,7 +1,16 @@
 import "server-only"
 import { cookies } from "next/headers"
 
-const CSRF_SECRET = process.env.CSRF_SECRET || process.env.DATABASE_SECRET_KEY || "default-csrf-secret-change-me"
+const CSRF_SECRET = process.env.CSRF_SECRET || process.env.DATABASE_SECRET_KEY
+
+if (process.env.NODE_ENV === "production" && !CSRF_SECRET) {
+  throw new Error("CSRF_SECRET or DATABASE_SECRET_KEY must be set in production")
+}
+
+function getCSRFSecret(): string {
+  if (!CSRF_SECRET) throw new Error("CSRF_SECRET or DATABASE_SECRET_KEY is not configured")
+  return CSRF_SECRET
+}
 
 // Edge-compatible random bytes using Web Crypto API
 function getRandomHex(bytes: number): string {
@@ -31,7 +40,7 @@ async function hmacSign(data: string, secret: string): Promise<string> {
 function generateCSRFToken(): Promise<string> {
   return (async () => {
     const tokenId = getRandomHex(32)
-    const signature = await hmacSign(tokenId, CSRF_SECRET)
+    const signature = await hmacSign(tokenId, getCSRFSecret())
     return `${tokenId}.${signature}`
   })()
 }
@@ -41,7 +50,7 @@ export async function validateCSRFToken(token: string): Promise<boolean> {
   if (parts.length !== 2) return false
   
   const [tokenId, signature] = parts
-  const expectedSignature = await hmacSign(tokenId, CSRF_SECRET)
+  const expectedSignature = await hmacSign(tokenId, getCSRFSecret())
   
   return signature === expectedSignature
 }

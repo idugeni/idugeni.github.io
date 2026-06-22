@@ -131,6 +131,7 @@ export interface BlogListClientProps {
   articles: BlogArticle[];
   categories: BlogCategory[];
   activeCategory?: string;
+  activeQuery?: string;
   pagination?: {
     page: number;
     pageSize: number;

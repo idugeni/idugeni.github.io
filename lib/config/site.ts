@@ -36,8 +36,8 @@ export const siteConfig = {
   social: {
     github: "https://github.com/idugeni",
     instagram: "https://www.instagram.com/eliyantosarage_/",
-    linkedin: "#",
-    twitter: "#",
+    linkedin: "https://www.linkedin.com/in/eliyantosarage/",
+    twitter: "https://x.com/irnk_codes",
   },
 
   // SEO

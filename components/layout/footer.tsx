@@ -2,9 +2,8 @@ import Link from "next/link";
 import { FiGithub, FiInstagram, FiMail } from "react-icons/fi";
 import { siteConfig } from "@/lib/config/site";
 
-const YEAR = 2026;
-
 export function Footer() {
+  const YEAR = new Date().getFullYear();
   return (
     <footer className="border-t border-primary/20 bg-background/80 backdrop-blur-sm mt-auto relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -37,13 +36,9 @@ export function Footer() {
           <div>
             <h4 className="font-orbitron text-xs font-bold text-foreground mb-4 tracking-wider">NAVIGATION</h4>
             <ul className="space-y-2.5 font-mono text-xs">
-              <li><Link href="/" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Home</Link></li>
-              <li><Link href="/about" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">About</Link></li>
-              <li><Link href="/projects" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Projects</Link></li>
-              <li><Link href="/blog" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Blog</Link></li>
-              <li><Link href="/gallery" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Gallery</Link></li>
-              <li><Link href="/resume" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Resume</Link></li>
-              <li><Link href="/contact" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Contact</Link></li>
+              {siteConfig.nav.footer.navigation.map((item) => (
+                <li key={item.href + item.label}><Link href={item.href} prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">{item.label}</Link></li>
+              ))}
             </ul>
           </div>
 
@@ -51,12 +46,9 @@ export function Footer() {
           <div>
             <h4 className="font-orbitron text-xs font-bold text-foreground mb-4 tracking-wider">SERVICES</h4>
             <ul className="space-y-2.5 font-mono text-xs">
-              <li><Link href="/services" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Web Development</Link></li>
-              <li><Link href="/services" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">AI &amp; ML Integration</Link></li>
-              <li><Link href="/services" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">UI/UX Design</Link></li>
-              <li><Link href="/services" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Mobile Development</Link></li>
-              <li><Link href="/services" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">DevOps &amp; Cloud</Link></li>
-              <li><Link href="/services" prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">Technical Consulting</Link></li>
+              {siteConfig.nav.footer.services.map((item) => (
+                <li key={item.label}><Link href={item.href} prefetch={false} className="text-muted-foreground hover:text-primary transition-colors">{item.label}</Link></li>
+              ))}
             </ul>
           </div>
 

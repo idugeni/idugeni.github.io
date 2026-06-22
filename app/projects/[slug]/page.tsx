@@ -1,12 +1,14 @@
+import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { toCamelCase } from "@/lib/utils/case";
+import { toPlainText, safeImageSource } from "@/lib/utils/html";
+import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import type { Project } from "@/types/pages";
-
-export const dynamic = "force-dynamic";
 
 const BASE_URL = "https://irnk.codes";
 
@@ -16,37 +18,6 @@ type ProjectDetail = {
   project: Project;
   relatedProjects: Project[];
 };
-
-function toPlainText(value: unknown) {
-  return String(value ?? "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<\/h[1-6]>/gi, "\n\n")
-    .replace(/<\/li>/gi, "\n")
-    .replace(/<[^>]*>/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-function getParagraphs(content: unknown) {
-  const text = toPlainText(content);
-  return text ? text.split(/\n{2,}/).map((item) => item.trim()).filter(Boolean) : [];
-}
-
-function safeImageSource(value: unknown) {
-  const src = typeof value === "string" ? value.trim() : "";
-  if (!src) return null;
-  if (src.startsWith("/") || /^https?:\/\//i.test(src)) return src;
-  return null;
-}
 
 async function getProjectDetailData(slug: string): Promise<ProjectDetail | null> {
   const rawProject = await queryPoolerSingle<Record<string, unknown>>(
@@ -117,7 +88,7 @@ export default async function ProjectDetailPage({ params }: Props) {
   if (!detail) notFound();
 
   const { project, relatedProjects } = detail;
-  const paragraphs = getParagraphs(project.deskripsi);
+  const sanitizedDescription = sanitizeRichHtml(project.deskripsi);
   const thumbnail = safeImageSource(project.thumbnailUrl);
 
   return (
@@ -130,9 +101,9 @@ export default async function ProjectDetailPage({ params }: Props) {
         ]}
       />
       <article className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-        <a href="/projects" className="mb-8 inline-flex text-sm font-mono text-primary hover:underline">
+        <Link href="/projects" className="mb-8 inline-flex text-sm font-mono text-primary hover:underline">
           RETURN_TO_ARCHIVES
-        </a>
+        </Link>
         <div className="mb-6 flex flex-wrap items-center gap-3 text-xs font-mono uppercase text-muted-foreground">
           <span>{project.kategori || "Project"}</span>
           <span>•</span>
@@ -154,22 +125,24 @@ export default async function ProjectDetailPage({ params }: Props) {
           )}
         </div>
         {thumbnail && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={thumbnail}
-            alt={project.nama}
-            className="mb-10 aspect-video w-full rounded-2xl border border-border object-cover"
-            loading="eager"
-          />
+          <div className="mb-10 aspect-video w-full relative rounded-2xl border border-border overflow-hidden">
+            <Image
+              src={thumbnail}
+              alt={project.nama}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 768px"
+              priority
+            />
+          </div>
         )}
         <div className="grid gap-10 lg:grid-cols-[1fr_280px]">
           <div>
             <h2 className="mb-4 text-2xl font-bold text-primary">PROJECT_OVERVIEW</h2>
-            <div className="space-y-6 text-base leading-8 text-foreground md:text-lg">
-              {paragraphs.map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
-              ))}
-            </div>
+            <div
+              className="irnk-prose"
+              dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+            />
           </div>
           <aside className="space-y-6">
             {project.techStack && project.techStack.length > 0 && (
@@ -195,10 +168,10 @@ export default async function ProjectDetailPage({ params }: Props) {
             <h2 className="mb-4 text-2xl font-bold">Related Projects</h2>
             <div className="grid gap-4 sm:grid-cols-3">
               {relatedProjects.map((related) => (
-                <a key={String(related.id)} href={`/projects/${related.slug}`} className="rounded-xl border border-border bg-secondary/30 p-4 hover:border-primary/60">
+                <Link key={String(related.id)} href={`/projects/${related.slug}`} className="rounded-xl border border-border bg-secondary/30 p-4 hover:border-primary/60">
                   <h3 className="font-semibold text-foreground">{related.nama}</h3>
                   {related.kategori && <p className="mt-2 text-sm text-muted-foreground">{related.kategori}</p>}
-                </a>
+                </Link>
               ))}
             </div>
           </section>

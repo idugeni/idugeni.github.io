@@ -10,10 +10,15 @@ interface Particle {
   opacity: number;
 }
 
+const REDUCED_MOTION = typeof window !== "undefined"
+  && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 export function ParticleBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    if (REDUCED_MOTION) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -28,7 +33,7 @@ export function ParticleBackground() {
 
     const getParticleCount = () => {
       const area = window.innerWidth * window.innerHeight;
-      return Math.min(200, Math.max(60, Math.floor(area / 8000)));
+      return Math.min(120, Math.max(40, Math.floor(area / 12000)));
     };
 
     const resize = () => {
@@ -87,9 +92,9 @@ export function ParticleBackground() {
 
     resize();
 
-    const CONNECTION_DIST = 150;
+    const CONNECTION_DIST = 120;
     const CONNECTION_DIST_SQ = CONNECTION_DIST * CONNECTION_DIST;
-    const MOUSE_RADIUS = 180;
+    const MOUSE_RADIUS = 150;
     const MOUSE_RADIUS_SQ = MOUSE_RADIUS * MOUSE_RADIUS;
 
     const draw = () => {
@@ -102,15 +107,12 @@ export function ParticleBackground() {
 
       const len = particles.length;
 
-      // Update and draw particles
       for (let i = 0; i < len; i++) {
         const p = particles[i];
 
-        // Smooth movement
         p.x += p.vx;
         p.y += p.vy;
 
-        // Mouse interaction - gentle attraction at distance, repulsion up close
         const dx = mouseX - p.x;
         const dy = mouseY - p.y;
         const distSq = dx * dx + dy * dy;
@@ -118,16 +120,13 @@ export function ParticleBackground() {
         if (distSq < MOUSE_RADIUS_SQ && distSq > 0) {
           const dist = Math.sqrt(distSq);
           const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
-          // Repel nearby particles
           p.vx -= (dx / dist) * force * 0.4;
           p.vy -= (dy / dist) * force * 0.4;
         }
 
-        // Gentle friction for smooth deceleration
         p.vx *= 0.995;
         p.vy *= 0.995;
 
-        // Maintain minimum drift so particles never fully stop
         const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
         if (speed < 0.2) {
           const angle = Math.random() * Math.PI * 2;
@@ -135,20 +134,17 @@ export function ParticleBackground() {
           p.vy += Math.sin(angle) * 0.05;
         }
 
-        // Soft wrap around edges
         if (p.x < -10) p.x = canvas.width + 10;
         else if (p.x > canvas.width + 10) p.x = -10;
         if (p.y < -10) p.y = canvas.height + 10;
         else if (p.y > canvas.height + 10) p.y = -10;
 
-        // Draw particle with glow
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(6, 182, 212, ${p.opacity})`;
         ctx.fill();
       }
 
-      // Draw connections with distance-based opacity
       ctx.lineWidth = 0.6;
       for (let i = 0; i < len; i++) {
         const p = particles[i];
@@ -182,6 +178,8 @@ export function ParticleBackground() {
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
+
+  if (REDUCED_MOTION) return null;
 
   return (
     <canvas

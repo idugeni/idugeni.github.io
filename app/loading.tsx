@@ -5,7 +5,7 @@ export default function RootLoading() {
         <div className="pointer-events-none absolute inset-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-2xl" />
         <div className="relative grid h-16 w-16 place-items-center">
           <div className="absolute inset-0 rounded-full border border-primary/20" />
-          <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-r-accent border-t-primary" />
+          <div className="absolute inset-0 motion-reduce:animate-none animate-spin rounded-full border-2 border-transparent border-r-accent border-t-primary" />
           <div className="absolute inset-3 rounded-full border border-primary/30 bg-primary/10" />
           <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_18px_hsl(var(--primary))]" />
         </div>

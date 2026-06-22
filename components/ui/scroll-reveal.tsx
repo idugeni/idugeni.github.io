@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface ScrollRevealProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -9,6 +9,14 @@ interface ScrollRevealProps extends React.HTMLAttributes<HTMLDivElement> {
   direction?: "up" | "down" | "left" | "right" | "none";
 }
 
+const DIRECTION_CLASSES = {
+  up: "translate-y-8",
+  down: "-translate-y-8",
+  left: "translate-x-8",
+  right: "-translate-x-8",
+  none: "",
+} as const;
+
 export function ScrollReveal({
   children,
   className,
@@ -17,52 +25,36 @@ export function ScrollReveal({
   direction = "up",
   ...props
 }: ScrollRevealProps) {
-  const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setTimeout(() => setIsVisible(true), delay);
-          observer.unobserve(entry.target);
+          if (delay) {
+            setTimeout(() => el.classList.add("sr-visible"), delay);
+          } else {
+            el.classList.add("sr-visible");
+          }
+          observer.unobserve(el);
         }
       },
       { threshold }
     );
 
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
-      }
-    };
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [threshold, delay]);
-
-  const getDirectionClasses = () => {
-    switch (direction) {
-      case "up":
-        return "translate-y-8";
-      case "down":
-        return "-translate-y-8";
-      case "left":
-        return "translate-x-8";
-      case "right":
-        return "-translate-x-8";
-      default:
-        return "";
-    }
-  };
 
   return (
     <div
       ref={ref}
       className={cn(
-        "transition-all duration-700 ease-out",
-        isVisible ? "opacity-100 transform-none" : `opacity-0 ${getDirectionClasses()}`,
+        "sr-reveal",
+        DIRECTION_CLASSES[direction],
         className
       )}
       {...props}
