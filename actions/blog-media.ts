@@ -1,7 +1,7 @@
 "use server";
 
 import { requireAdmin } from "@/lib/auth/rbac";
-import { createServiceClient } from "@/lib/supabase/service";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
 import { slugSchema } from "@/lib/security/server-action";
 
@@ -43,7 +43,7 @@ async function uploadToMediaBucket(file: File, pathPrefix: string) {
     throw new Error("Unsupported media type. Use JPG, PNG, GIF, WEBP, SVG, MP4, or WEBM.");
   }
 
-  const supabase = createServiceClient();
+  const supabase = createAdminClient();
   const fileName = safeFileName(file.name.replace(/\.[^.]+$/, ""));
   const extension = extensionFor(file);
   const path = `${pathPrefix}/${Date.now()}-${fileName}.${extension}`;

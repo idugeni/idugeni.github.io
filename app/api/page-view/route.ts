@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createServiceClient } from "@/lib/supabase/service";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { rateLimit } from "@/lib/rate-limit";
 
 const pageViewSchema = z.object({
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     const userAgent = request.headers.get("user-agent") || null;
 
-    const supabase = createServiceClient();
+    const supabase = createAdminClient();
     const { error } = await supabase.from("page_views").insert({
       halaman: parsed.data.halaman,
       referrer: parsed.data.referrer || null,

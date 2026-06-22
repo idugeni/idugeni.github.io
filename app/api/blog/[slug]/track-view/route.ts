@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createServiceClient } from "@/lib/supabase/service";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { rateLimit } from "@/lib/rate-limit";
 
 const blogViewParamsSchema = z.object({
@@ -31,7 +31,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     }
 
     const articleId = parsed.data.slug;
-    const serviceClient = createServiceClient();
+    const serviceClient = createAdminClient();
     const { data, error } = await serviceClient
       .from("blog_artikel")
       .select("jumlah_view, jumlah_like")
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const ip = getRequestIp(request);
     await rateLimit(`${ip}:${articleId}`, "blog-view", { max: 10, window: 60 * 60 * 1000 });
 
-    const serviceClient = createServiceClient();
+    const serviceClient = createAdminClient();
     await serviceClient.rpc("increment_view", { article_id: articleId });
   } catch {
     // Public telemetry must never break page UX or create visible browser console errors.

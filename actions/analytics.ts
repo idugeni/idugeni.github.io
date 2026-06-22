@@ -1,6 +1,6 @@
 "use server";
 
-import { createServiceClient } from "@/lib/supabase/service";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin, withTimeout } from "@/lib/auth/rbac";
 import { queryPooler } from "@/lib/db/pooler";
 import { cookies } from "next/headers";
@@ -41,11 +41,11 @@ function aggregateCounts<T extends string>(items: T[]) {
 export async function trackPageView(data: { halaman: string; referrer?: string | null }) {
   try {
     if (!data.halaman) return { success: true };
-    const supabase = createServiceClient();
-    await supabase.from("page_views").insert({
-      halaman: data.halaman,
-      referrer: data.referrer || null,
-    });
+  const supabase = createAdminClient();
+  await supabase.from("page_views").insert({
+    halaman: data.halaman,
+    referrer: data.referrer || null,
+  });
     return { success: true };
   } catch {
     return { success: false };

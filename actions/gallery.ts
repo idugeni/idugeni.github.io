@@ -3,7 +3,7 @@
 import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { slugSchema } from "@/lib/security/server-action";
 import { slugify } from "@/lib/utils/slug";
@@ -248,7 +248,7 @@ export interface OrphanFile {
 
 export async function scanOrphanStorageFiles(): Promise<OrphanFile[]> {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // 1. Fetch storage files from buckets
   const [blogList, shortlinksList] = await Promise.all([
@@ -333,7 +333,7 @@ export async function scanOrphanStorageFiles(): Promise<OrphanFile[]> {
 
 export async function purgeOrphanStorageFiles(files: { bucket: string; name: string }[]) {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const blogFilesToPurge = files.filter(f => f.bucket === "blog").map(f => f.name);
   const shortlinkFilesToPurge = files.filter(f => f.bucket === "shortlinks").map(f => f.name);

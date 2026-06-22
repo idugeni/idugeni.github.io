@@ -16,11 +16,16 @@ const serverSchema = z.object({
   NEXT_PUBLIC_GOOGLE_VERIFICATION: z.string().optional(),
   NEXT_PUBLIC_BING_VERIFICATION: z.string().optional(),
   NEXT_PUBLIC_YANDEX_VERIFICATION: z.string().optional(),
-  
+
+  // Supabase server-only (optional, falls back to NEXT_PUBLIC_* if not set)
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
+  SUPABASE_SECRET_KEY: z.string().min(1).optional(),
+
   // Rate Limiting & Caching (Upstash Redis)
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
-  
+
   // Security (CSRF Protection)
   CSRF_SECRET: z.string().min(32).optional(),
 });

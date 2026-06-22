@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { isPrivateOrBlockedUrl } from "@/lib/security/url-validation";
 import { nanoid } from "nanoid";
@@ -129,8 +129,7 @@ function parseUserAgent(ua: string | null): { device_type: string; browser: stri
 
 async function requireAuth() {
   const user = await requireAdmin();
-  const supabase = await createClient();
-  return { supabase, user };
+  return { user };
 }
 
 async function logAudit(
@@ -173,7 +172,7 @@ async function generateQRCode(shortUrl: string, fgColor = "#000000", bgColor = "
   const base64Data = qrDataUrl.replace(/^data:image\/png;base64,/, "");
   const buffer = Buffer.from(base64Data, "base64");
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const fileName = `qr-${Date.now()}-${nanoid(6)}.png`;
   const { error } = await supabase.storage
     .from("shortlinks")
@@ -325,7 +324,7 @@ export async function incrementShortlinkClick(
  * Create shortlink with audit trail
  */
 export async function createShortlink(input: CreateShortlinkInput) {
-  const { supabase, user } = await requireAuth();
+  const { user } = await requireAuth();
 
   if (!input.destination_url.match(/^https?:\/\//)) {
     throw new Error("Destination URL must start with http:// or https://");
@@ -607,7 +606,7 @@ export async function restoreShortlink(id: string) {
  * Admin: Permanently delete shortlink (from trash)
  */
 export async function permanentDeleteShortlink(id: string) {
-  const { supabase } = await requireAuth();
+  await requireAuth();
 
   const shortlink = await queryPoolerSingle<Shortlink>(
     `SELECT * FROM shortlinks WHERE id = $1`,
@@ -617,6 +616,7 @@ export async function permanentDeleteShortlink(id: string) {
   if (shortlink?.qr_code_url) {
     const fileName = shortlink.qr_code_url.split("/").pop();
     if (fileName) {
+      const supabase = createAdminClient();
       await supabase.storage.from("shortlinks").remove([fileName]);
     }
   }
