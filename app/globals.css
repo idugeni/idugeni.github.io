@@ -243,22 +243,6 @@
   @apply flex items-center justify-center border border-primary/30 bg-primary/10 text-primary shadow-glow-md;
 }
 
-@utility hover-elevate {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-}
-
-@utility active-elevate-2 {
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-  &:active {
-    transform: translateY(0);
-    box-shadow: none;
-  }
-}
-
 .neon-text { 
   color: hsl(var(--primary)); 
   text-shadow: 0 0 20px hsl(var(--primary) / 0.4), 0 0 40px hsl(var(--primary) / 0.2); 
@@ -638,7 +622,6 @@ body::after {
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 
