@@ -1,23 +1,18 @@
 "use client";
 
-interface Dot {
-  id: number;
-  x: number;
-  y: number;
-  size: number;
-  duration: number;
-  delay: number;
-  opacity: number;
+function seededRandom(seed: number) {
+  const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
 }
 
-const DOTS: Dot[] = Array.from({ length: 40 }, (_, i) => ({
+const DOTS = Array.from({ length: 40 }, (_, i) => ({
   id: i,
-  x: Math.round(Math.random() * 100),
-  y: Math.round(Math.random() * 100),
-  size: Math.round(Math.random() * 3 + 1),
-  duration: Math.round(Math.random() * 20 + 15),
-  delay: Math.round(Math.random() * 10),
-  opacity: Math.round((Math.random() * 0.4 + 0.2) * 100) / 100,
+  x: Math.round(seededRandom(i) * 100),
+  y: Math.round(seededRandom(i + 100) * 100),
+  size: Math.round(seededRandom(i + 200) * 3 + 1),
+  duration: Math.round(seededRandom(i + 300) * 20 + 15),
+  delay: Math.round(seededRandom(i + 400) * 10),
+  opacity: Math.round((seededRandom(i + 500) * 0.4 + 0.2) * 100) / 100,
 }));
 
 export function ParticleBackground() {
@@ -47,12 +42,11 @@ export function ParticleBackground() {
             height: `${dot.size}px`,
             backgroundColor: `rgba(6, 182, 212, ${dot.opacity})`,
             boxShadow: `0 0 ${dot.size * 4}px rgba(6, 182, 212, ${dot.opacity * 0.5})`,
-            ["--p-opacity" as string]: dot.opacity,
+            ["--p-opacity" as string]: String(dot.opacity),
             animation: `particle-drift ${dot.duration}s ease-in-out ${dot.delay}s infinite, particle-pulse ${dot.duration * 0.6}s ease-in-out ${dot.delay}s infinite`,
           }}
         />
       ))}
-      {/* Connection lines using SVG */}
       <svg className="absolute inset-0 w-full h-full" style={{ opacity: 0.08 }}>
         {DOTS.slice(0, 20).map((dot, i) => {
           const next = DOTS[(i + 1) % 20];
