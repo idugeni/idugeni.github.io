@@ -17,104 +17,55 @@ export function ParticleBackground() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
-    let particles: Particle[] = [];
-    let animationFrameId: number;
-    let mouseX = -1000;
-    let mouseY = -1000;
-    let isVisible = true;
-
-    const getParticleCount = () => {
-      const area = window.innerWidth * window.innerHeight;
-      return Math.min(120, Math.max(40, Math.floor(area / 12000)));
-    };
-
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      initParticles();
     };
-
-    const initParticles = () => {
-      particles = [];
-      const numParticles = getParticleCount();
-      for (let i = 0; i < numParticles; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.8,
-          vy: (Math.random() - 0.5) * 0.8,
-          size: Math.random() * 2 + 0.5,
-          opacity: Math.random() * 0.5 + 0.3,
-        });
-      }
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    };
-
-    const handleMouseLeave = () => {
-      mouseX = -1000;
-      mouseY = -1000;
-    };
-
-    const handleVisibility = () => {
-      isVisible = !document.hidden;
-      if (isVisible) {
-        animationFrameId = requestAnimationFrame(draw);
-      }
-    };
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        isVisible = entry.isIntersecting;
-        if (isVisible && !animationFrameId) {
-          animationFrameId = requestAnimationFrame(draw);
-        }
-      },
-      { threshold: 0 }
-    );
-    observer.observe(canvas);
-
-    window.addEventListener("resize", resize);
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    window.addEventListener("mouseleave", handleMouseLeave);
-    document.addEventListener("visibilitychange", handleVisibility);
-
     resize();
+    window.addEventListener("resize", resize);
+
+    const particles: Particle[] = [];
+    const numParticles = Math.min(120, Math.max(40, Math.floor((canvas.width * canvas.height) / 12000)));
+    for (let i = 0; i < numParticles; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
+        size: Math.random() * 2 + 0.5,
+        opacity: Math.random() * 0.5 + 0.3,
+      });
+    }
+
+    let mouseX = -1000;
+    let mouseY = -1000;
+    const onMouseMove = (e: MouseEvent) => { mouseX = e.clientX; mouseY = e.clientY; };
+    const onMouseLeave = () => { mouseX = -1000; mouseY = -1000; };
+    window.addEventListener("mousemove", onMouseMove, { passive: true });
+    window.addEventListener("mouseleave", onMouseLeave);
 
     const CONNECTION_DIST = 120;
     const CONNECTION_DIST_SQ = CONNECTION_DIST * CONNECTION_DIST;
     const MOUSE_RADIUS = 150;
     const MOUSE_RADIUS_SQ = MOUSE_RADIUS * MOUSE_RADIUS;
 
+    let rafId = 0;
     const draw = () => {
-      if (!isVisible) {
-        animationFrameId = 0;
-        return;
-      }
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const len = particles.length;
-
-      for (let i = 0; i < len; i++) {
+      for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
-
         p.x += p.vx;
         p.y += p.vy;
 
         const dx = mouseX - p.x;
         const dy = mouseY - p.y;
         const distSq = dx * dx + dy * dy;
-
         if (distSq < MOUSE_RADIUS_SQ && distSq > 0) {
           const dist = Math.sqrt(distSq);
           const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
@@ -144,16 +95,15 @@ export function ParticleBackground() {
       }
 
       ctx.lineWidth = 0.6;
-      for (let i = 0; i < len; i++) {
+      for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
-        for (let j = i + 1; j < len; j++) {
+        for (let j = i + 1; j < particles.length; j++) {
           const p2 = particles[j];
           const dxc = p.x - p2.x;
           const dyc = p.y - p2.y;
           const distSq = dxc * dxc + dyc * dyc;
           if (distSq < CONNECTION_DIST_SQ) {
-            const opacity = (1 - distSq / CONNECTION_DIST_SQ) * 0.15;
-            ctx.strokeStyle = `rgba(6, 182, 212, ${opacity})`;
+            ctx.strokeStyle = `rgba(6, 182, 212, ${(1 - distSq / CONNECTION_DIST_SQ) * 0.15})`;
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
@@ -162,18 +112,16 @@ export function ParticleBackground() {
         }
       }
 
-      animationFrameId = requestAnimationFrame(draw);
+      rafId = requestAnimationFrame(draw);
     };
 
     draw();
 
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener("resize", resize);
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseleave", handleMouseLeave);
-      document.removeEventListener("visibilitychange", handleVisibility);
-      observer.disconnect();
-      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseleave", onMouseLeave);
     };
   }, []);
 
