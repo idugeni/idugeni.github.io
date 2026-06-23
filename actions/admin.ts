@@ -2,9 +2,9 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
-import { requireAdmin, withTimeout } from "@/lib/auth/rbac";
+import { requireAdmin } from "@/lib/auth/rbac";
 import { rateLimit } from "@/lib/rate-limit";
-import { queryPooler } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const adminLoginSchema = z.object({
   email: z.string().email().max(255),
@@ -47,113 +47,147 @@ export async function getAdminUser() {
 
 export async function getAdminDashboardOverview() {
   await requireAdmin();
+  const supabase = createAdminClient();
 
-  const [rows, topPages, latestMessages, latestArticles, latestProjects] = await Promise.all([
-    withTimeout(
-      queryPooler<any>(`
-        SELECT
-          (SELECT COUNT(*)::int FROM blog_artikel) AS blog_total,
-          (SELECT COUNT(*)::int FROM blog_artikel WHERE status='published') AS blog_published,
-          (SELECT COUNT(*)::int FROM blog_artikel WHERE status='draft') AS blog_draft,
-          (SELECT COUNT(*)::int FROM projects) AS project_total,
-          (SELECT COUNT(*)::int FROM projects WHERE status='completed') AS project_completed,
-          (SELECT COUNT(*)::int FROM projects WHERE status='ongoing') AS project_ongoing,
-          (SELECT COUNT(*)::int FROM contact_messages) AS msg_total,
-          (SELECT COUNT(*)::int FROM contact_messages WHERE dibaca=false) AS msg_unread,
-          (SELECT COUNT(*)::int FROM newsletter_subscribers WHERE aktif=true) AS sub_active,
-          (SELECT COUNT(*)::int FROM page_views) AS total_views,
-          (SELECT COUNT(*)::int FROM page_views WHERE created_at >= CURRENT_DATE) AS views_today,
-          (SELECT COUNT(*)::int FROM page_views WHERE created_at >= CURRENT_DATE - INTERVAL '7 days') AS views_this_week,
-          (SELECT COUNT(*)::int FROM page_views WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE)) AS views_this_month,
-          (SELECT COUNT(*)::int FROM page_views WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month' AND created_at < DATE_TRUNC('month', CURRENT_DATE)) AS views_prev_month,
-          (SELECT COALESCE(halaman,'/') FROM page_views GROUP BY halaman ORDER BY COUNT(*) DESC LIMIT 1) AS most_visited_page,
-          (SELECT COUNT(*)::int FROM page_views WHERE halaman = (SELECT halaman FROM page_views GROUP BY halaman ORDER BY COUNT(*) DESC LIMIT 1)) AS most_visited_page_views,
-          (SELECT COUNT(*)::int FROM newsletter_subscribers) AS newsletter_total,
-          (SELECT COUNT(*)::int FROM newsletter_subscribers WHERE aktif=true) AS newsletter_active,
-          (SELECT COUNT(*)::int FROM testimonials) AS testimonial_total,
-          (SELECT COUNT(*)::int FROM testimonials WHERE tampil=true) AS testimonial_visible,
-          (SELECT COUNT(*)::int FROM testimonials WHERE featured=true) AS testimonial_featured,
-          COALESCE((SELECT ROUND(AVG(rating)::numeric,1) FROM testimonials),0)::float AS testimonial_avg_rating,
-          (SELECT COUNT(*)::int FROM services) AS service_total,
-          (SELECT COUNT(*)::int FROM services WHERE aktif=true) AS service_active,
-          (SELECT COUNT(*)::int FROM gallery) AS gallery_total
-      `),
-      6000,
-      "Dashboard overview timeout"
-    ),
-    withTimeout(
-      queryPooler<{ halaman: string; views: number; share: number }>(`
-        WITH recent AS (SELECT halaman FROM page_views ORDER BY created_at DESC LIMIT 3000),
-             agg AS (SELECT halaman, COUNT(*)::int AS views FROM recent GROUP BY halaman),
-             total AS (SELECT COUNT(*)::int AS t FROM recent)
-        SELECT halaman, views, ROUND((views::numeric / NULLIF(t,0) * 100),1)::float AS share
-        FROM agg, total ORDER BY views DESC LIMIT 5
-      `),
-      4000,
-      "Top pages timeout"
-    ),
-    withTimeout(
-      queryPooler<any>(`SELECT id,nama,subjek,dibaca,created_at FROM contact_messages ORDER BY created_at DESC LIMIT 5`),
-      3000,
-      "Latest messages timeout"
-    ),
-    withTimeout(
-      queryPooler<any>(`SELECT id,judul,slug,status,jumlah_view,created_at FROM blog_artikel ORDER BY created_at DESC LIMIT 5`),
-      3000,
-      "Latest articles timeout"
-    ),
-    withTimeout(
-      queryPooler<any>(`SELECT id,nama,slug,status,created_at FROM projects ORDER BY created_at DESC LIMIT 5`),
-      3000,
-      "Latest projects timeout"
-    ),
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const weekStart = (() => {
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(now.getFullYear(), now.getMonth(), diff).toISOString();
+  })();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+
+  const c = (r: { count: number | null }) => r.count || 0;
+
+  const [
+    blogTotal, blogPublished, blogDraft,
+    projectTotal, projectCompleted, projectOngoing,
+    msgTotal, msgUnread,
+    subActive,
+    totalViews, viewsToday, viewsThisWeek, viewsThisMonth, viewsPrevMonth,
+    newsletterTotal, newsletterActive,
+    testimonialTotal, testimonialVisible, testimonialFeatured, testimonialRatings,
+    serviceTotal, serviceActive,
+    galleryTotal,
+    latestMessages, latestArticles, latestProjects,
+    recentHalaman,
+  ] = await Promise.all([
+    supabase.from("blog_artikel").select("*", { count: "exact", head: true }),
+    supabase.from("blog_artikel").select("*", { count: "exact", head: true }).eq("status", "published"),
+    supabase.from("blog_artikel").select("*", { count: "exact", head: true }).eq("status", "draft"),
+    supabase.from("projects").select("*", { count: "exact", head: true }),
+    supabase.from("projects").select("*", { count: "exact", head: true }).eq("status", "completed"),
+    supabase.from("projects").select("*", { count: "exact", head: true }).eq("status", "ongoing"),
+    supabase.from("contact_messages").select("*", { count: "exact", head: true }),
+    supabase.from("contact_messages").select("*", { count: "exact", head: true }).eq("dibaca", false),
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("aktif", true),
+    supabase.from("page_views").select("*", { count: "exact", head: true }),
+    supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", todayStart),
+    supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", weekStart),
+    supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", monthStart),
+    supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", prevMonthStart).lt("created_at", monthStart),
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }),
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("aktif", true),
+    supabase.from("testimonials").select("*", { count: "exact", head: true }),
+    supabase.from("testimonials").select("*", { count: "exact", head: true }).eq("tampil", true),
+    supabase.from("testimonials").select("*", { count: "exact", head: true }).eq("featured", true),
+    supabase.from("testimonials").select("rating"),
+    supabase.from("services").select("*", { count: "exact", head: true }),
+    supabase.from("services").select("*", { count: "exact", head: true }).eq("aktif", true),
+    supabase.from("gallery").select("*", { count: "exact", head: true }),
+    supabase.from("contact_messages").select("id, nama, subjek, dibaca, created_at").order("created_at", { ascending: false }).limit(5),
+    supabase.from("blog_artikel").select("id, judul, slug, status, jumlah_view, created_at").order("created_at", { ascending: false }).limit(5),
+    supabase.from("projects").select("id, nama, slug, status, created_at").order("created_at", { ascending: false }).limit(5),
+    supabase.from("page_views").select("halaman").order("created_at", { ascending: false }).limit(3000),
   ]);
 
-  const r = rows[0] || {};
+  const halamanCounts = new Map<string, number>();
+  for (const row of recentHalaman.data || []) {
+    halamanCounts.set(row.halaman, (halamanCounts.get(row.halaman) || 0) + 1);
+  }
+  let mostVisitedPage = "/";
+  let mostVisitedPageViews = 0;
+  for (const [page, count] of halamanCounts) {
+    if (count > mostVisitedPageViews) {
+      mostVisitedPage = page;
+      mostVisitedPageViews = count;
+    }
+  }
 
-  const currentMonth = r.views_this_month ?? 0;
-  const previousMonth = r.views_prev_month ?? 0;
-  const growthPercent = previousMonth > 0 ? Number((((currentMonth - previousMonth) / previousMonth) * 100).toFixed(1)) : currentMonth > 0 ? 100 : 0;
+  const totalRecentViews = recentHalaman.data?.length || 0;
+  const topPages = [...halamanCounts.entries()]
+    .map(([halaman, views]) => ({
+      halaman,
+      views,
+      share: totalRecentViews > 0 ? Number(((views / totalRecentViews) * 100).toFixed(1)) : 0,
+    }))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 5);
+
+  const ratings = testimonialRatings.data || [];
+  const avgRating = ratings.length > 0
+    ? Number((ratings.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / ratings.length).toFixed(1))
+    : 0;
+
+  const currentMonth = c(viewsThisMonth);
+  const previousMonth = c(viewsPrevMonth);
+  const growthPercent = previousMonth > 0
+    ? Number((((currentMonth - previousMonth) / previousMonth) * 100).toFixed(1))
+    : currentMonth > 0 ? 100 : 0;
 
   return {
     stats: {
-      blog: { total: r.blog_total ?? 0, published: r.blog_published ?? 0, draft: r.blog_draft ?? 0 },
-      projects: { total: r.project_total ?? 0, completed: r.project_completed ?? 0, ongoing: r.project_ongoing ?? 0 },
-      messages: { total: r.msg_total ?? 0, unread: r.msg_unread ?? 0 },
-      subscribers: r.sub_active ?? 0,
+      blog: { total: c(blogTotal), published: c(blogPublished), draft: c(blogDraft) },
+      projects: { total: c(projectTotal), completed: c(projectCompleted), ongoing: c(projectOngoing) },
+      messages: { total: c(msgTotal), unread: c(msgUnread) },
+      subscribers: c(subActive),
     },
     analytics: {
-      totalViews: r.total_views ?? 0,
-      viewsToday: r.views_today ?? 0,
+      totalViews: c(totalViews),
+      viewsToday: c(viewsToday),
       viewsPreviousMonth: previousMonth,
-      viewsThisWeek: r.views_this_week ?? 0,
+      viewsThisWeek: c(viewsThisWeek),
       viewsThisMonth: currentMonth,
       growthPercent,
-      avgPerDay: new Date().getDate() > 0 ? Number((currentMonth / new Date().getDate()).toFixed(1)) : 0,
-      mostVisitedPage: r.most_visited_page ?? "/",
-      mostVisitedPageViews: r.most_visited_page_views ?? 0,
+      avgPerDay: now.getDate() > 0 ? Number((currentMonth / now.getDate()).toFixed(1)) : 0,
+      mostVisitedPage,
+      mostVisitedPageViews,
     },
     topPages,
-    latestMessages,
-    latestArticles,
-    latestProjects,
-    newsletter: { total: r.newsletter_total ?? 0, active: r.newsletter_active ?? 0, inactive: (r.newsletter_total ?? 0) - (r.newsletter_active ?? 0) },
-    testimonials: { total: r.testimonial_total ?? 0, visible: r.testimonial_visible ?? 0, featured: r.testimonial_featured ?? 0, averageRating: r.testimonial_avg_rating ?? 0 },
-    services: { total: r.service_total ?? 0, active: r.service_active ?? 0, inactive: (r.service_total ?? 0) - (r.service_active ?? 0) },
-    gallery: { total: r.gallery_total ?? 0 },
+    latestMessages: latestMessages.data || [],
+    latestArticles: latestArticles.data || [],
+    latestProjects: latestProjects.data || [],
+    newsletter: { total: c(newsletterTotal), active: c(newsletterActive), inactive: c(newsletterTotal) - c(newsletterActive) },
+    testimonials: { total: c(testimonialTotal), visible: c(testimonialVisible), featured: c(testimonialFeatured), averageRating: avgRating },
+    services: { total: c(serviceTotal), active: c(serviceActive), inactive: c(serviceTotal) - c(serviceActive) },
+    gallery: { total: c(galleryTotal) },
   };
 }
 
 export async function getUnapprovedComments() {
   await requireAdmin();
-  return await queryPooler<any>(`SELECT * FROM blog_komentar WHERE approved=false ORDER BY created_at DESC`);
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("blog_komentar")
+    .select("*")
+    .eq("approved", false)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
 }
 
 export async function approveComment(id: string) {
   await requireAdmin();
   const parsed = uuidSchema.safeParse(id);
   if (!parsed.success) throw new Error("Invalid comment ID: must be a valid UUID");
-  await queryPooler(`UPDATE blog_komentar SET approved=true WHERE id=$1`, [parsed.data]);
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("blog_komentar")
+    .update({ approved: true })
+    .eq("id", parsed.data);
+  if (error) throw error;
   return { success: true };
 }
 
@@ -161,6 +195,11 @@ export async function deleteComment(id: string) {
   await requireAdmin();
   const parsed = uuidSchema.safeParse(id);
   if (!parsed.success) throw new Error("Invalid comment ID: must be a valid UUID");
-  await queryPooler(`DELETE FROM blog_komentar WHERE id=$1`, [parsed.data]);
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("blog_komentar")
+    .delete()
+    .eq("id", parsed.data);
+  if (error) throw error;
   return { success: true };
 }

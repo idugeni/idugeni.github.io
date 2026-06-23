@@ -4,7 +4,6 @@ import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { slugSchema } from "@/lib/security/server-action";
 import { slugify } from "@/lib/utils/slug";
 
@@ -28,13 +27,14 @@ async function createUniqueGallerySlug(baseValue: string, excludeId?: string) {
   const baseSlug = slugify(baseValue);
   let candidate = baseSlug;
   let suffix = 2;
+  const supabase = createAdminClient();
 
   while (suffix <= 100) {
-    const rows = await queryPooler<{ id: string }>(
-      `SELECT id FROM gallery WHERE slug = $1 LIMIT 1`,
-      [candidate]
-    );
-    const data = rows[0] || null;
+    const { data } = await supabase
+      .from("gallery")
+      .select("id")
+      .eq("slug", candidate)
+      .maybeSingle();
     if (!data || data.id === excludeId) return candidate;
     candidate = `${baseSlug}-${suffix}`;
     suffix += 1;
@@ -44,15 +44,15 @@ async function createUniqueGallerySlug(baseValue: string, excludeId?: string) {
 }
 
 export async function getGallery(filters?: { tipe?: string; kategori?: string }) {
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  const supabase = createAdminClient();
+  let query = supabase.from("gallery").select("*").order("urutan").limit(200);
 
-  if (filters?.tipe) { conditions.push(`tipe = $${idx}`); params.push(filters.tipe); idx++; }
-  if (filters?.kategori) { conditions.push(`kategori = $${idx}`); params.push(filters.kategori); idx++; }
+  if (filters?.tipe) query = query.eq("tipe", filters.tipe);
+  if (filters?.kategori) query = query.eq("kategori", filters.kategori);
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  return queryPooler(`SELECT * FROM gallery ${where} ORDER BY urutan LIMIT 200`, params);
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return data || [];
 }
 
 export async function getGalleryItem(id: string) {
@@ -63,9 +63,14 @@ export async function getGalleryItem(id: string) {
     throw new Error("Invalid gallery item ID: must be a valid UUID");
   }
 
-  const row = await queryPoolerSingle(`SELECT * FROM gallery WHERE id = $1`, [parsed.data]);
-  if (!row) throw new Error("Gallery item not found");
-  return row;
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("gallery")
+    .select("*")
+    .eq("id", parsed.data)
+    .single();
+  if (error) throw new Error("Gallery item not found");
+  return data;
 }
 
 export async function getGalleryItemBySlug(slug: string) {
@@ -76,9 +81,14 @@ export async function getGalleryItemBySlug(slug: string) {
     throw new Error("Invalid gallery item slug");
   }
 
-  const row = await queryPoolerSingle(`SELECT * FROM gallery WHERE slug = $1`, [parsed.data]);
-  if (!row) throw new Error("Gallery item not found");
-  return row;
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("gallery")
+    .select("*")
+    .eq("slug", parsed.data)
+    .single();
+  if (error) throw new Error("Gallery item not found");
+  return data;
 }
 
 export async function createGalleryItem(data: Record<string, unknown>) {
@@ -92,30 +102,24 @@ export async function createGalleryItem(data: Record<string, unknown>) {
   const { imageUrl, fileUrl, thumbnailUrl, ...galleryData } = parsed.data;
   const slug = await createUniqueGallerySlug(parsed.data.slug || parsed.data.judul);
 
-  const columns: string[] = [];
-  const values: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  const insertData: Record<string, unknown> = {
+    judul: galleryData.judul,
+    slug,
+    deskripsi: galleryData.deskripsi || null,
+    file_url: fileUrl || imageUrl,
+    thumbnail_url: thumbnailUrl || fileUrl || imageUrl || null,
+    tipe: galleryData.tipe,
+    kategori: parsed.data.kategori || null,
+  };
+  if (galleryData.urutan !== undefined) insertData.urutan = galleryData.urutan;
 
-  function addColumn(col: string, val: unknown) {
-    columns.push(col);
-    values.push(`$${idx++}`);
-    params.push(val);
-  }
-
-  addColumn("judul", galleryData.judul);
-  addColumn("slug", slug);
-  addColumn("deskripsi", galleryData.deskripsi || null);
-  addColumn("file_url", fileUrl || imageUrl);
-  addColumn("thumbnail_url", thumbnailUrl || fileUrl || imageUrl || null);
-  addColumn("tipe", galleryData.tipe);
-  addColumn("kategori", parsed.data.kategori || null);
-  if (galleryData.urutan !== undefined) addColumn("urutan", galleryData.urutan);
-
-  const [item] = await queryPooler(
-    `INSERT INTO gallery (${columns.join(", ")}) VALUES (${values.join(", ")}) RETURNING *`,
-    params
-  );
+  const supabase = createAdminClient();
+  const { data: item, error } = await supabase
+    .from("gallery")
+    .insert(insertData)
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
   updatePublicContent([CACHE_TAGS.gallery]);
   return item;
 }
@@ -139,11 +143,13 @@ export async function updateGalleryItemBySlug(currentSlug: string, data: Record<
     throw new Error("Invalid gallery item slug");
   }
 
-  const existing = await queryPoolerSingle<{ id: string }>(
-    `SELECT id FROM gallery WHERE slug = $1`,
-    [parsedSlug.data]
-  );
-  if (!existing) throw new Error("Gallery item not found");
+  const supabase = createAdminClient();
+  const { data: existing, error: lookupError } = await supabase
+    .from("gallery")
+    .select("id")
+    .eq("slug", parsedSlug.data)
+    .maybeSingle();
+  if (lookupError || !existing) throw new Error("Gallery item not found");
 
   return updateGalleryItemById(existing.id, data);
 }
@@ -159,31 +165,35 @@ async function updateGalleryItemById(id: string, data: Record<string, unknown>) 
     ? await createUniqueGallerySlug(parsed.data.slug || parsed.data.judul || "gallery-media", id)
     : undefined;
 
-  const setClauses: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  const updateData: Record<string, unknown> = {};
+  if (galleryData.judul !== undefined) updateData.judul = galleryData.judul;
+  if (slug !== undefined) updateData.slug = slug;
+  if (galleryData.deskripsi !== undefined) updateData.deskripsi = galleryData.deskripsi || null;
+  if (galleryData.tipe !== undefined) updateData.tipe = galleryData.tipe;
+  if (galleryData.urutan !== undefined) updateData.urutan = galleryData.urutan;
+  if (parsed.data.kategori !== undefined) updateData.kategori = parsed.data.kategori || null;
+  if (fileUrl || imageUrl) updateData.file_url = fileUrl || imageUrl;
+  if (thumbnailUrl !== undefined || fileUrl || imageUrl) updateData.thumbnail_url = thumbnailUrl || fileUrl || imageUrl || null;
 
-  if (galleryData.judul !== undefined) { setClauses.push(`judul = $${idx++}`); params.push(galleryData.judul); }
-  if (slug !== undefined) { setClauses.push(`slug = $${idx++}`); params.push(slug); }
-  if (galleryData.deskripsi !== undefined) { setClauses.push(`deskripsi = $${idx++}`); params.push(galleryData.deskripsi || null); }
-  if (galleryData.tipe !== undefined) { setClauses.push(`tipe = $${idx++}`); params.push(galleryData.tipe); }
-  if (galleryData.urutan !== undefined) { setClauses.push(`urutan = $${idx++}`); params.push(galleryData.urutan); }
-  if (parsed.data.kategori !== undefined) { setClauses.push(`kategori = $${idx++}`); params.push(parsed.data.kategori || null); }
-  if (fileUrl || imageUrl) { setClauses.push(`file_url = $${idx++}`); params.push(fileUrl || imageUrl); }
-  if (thumbnailUrl !== undefined || fileUrl || imageUrl) { setClauses.push(`thumbnail_url = $${idx++}`); params.push(thumbnailUrl || fileUrl || imageUrl || null); }
+  const supabase = createAdminClient();
 
-  if (setClauses.length === 0) {
-    const row = await queryPoolerSingle(`SELECT * FROM gallery WHERE id = $1`, [id]);
-    if (!row) throw new Error("Gallery item not found");
+  if (Object.keys(updateData).length === 0) {
+    const { data: row, error } = await supabase
+      .from("gallery")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (error) throw new Error("Gallery item not found");
     return row;
   }
 
-  params.push(id);
-  const [item] = await queryPooler(
-    `UPDATE gallery SET ${setClauses.join(", ")} WHERE id = $${idx} RETURNING *`,
-    params
-  );
-  if (!item) throw new Error("Gallery item not found");
+  const { data: item, error } = await supabase
+    .from("gallery")
+    .update(updateData)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error || !item) throw new Error("Gallery item not found");
   updatePublicContent([CACHE_TAGS.gallery]);
   return item;
 }
@@ -196,30 +206,31 @@ export async function deleteGalleryItem(id: string) {
     throw new Error("Invalid gallery item ID: must be a valid UUID");
   }
 
-  await queryPooler(`DELETE FROM gallery WHERE id = $1`, [parsed.data]);
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("gallery")
+    .delete()
+    .eq("id", parsed.data);
+  if (error) throw new Error(error.message);
   updatePublicContent([CACHE_TAGS.gallery]);
   return { success: true };
 }
 
 export async function getGalleryStats() {
   await requireAdmin();
-  const [row] = await queryPooler<{
-    total: number;
-    images: number;
-    videos: number;
-  }>(`
-    SELECT
-      COUNT(*)::int AS total,
-      COUNT(*) FILTER (WHERE tipe = 'foto')::int AS images,
-      COUNT(*) FILTER (WHERE tipe = 'video')::int AS videos
-    FROM gallery
-  `);
+  const supabase = createAdminClient();
 
+  const { data: all, error } = await supabase
+    .from("gallery")
+    .select("tipe");
+  if (error) throw new Error(error.message);
+
+  const items = all || [];
   return {
-    total: row.total,
+    total: items.length,
     totalSize: 0,
-    images: row.images,
-    videos: row.videos,
+    images: items.filter((r) => r.tipe === "foto").length,
+    videos: items.filter((r) => r.tipe === "video").length,
   };
 }
 
@@ -233,8 +244,12 @@ export async function bulkDeleteGalleryItems(ids: string[]) {
     }
   }
 
-  const placeholders = ids.map((_, i) => `$${i + 1}`).join(", ");
-  await queryPooler(`DELETE FROM gallery WHERE id IN (${placeholders})`, ids);
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("gallery")
+    .delete()
+    .in("id", ids);
+  if (error) throw new Error(error.message);
   updatePublicContent([CACHE_TAGS.gallery]);
   return { success: true };
 }

@@ -1,8 +1,8 @@
-﻿import "server-only";
+import "server-only";
 
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const categorySlugSchema = z
   .string()
@@ -31,20 +31,27 @@ function serializeCategory(category: AdminBlogCategoryRow & { article_count?: nu
 export async function getAdminBlogCategoriesReadModel() {
   await requireAdmin();
 
-  const [categories, articleCounts] = await Promise.all([
-    queryPooler<AdminBlogCategoryRow>(
-      `SELECT id, nama, slug, deskripsi, warna, created_at FROM kategori ORDER BY nama ASC`,
-    ),
-    queryPooler<{ kategori_id: string; article_count: number }>(
-      `SELECT kategori_id, COUNT(*)::int AS article_count
-       FROM blog_artikel
-       WHERE kategori_id IS NOT NULL
-       GROUP BY kategori_id`,
-    ),
+  const supabase = createAdminClient();
+
+  const [categoriesResult, articlesResult] = await Promise.all([
+    supabase
+      .from("kategori")
+      .select("id,nama,slug,deskripsi,warna,created_at")
+      .order("nama", { ascending: true }),
+    supabase
+      .from("blog_artikel")
+      .select("kategori_id")
+      .not("kategori_id", "is", null),
   ]);
 
-  const countByCategory = new Map(articleCounts.map((row) => [row.kategori_id, Number(row.article_count)]));
-  const enrichedCategories = categories.map((category) => serializeCategory({
+  const countByCategory = new Map<string, number>();
+  (articlesResult.data ?? []).forEach((row) => {
+    if (row.kategori_id) {
+      countByCategory.set(row.kategori_id, (countByCategory.get(row.kategori_id) ?? 0) + 1);
+    }
+  });
+
+  const enrichedCategories = (categoriesResult.data ?? []).map((category) => serializeCategory({
     ...category,
     article_count: countByCategory.get(category.id) ?? 0,
   }));
@@ -67,10 +74,13 @@ export async function getAdminBlogCategoryBySlugReadModel(slug: string) {
     throw new Error("Invalid category slug");
   }
 
-  const category = await queryPoolerSingle<AdminBlogCategoryRow>(
-    `SELECT id, nama, slug, deskripsi, warna, created_at FROM kategori WHERE slug = $1`,
-    [parsed.data],
-  );
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("kategori")
+    .select("id,nama,slug,deskripsi,warna,created_at")
+    .eq("slug", parsed.data)
+    .maybeSingle();
 
-  return category ? serializeCategory(category) : null;
+  if (error || !data) return null;
+  return serializeCategory(data);
 }

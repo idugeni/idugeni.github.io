@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { Resend } from "resend";
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { rateLimit } from "@/lib/rate-limit";
 import { getClientIp, uuidSchema } from "@/lib/security/server-action";
@@ -64,10 +64,13 @@ export async function subscribeNewsletter(data: { email: string; nama?: string; 
     return { success: false, message: "Email tidak valid" };
   }
 
-  const existing = await queryPoolerSingle<{ id: string; aktif: boolean; confirmed: boolean; confirmation_token: string | null }>(
-    `SELECT id, aktif, confirmed, confirmation_token FROM newsletter_subscribers WHERE email = $1`,
-    [parsed.data.email]
-  );
+  const supabase = createAdminClient();
+
+  const { data: existing } = await supabase
+    .from("newsletter_subscribers")
+    .select("id, aktif, confirmed, confirmation_token")
+    .eq("email", parsed.data.email)
+    .maybeSingle();
 
   // Case 1: Email already exists and is confirmed + active
   if (existing && existing.confirmed && existing.aktif) {
@@ -77,11 +80,11 @@ export async function subscribeNewsletter(data: { email: string; nama?: string; 
   // Case 2: Email exists but not confirmed yet (resend confirmation email)
   if (existing && !existing.confirmed) {
     const newToken = generateConfirmationToken();
-    await queryPooler(
-      `UPDATE newsletter_subscribers SET confirmation_token = $1 WHERE id = $2`,
-      [newToken, existing.id]
-    );
-    
+    await supabase
+      .from("newsletter_subscribers")
+      .update({ confirmation_token: newToken })
+      .eq("id", existing.id);
+
     try {
       await sendConfirmationEmail({
         email: parsed.data.email,
@@ -98,11 +101,16 @@ export async function subscribeNewsletter(data: { email: string; nama?: string; 
   // Case 3: Email exists but inactive (resubscribe)
   if (existing && !existing.aktif) {
     const newToken = generateConfirmationToken();
-    await queryPooler(
-      `UPDATE newsletter_subscribers SET aktif = $1, confirmed = $2, confirmation_token = $3, unsubscribed_at = NULL, updated_at = NOW() WHERE id = $4`,
-      [true, false, newToken, existing.id]
-    );
-    
+    await supabase
+      .from("newsletter_subscribers")
+      .update({
+        aktif: true,
+        confirmed: false,
+        confirmation_token: newToken,
+        unsubscribed_at: null,
+      })
+      .eq("id", existing.id);
+
     try {
       await sendConfirmationEmail({
         email: parsed.data.email,
@@ -119,11 +127,15 @@ export async function subscribeNewsletter(data: { email: string; nama?: string; 
   // Case 4: New subscriber
   const confirmationToken = generateConfirmationToken();
   const unsubscribeToken = randomUUID();
-  
-  await queryPooler(
-    `INSERT INTO newsletter_subscribers (email, nama, aktif, confirmed, confirmation_token, token_unsubscribe) VALUES ($1, $2, $3, $4, $5, $6)`,
-    [parsed.data.email, parsed.data.nama || null, true, false, confirmationToken, unsubscribeToken]
-  );
+
+  await supabase.from("newsletter_subscribers").insert({
+    email: parsed.data.email,
+    nama: parsed.data.nama || null,
+    aktif: true,
+    confirmed: false,
+    confirmation_token: confirmationToken,
+    token_unsubscribe: unsubscribeToken,
+  });
 
   try {
     await sendConfirmationEmail({
@@ -142,11 +154,13 @@ export async function unsubscribeNewsletter(token: string) {
   const parsed = uuidSchema.safeParse(token);
   if (!parsed.success) return { success: false, message: "Token unsubscribe tidak valid" };
 
-  // Check if subscriber exists and is confirmed
-  const subscriber = await queryPoolerSingle<{ id: string; email: string; confirmed: boolean; aktif: boolean }>(
-    `SELECT id, email, confirmed, aktif FROM newsletter_subscribers WHERE token_unsubscribe = $1`,
-    [parsed.data]
-  );
+  const supabase = createAdminClient();
+
+  const { data: subscriber } = await supabase
+    .from("newsletter_subscribers")
+    .select("id, email, confirmed, aktif")
+    .eq("token_unsubscribe", parsed.data)
+    .maybeSingle();
 
   if (!subscriber) {
     return { success: false, message: "Token unsubscribe tidak ditemukan. Silakan periksa kembali link yang Anda klik." };
@@ -156,19 +170,25 @@ export async function unsubscribeNewsletter(token: string) {
     return { success: true, message: "Anda sudah tidak berlangganan newsletter kami." };
   }
 
-  await queryPooler(
-    `UPDATE newsletter_subscribers SET aktif = $1, unsubscribed_at = $2 WHERE token_unsubscribe = $3`,
-    [false, new Date().toISOString(), parsed.data]
-  );
+  await supabase
+    .from("newsletter_subscribers")
+    .update({ aktif: false, unsubscribed_at: new Date().toISOString() })
+    .eq("token_unsubscribe", parsed.data);
+
   return { success: true, message: "Berhasil berhenti berlangganan newsletter IRNK Codes." };
 }
 
 export async function getNewsletterSubscribers() {
   await requireAdmin();
 
-  return queryPooler(
-    `SELECT * FROM newsletter_subscribers ORDER BY subscribed_at DESC LIMIT 100`
-  );
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("newsletter_subscribers")
+    .select("*")
+    .order("subscribed_at", { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  return data ?? [];
 }
 
 export async function getAdminNewsletterSubscribersPage(rawFilters: unknown) {
@@ -178,33 +198,36 @@ export async function getAdminNewsletterSubscribersPage(rawFilters: unknown) {
   if (!filtersParsed.success) throw new Error("Invalid input");
   const filters = filtersParsed.data;
 
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
-
-  if (filters.q) {
-    const escaped = filters.q.replace(/[%_]/g, '\\$&');
-    conditions.push(`(email ILIKE '%' || $${idx} || '%' ESCAPE '\\' OR nama ILIKE '%' || $${idx} || '%' ESCAPE '\\')`);
-    params.push(escaped);
-    idx++;
-  }
-  if (filters.status === "active") { conditions.push(`aktif = $${idx}`); params.push(true); idx++; }
-  if (filters.status === "inactive") { conditions.push(`aktif = $${idx}`); params.push(false); idx++; }
-
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const sortCol = getNewsletterSortColumn(filters.sort);
-  const sortDir = filters.order === "asc" ? "ASC" : "DESC";
+  const sortAscending = filters.order === "asc";
   const limit = filters.pageSize;
   const offset = (filters.page - 1) * filters.pageSize;
 
-  const [countResult, data] = await Promise.all([
-    queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM newsletter_subscribers ${where}`, params),
-    queryPooler<NewsletterRow>(`SELECT * FROM newsletter_subscribers ${where} ORDER BY ${sortCol} ${sortDir} LIMIT $${idx} OFFSET $${idx + 1}`, [...params, limit, offset]),
+  const supabase = createAdminClient();
+
+  function applyFilters(q: any) {
+    if (filters.q) {
+      q = q.or(`email.ilike.%${filters.q}%,nama.ilike.%${filters.q}%`);
+    }
+    if (filters.status === "active") {
+      q = q.eq("aktif", true);
+    }
+    if (filters.status === "inactive") {
+      q = q.eq("aktif", false);
+    }
+    return q;
+  }
+
+  const [countResult, dataResult] = await Promise.all([
+    applyFilters(supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true })),
+    applyFilters(supabase.from("newsletter_subscribers").select("*"))
+      .order(sortCol, { ascending: sortAscending })
+      .range(offset, offset + limit - 1),
   ]);
 
-  const totalItems = countResult[0]?.count ?? 0;
+  const totalItems = countResult.count ?? 0;
   return {
-    subscribers: data,
+    subscribers: dataResult.data ?? [],
     filters,
     pagination: {
       page: filters.page,
@@ -217,38 +240,31 @@ export async function getAdminNewsletterSubscribersPage(rawFilters: unknown) {
 
 export async function getNewsletterStats() {
   await requireAdmin();
+  const supabase = createAdminClient();
 
-  const [row] = await queryPooler<{
-    total: number;
-    active: number;
-    inactive: number;
-    recent: number;
-    confirmed: number;
-    unconfirmed: number;
-    confirmation_rate: number;
-  }>(`
-    SELECT
-      COUNT(*)::int AS total,
-      COUNT(*) FILTER (WHERE aktif = true)::int AS active,
-      COUNT(*) FILTER (WHERE aktif = false)::int AS inactive,
-      COUNT(*) FILTER (WHERE subscribed_at >= NOW() - INTERVAL '7 days')::int AS recent,
-      COUNT(*) FILTER (WHERE confirmed = true)::int AS confirmed,
-      COUNT(*) FILTER (WHERE confirmed = false)::int AS unconfirmed,
-      CASE
-        WHEN COUNT(*) = 0 THEN 0
-        ELSE ROUND((COUNT(*) FILTER (WHERE confirmed = true)::numeric / COUNT(*)::numeric) * 100, 2)
-      END AS confirmation_rate
-    FROM newsletter_subscribers
-  `);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [totalRes, activeRes, inactiveRes, recentRes, confirmedRes, unconfirmedRes] = await Promise.all([
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }),
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("aktif", true),
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("aktif", false),
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).gte("subscribed_at", sevenDaysAgo),
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("confirmed", true),
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("confirmed", false),
+  ]);
+
+  const total = totalRes.count ?? 0;
+  const confirmed = confirmedRes.count ?? 0;
+  const confirmationRate = total === 0 ? 0 : Math.round((confirmed / total) * 10000) / 100;
 
   return {
-    total: row.total,
-    active: row.active,
-    inactive: row.inactive,
-    recent: row.recent,
-    confirmed: row.confirmed,
-    unconfirmed: row.unconfirmed,
-    confirmationRate: Number(row.confirmation_rate) || 0,
+    total,
+    active: activeRes.count ?? 0,
+    inactive: inactiveRes.count ?? 0,
+    recent: recentRes.count ?? 0,
+    confirmed,
+    unconfirmed: unconfirmedRes.count ?? 0,
+    confirmationRate,
   };
 }
 
@@ -261,11 +277,13 @@ export async function updateNewsletterSubscriberStatus(id: string, aktif: boolea
   if (!parsedPatchResult.success) throw new Error("Invalid input");
   const parsedPatch = parsedPatchResult.data;
 
+  const supabase = createAdminClient();
   const unsubscribedAt = parsedPatch.aktif ? null : new Date().toISOString();
-  await queryPooler(
-    `UPDATE newsletter_subscribers SET aktif = $1, unsubscribed_at = $2 WHERE id = $3`,
-    [parsedPatch.aktif, unsubscribedAt, parsedId]
-  );
+  await supabase
+    .from("newsletter_subscribers")
+    .update({ aktif: parsedPatch.aktif, unsubscribed_at: unsubscribedAt })
+    .eq("id", parsedId);
+
   revalidatePath("/admin/newsletter");
   return { success: true };
 }
@@ -279,12 +297,13 @@ export async function bulkUpdateNewsletterSubscribers(ids: string[], patch: { ak
   if (!parsedPatchResult.success) throw new Error("Invalid input");
   const parsedPatch = parsedPatchResult.data;
 
+  const supabase = createAdminClient();
   const unsubscribedAt = parsedPatch.aktif ? null : new Date().toISOString();
-  const placeholders = parsedIds.map((_, i) => `$${i + 2}`).join(", ");
-  await queryPooler(
-    `UPDATE newsletter_subscribers SET aktif = $1, unsubscribed_at = $2 WHERE id IN (${placeholders})`,
-    [parsedPatch.aktif, unsubscribedAt, ...parsedIds]
-  );
+  await supabase
+    .from("newsletter_subscribers")
+    .update({ aktif: parsedPatch.aktif, unsubscribed_at: unsubscribedAt })
+    .in("id", parsedIds);
+
   revalidatePath("/admin/newsletter");
   return { success: true };
 }
@@ -295,11 +314,9 @@ export async function bulkDeleteNewsletterSubscribers(ids: string[]) {
   if (!parsedIdsResult.success) throw new Error("Invalid input");
   const parsedIds = parsedIdsResult.data;
 
-  const placeholders = parsedIds.map((_, i) => `$${i + 1}`).join(", ");
-  await queryPooler(
-    `DELETE FROM newsletter_subscribers WHERE id IN (${placeholders})`,
-    parsedIds
-  );
+  const supabase = createAdminClient();
+  await supabase.from("newsletter_subscribers").delete().in("id", parsedIds);
+
   revalidatePath("/admin/newsletter");
   return { success: true };
 }
@@ -315,10 +332,12 @@ export async function dispatchNewsletterCampaign(data: { subject: string; conten
   if (!parsedResult.success) throw new Error("Invalid input");
   const parsed = parsedResult.data;
 
-  const subscribers = await queryPooler<{ email: string; nama: string | null; token_unsubscribe: string }>(
-    `SELECT email, nama, token_unsubscribe FROM newsletter_subscribers WHERE aktif = $1 AND confirmed = $2`,
-    [true, true]
-  );
+  const supabase = createAdminClient();
+  const { data: subscribers } = await supabase
+    .from("newsletter_subscribers")
+    .select("email, nama, token_unsubscribe")
+    .eq("aktif", true)
+    .eq("confirmed", true);
 
   if (!subscribers || subscribers.length === 0) {
     return { success: true, message: "No active subscribers found.", sentCount: 0, failedCount: 0 };

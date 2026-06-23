@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { ServiceDetailClient } from "@/components/pages/services/service-detail-client";
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
+import { createPublicClient } from "@/lib/supabase/public";
 import { toCamelCase } from "@/lib/utils/case";
 import { siteConfig } from "@/lib/config/site";
 import { CACHE_TAGS } from "@/lib/cache/tags";
@@ -24,34 +24,42 @@ export const getServiceDetailData = cache(async function getServiceDetailData(sl
   cacheLife("hours");
   cacheTag(`service-${slug}`, CACHE_TAGS.services);
 
-  const rawService = await queryPoolerSingle<Record<string, unknown>>(
-    `SELECT * FROM services WHERE slug=$1 AND aktif=true`,
-    [slug]
-  );
+  const supabase = createPublicClient();
 
-  if (!rawService) return null;
+  const { data: rawService, error } = await supabase
+    .from("services")
+    .select("*")
+    .eq("slug", slug)
+    .eq("aktif", true)
+    .single();
+
+  if (error || !rawService) return null;
 
   const service = toCamelCase<Service>(rawService);
-  const rawRelated = await queryPooler<Record<string, unknown>>(
-    `SELECT * FROM services WHERE aktif=true AND id != $1 ORDER BY urutan LIMIT 3`,
-    [service.id as string]
-  );
+  const { data: rawRelated } = await supabase
+    .from("services")
+    .select("*")
+    .eq("aktif", true)
+    .neq("id", service.id as string)
+    .order("urutan")
+    .limit(3);
 
   return {
     service,
-    relatedServices: toCamelCase<Service[]>(rawRelated),
+    relatedServices: toCamelCase<Service[]>(rawRelated ?? []),
   };
 });
 
 export async function generateStaticParams() {
-  if (!process.env.DATABASE_URL) {
-    return [{ slug: "_placeholder" }];
-  }
-  const rows = await queryPooler<{ slug: string }>(
-    `SELECT slug FROM services WHERE aktif=true ORDER BY urutan ASC LIMIT 100`
-  );
+  const supabase = createPublicClient();
+  const { data: rows } = await supabase
+    .from("services")
+    .select("slug")
+    .eq("aktif", true)
+    .order("urutan", { ascending: true })
+    .limit(100);
 
-  return rows.length > 0 ? rows.map((service) => ({ slug: service.slug })) : [{ slug: "_placeholder" }];
+  return rows && rows.length > 0 ? rows.map((service) => ({ slug: service.slug })) : [{ slug: "_placeholder" }];
 }
 
 async function ServiceDetailContent({ params }: { params: ServiceDetailParams }) {

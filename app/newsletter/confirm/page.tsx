@@ -1,4 +1,4 @@
-import { queryPooler } from "@/lib/db/pooler";
+import { createPublicClient } from "@/lib/supabase/public";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -30,17 +30,19 @@ export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
 
   // Verify and confirm the subscription
   try {
-    const result = await queryPooler(
-      `UPDATE newsletter_subscribers 
-       SET confirmed = true, 
-           confirmation_token = NULL,
-           updated_at = NOW()
-       WHERE confirmation_token = $1 AND confirmed = false
-       RETURNING email, nama`,
-      [token]
-    );
+    const supabase = createPublicClient();
+    const { data: result, error } = await supabase
+      .from("newsletter_subscribers")
+      .update({
+        confirmed: true,
+        confirmation_token: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("confirmation_token", token)
+      .eq("confirmed", false)
+      .select("email, nama");
 
-    if (result.length === 0) {
+    if (error || !result || result.length === 0) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="max-w-md mx-auto text-center space-y-6">

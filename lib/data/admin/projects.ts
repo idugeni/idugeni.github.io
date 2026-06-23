@@ -1,8 +1,8 @@
-﻿import "server-only";
+import "server-only";
 
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getTotalPages, parsePositiveInt } from "@/lib/utils/pagination";
 import { slugSchema } from "@/lib/security/server-action";
 
@@ -62,49 +62,37 @@ export async function getAdminProjectsReadModel(filters: Record<string, unknown>
     name: "nama",
     status: "status",
   } as const)[parsed.data.sort ?? "date"] ?? "created_at";
-  const sortDir = (parsed.data.order ?? "desc") === "asc" ? "ASC" : "DESC";
+  const ascending = (parsed.data.order ?? "desc") === "asc";
 
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
-
-  if (parsed.data.q) {
-    const escaped = parsed.data.q.replace(/[%_]/g, "\\$&");
-    conditions.push(`nama ILIKE '%' || $${idx} || '%' ESCAPE '\\'`);
-    params.push(escaped);
-    idx++;
-  }
-  if (parsed.data.status) {
-    conditions.push(`status = $${idx}`);
-    params.push(parsed.data.status);
-    idx++;
-  }
-  if (parsed.data.category) {
-    conditions.push(`kategori = $${idx}`);
-    params.push(parsed.data.category);
-    idx++;
-  }
-  if (parsed.data.featured === "true") {
-    conditions.push(`featured = $${idx}`);
-    params.push(true);
-    idx++;
-  }
-
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const offset = (page - 1) * ADMIN_PROJECT_PAGE_SIZE;
 
-  const [countResult, projects] = await Promise.all([
-    queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM projects ${where}`, params),
-    queryPooler<AdminProjectRow>(`SELECT * FROM projects ${where} ORDER BY ${sortColumn} ${sortDir} LIMIT $${idx} OFFSET $${idx + 1}`, [
-      ...params,
-      ADMIN_PROJECT_PAGE_SIZE,
-      offset,
-    ]),
-  ]);
+  const supabase = createAdminClient();
 
-  const totalItems = countResult[0]?.count ?? 0;
+  let baseQuery = supabase
+    .from("projects")
+    .select("*", { count: "exact" });
+
+  if (parsed.data.q) {
+    const pattern = `%${parsed.data.q.replace(/[%_]/g, "\\$&")}%`;
+    baseQuery = baseQuery.ilike("nama", pattern);
+  }
+  if (parsed.data.status) {
+    baseQuery = baseQuery.eq("status", parsed.data.status);
+  }
+  if (parsed.data.category) {
+    baseQuery = baseQuery.eq("kategori", parsed.data.category);
+  }
+  if (parsed.data.featured === "true") {
+    baseQuery = baseQuery.eq("featured", true);
+  }
+
+  const { data, count } = await baseQuery
+    .order(sortColumn, { ascending })
+    .range(offset, offset + ADMIN_PROJECT_PAGE_SIZE - 1);
+
+  const totalItems = count ?? 0;
   return {
-    projects: projects.map(serializeProject),
+    projects: (data ?? []).map(serializeProject as (row: Record<string, unknown>) => ReturnType<typeof serializeProject>),
     filters: parsed.data,
     pagination: {
       page,
@@ -118,35 +106,35 @@ export async function getAdminProjectsReadModel(filters: Record<string, unknown>
 export async function getProjectStatsReadModel() {
   await requireAdmin();
 
-  const [row] = await queryPooler<{
-    total: number;
-    completed: number;
-    ongoing: number;
-    featured: number;
-  }>(`
-    SELECT
-      COUNT(*)::int AS total,
-      COUNT(*) FILTER (WHERE status = 'completed')::int AS completed,
-      COUNT(*) FILTER (WHERE status = 'ongoing')::int AS ongoing,
-      COUNT(*) FILTER (WHERE featured = true)::int AS featured
-    FROM projects
-  `);
+  const supabase = createAdminClient();
+
+  const [totalResult, completedResult, ongoingResult, featuredResult] = await Promise.all([
+    supabase.from("projects").select("*", { count: "exact", head: true }),
+    supabase.from("projects").select("*", { count: "exact", head: true }).eq("status", "completed"),
+    supabase.from("projects").select("*", { count: "exact", head: true }).eq("status", "ongoing"),
+    supabase.from("projects").select("*", { count: "exact", head: true }).eq("featured", true),
+  ]);
 
   return {
-    total: row?.total ?? 0,
-    completed: row?.completed ?? 0,
-    ongoing: row?.ongoing ?? 0,
-    featured: row?.featured ?? 0,
+    total: totalResult.count ?? 0,
+    completed: completedResult.count ?? 0,
+    ongoing: ongoingResult.count ?? 0,
+    featured: featuredResult.count ?? 0,
   };
 }
 
 export async function getProjectCategoriesReadModel() {
   await requireAdmin();
 
-  const rows = await queryPooler<{ kategori: string | null }>(
-    `SELECT DISTINCT kategori FROM projects WHERE kategori IS NOT NULL ORDER BY kategori`,
-  );
-  return rows.map((row) => row.kategori).filter((value): value is string => Boolean(value));
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("projects")
+    .select("kategori")
+    .not("kategori", "is", null)
+    .order("kategori", { ascending: true });
+
+  const unique = Array.from(new Set((data ?? []).map((r) => r.kategori).filter(Boolean)));
+  return unique as string[];
 }
 
 export async function getProjectBySlugReadModel(slug: string) {
@@ -157,7 +145,13 @@ export async function getProjectBySlugReadModel(slug: string) {
     throw new Error("Invalid project slug");
   }
 
-  const project = await queryPoolerSingle<AdminProjectRow>(`SELECT * FROM projects WHERE slug = $1`, [parsed.data]);
-  if (!project) throw new Error("Project not found");
-  return serializeProject(project);
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("slug", parsed.data)
+    .maybeSingle();
+
+  if (error || !data) throw new Error("Project not found");
+  return serializeProject(data);
 }

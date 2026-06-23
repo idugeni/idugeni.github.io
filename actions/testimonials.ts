@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { z } from "zod";
-import { queryPooler } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/rbac";
 import type { Database } from "@/lib/supabase/types";
 
@@ -74,19 +74,30 @@ function getTestimonialSortColumn(sort: z.infer<typeof adminTestimonialsFilterSc
 }
 
 export async function getTestimonials(filters?: { featured?: boolean }) {
-  const conditions = ["tampil = $1"];
-  const params: unknown[] = [true];
-  let idx = 2;
-  if (filters?.featured) {
-    conditions.push(`featured = $${idx++}`);
-    params.push(true);
-  }
-  return await queryPooler(`SELECT * FROM testimonials WHERE ${conditions.join(" AND ")} ORDER BY created_at DESC`, params);
+  const supabase = createAdminClient();
+  let query = supabase
+    .from("testimonials")
+    .select("*")
+    .eq("tampil", true)
+    .order("created_at", { ascending: false });
+
+  if (filters?.featured) query = query.eq("featured", true);
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return data || [];
 }
 
 export async function getAllTestimonials() {
   await requireAdmin();
-  return await queryPooler(`SELECT * FROM testimonials ORDER BY created_at DESC LIMIT 100`);
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("testimonials")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) throw new Error(error.message);
+  return data || [];
 }
 
 export async function getAdminTestimonialsPage(rawFilters: unknown) {
@@ -96,36 +107,36 @@ export async function getAdminTestimonialsPage(rawFilters: unknown) {
   if (!filtersParsed.success) throw new Error("Invalid input");
   const filters = filtersParsed.data;
 
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  const supabase = createAdminClient();
+  let query = supabase
+    .from("testimonials")
+    .select("*", { count: "exact" });
 
   if (filters.q) {
     const escaped = filters.q.replace(/[%_]/g, '\\$&');
-    conditions.push(`(nama ILIKE '%' || $${idx} || '%' ESCAPE '\\' OR jabatan ILIKE '%' || $${idx} || '%' ESCAPE '\\' OR perusahaan ILIKE '%' || $${idx} || '%' ESCAPE '\\' OR isi ILIKE '%' || $${idx} || '%' ESCAPE '\\')`);
-    params.push(escaped);
-    idx++;
+    query = query.or(
+      `nama.ilike.%${escaped}%,jabatan.ilike.%${escaped}%,perusahaan.ilike.%${escaped}%,isi.ilike.%${escaped}%`
+    );
   }
-  if (filters.visibility === "visible") { conditions.push(`tampil = $${idx}`); params.push(true); idx++; }
-  if (filters.visibility === "hidden") { conditions.push(`tampil = $${idx}`); params.push(false); idx++; }
-  if (filters.featured === "true") { conditions.push(`featured = $${idx}`); params.push(true); idx++; }
-  if (filters.featured === "false") { conditions.push(`featured = $${idx}`); params.push(false); idx++; }
-  if (filters.rating) { conditions.push(`rating = $${idx}`); params.push(filters.rating); idx++; }
+  if (filters.visibility === "visible") query = query.eq("tampil", true);
+  if (filters.visibility === "hidden") query = query.eq("tampil", false);
+  if (filters.featured === "true") query = query.eq("featured", true);
+  if (filters.featured === "false") query = query.eq("featured", false);
+  if (filters.rating) query = query.eq("rating", filters.rating);
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const sortCol = getTestimonialSortColumn(filters.sort);
-  const sortDir = filters.order === "asc" ? "ASC" : "DESC";
-  const limit = filters.pageSize;
-  const offset = (filters.page - 1) * filters.pageSize;
+  const from = (filters.page - 1) * filters.pageSize;
+  const to = from + filters.pageSize - 1;
 
-  const [countResult, data] = await Promise.all([
-    queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM testimonials ${where}`, params),
-    queryPooler<TestimonialRow>(`SELECT * FROM testimonials ${where} ORDER BY ${sortCol} ${sortDir} LIMIT $${idx} OFFSET $${idx + 1}`, [...params, limit, offset]),
-  ]);
+  const { data, count, error } = await query
+    .order(sortCol, { ascending: filters.order === "asc" })
+    .range(from, to);
 
-  const totalItems = countResult[0]?.count ?? 0;
+  if (error) throw new Error(error.message);
+
+  const totalItems = count ?? 0;
   return {
-    testimonials: data,
+    testimonials: data || [],
     filters,
     pagination: {
       page: filters.page,
@@ -138,29 +149,25 @@ export async function getAdminTestimonialsPage(rawFilters: unknown) {
 
 export async function getTestimonialStats() {
   await requireAdmin();
+  const supabase = createAdminClient();
 
-  const [row] = await queryPooler<{
-    total: number;
-    visible: number;
-    hidden: number;
-    featured: number;
-    average_rating: number;
-  }>(`
-    SELECT
-      COUNT(*)::int AS total,
-      COUNT(*) FILTER (WHERE tampil = true)::int AS visible,
-      COUNT(*) FILTER (WHERE tampil = false)::int AS hidden,
-      COUNT(*) FILTER (WHERE featured = true)::int AS featured,
-      COALESCE(ROUND(AVG(rating)::numeric, 1), 0)::float AS average_rating
-    FROM testimonials
-  `);
+  const { data: all, error } = await supabase
+    .from("testimonials")
+    .select("tampil, featured, rating");
+  if (error) throw new Error(error.message);
+
+  const items = all || [];
+  const total = items.length;
+  const avgRating = total > 0
+    ? Math.round((items.reduce((sum, r) => sum + (r.rating || 0), 0) / total) * 10) / 10
+    : 0;
 
   return {
-    total: row.total,
-    visible: row.visible,
-    hidden: row.hidden,
-    featured: row.featured,
-    averageRating: row.average_rating,
+    total,
+    visible: items.filter((r) => r.tampil).length,
+    hidden: items.filter((r) => !r.tampil).length,
+    featured: items.filter((r) => r.featured).length,
+    averageRating: avgRating,
   };
 }
 
@@ -171,13 +178,13 @@ export async function createTestimonial(data: Record<string, unknown>) {
   if (!parsed.success) throw new Error("Invalid input");
 
   const payload = normalizeTestimonialPayload(parsed.data);
-  const columns = Object.keys(payload);
-  const values = Object.values(payload);
-  const placeholders = columns.map((_, i) => `$${i + 1}`).join(", ");
-  const [testimonial] = await queryPooler<TestimonialRow>(
-    `INSERT INTO testimonials (${columns.join(", ")}) VALUES (${placeholders}) RETURNING *`,
-    values,
-  );
+  const supabase = createAdminClient();
+  const { data: testimonial, error } = await supabase
+    .from("testimonials")
+    .insert(payload)
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
   updatePublicContent([CACHE_TAGS.testimonials]);
   revalidatePath("/admin/testimonials");
   return testimonial;
@@ -193,14 +200,14 @@ export async function updateTestimonial(id: string, data: Record<string, unknown
   if (!parsed.success) throw new Error("Invalid input");
 
   const payload = normalizeTestimonialPayload(parsed.data);
-  const columns = Object.keys(payload);
-  const values = Object.values(payload);
-  const setClauses = columns.map((col, i) => `${col} = $${i + 1}`).join(", ");
-  const [testimonial] = await queryPooler<TestimonialRow>(
-    `UPDATE testimonials SET ${setClauses} WHERE id = $${columns.length + 1} RETURNING *`,
-    [...values, parsedId],
-  );
-  if (!testimonial) throw new Error("Testimonial not found");
+  const supabase = createAdminClient();
+  const { data: testimonial, error } = await supabase
+    .from("testimonials")
+    .update(payload)
+    .eq("id", parsedId)
+    .select()
+    .single();
+  if (error || !testimonial) throw new Error("Testimonial not found");
   updatePublicContent([CACHE_TAGS.testimonials]);
   revalidatePath("/admin/testimonials");
   return testimonial;
@@ -215,14 +222,13 @@ export async function bulkUpdateTestimonials(ids: string[], patch: { tampil?: bo
   const parsedPatchResult = bulkTestimonialPatchSchema.safeParse(patch);
   if (!parsedPatchResult.success) throw new Error("Invalid input");
   const parsedPatch = parsedPatchResult.data;
-  const columns = Object.keys(parsedPatch);
-  const values = Object.values(parsedPatch);
-  const setClauses = columns.map((col, i) => `${col} = $${i + 1}`).join(", ");
-  const placeholders = parsedIds.map((_, i) => `$${columns.length + i + 1}`).join(", ");
-  await queryPooler(
-    `UPDATE testimonials SET ${setClauses} WHERE id IN (${placeholders})`,
-    [...values, ...parsedIds],
-  );
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("testimonials")
+    .update(parsedPatch)
+    .in("id", parsedIds);
+  if (error) throw new Error(error.message);
   updatePublicContent([CACHE_TAGS.testimonials]);
   revalidatePath("/admin/testimonials");
   return { success: true };
@@ -234,23 +240,26 @@ export async function duplicateTestimonial(id: string) {
   const parsedIdResult = uuidSchema.safeParse(id);
   if (!parsedIdResult.success) throw new Error("Invalid input");
   const parsedId = parsedIdResult.data;
-  const [source] = await queryPooler<TestimonialRow>(
-    `SELECT * FROM testimonials WHERE id = $1`,
-    [parsedId],
-  );
-  if (!source) throw new Error("Testimonial not found");
+
+  const supabase = createAdminClient();
+  const { data: source, error: fetchError } = await supabase
+    .from("testimonials")
+    .select("*")
+    .eq("id", parsedId)
+    .single();
+  if (fetchError || !source) throw new Error("Testimonial not found");
 
   const { id: _id, created_at: _createdAt, ...clone } = source;
   void _id;
   void _createdAt;
   const insertData = { ...clone, nama: `${source.nama} Copy`, tampil: false, featured: false };
-  const columns = Object.keys(insertData);
-  const values = Object.values(insertData);
-  const placeholders = columns.map((_, i) => `$${i + 1}`).join(", ");
-  const [testimonial] = await queryPooler<TestimonialRow>(
-    `INSERT INTO testimonials (${columns.join(", ")}) VALUES (${placeholders}) RETURNING *`,
-    values,
-  );
+
+  const { data: testimonial, error: insertError } = await supabase
+    .from("testimonials")
+    .insert(insertData)
+    .select()
+    .single();
+  if (insertError) throw new Error(insertError.message);
   updatePublicContent([CACHE_TAGS.testimonials]);
   revalidatePath("/admin/testimonials");
   return testimonial;
@@ -262,7 +271,13 @@ export async function deleteTestimonial(id: string) {
   const parsedResult = uuidSchema.safeParse(id);
   if (!parsedResult.success) throw new Error("Invalid input");
   const parsed = parsedResult.data;
-  await queryPooler(`DELETE FROM testimonials WHERE id = $1`, [parsed]);
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("testimonials")
+    .delete()
+    .eq("id", parsed);
+  if (error) throw new Error(error.message);
   updatePublicContent([CACHE_TAGS.testimonials]);
   revalidatePath("/admin/testimonials");
   return { success: true };
@@ -274,8 +289,13 @@ export async function bulkDeleteTestimonials(ids: string[]) {
   const parsedIdsResult = uuidArraySchema.safeParse(ids);
   if (!parsedIdsResult.success) throw new Error("Invalid input");
   const parsedIds = parsedIdsResult.data;
-  const placeholders = parsedIds.map((_, i) => `$${i + 1}`).join(", ");
-  await queryPooler(`DELETE FROM testimonials WHERE id IN (${placeholders})`, parsedIds);
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("testimonials")
+    .delete()
+    .in("id", parsedIds);
+  if (error) throw new Error(error.message);
   updatePublicContent([CACHE_TAGS.testimonials]);
   revalidatePath("/admin/testimonials");
   return { success: true };

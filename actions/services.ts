@@ -1,6 +1,6 @@
 "use server";
 
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
@@ -41,7 +41,6 @@ const adminServiceFiltersSchema = z.object({
 });
 const uuidSchema = z.string().uuid();
 const ADMIN_SERVICE_PAGE_SIZE = 20;
-const SERVICE_COLUMNS = "id,nama,slug,deskripsi_pendek,deskripsi_panjang,icon,harga_mulai,fitur,urutan,aktif,created_at,updated_at";
 
 function normalizeServicePayload(data: z.infer<typeof updateServiceSchema>) {
   const deskripsiPendek = data.deskripsiPendek ?? data.deskripsi_pendek;
@@ -61,16 +60,38 @@ function normalizeServicePayload(data: z.infer<typeof updateServiceSchema>) {
   };
 }
 
+function buildServiceInsertObj(safeData: ReturnType<typeof normalizeServicePayload>) {
+  const obj: Record<string, unknown> = {
+    nama: safeData.nama ?? null,
+    slug: safeData.slug ?? null,
+    deskripsi_pendek: safeData.deskripsiPendek ?? null,
+    deskripsi_panjang: safeData.deskripsiPanjang ?? null,
+    icon: safeData.icon ?? null,
+    harga_mulai: safeData.hargaMulai ?? null,
+    fitur: Array.isArray(safeData.fitur) ? safeData.fitur : null,
+    aktif: safeData.aktif ?? true,
+    urutan: safeData.urutan ?? 0,
+  };
+  return obj;
+}
+
 export async function getServices() {
-  return queryPooler(
-    `SELECT ${SERVICE_COLUMNS} FROM services WHERE aktif = $1 ORDER BY urutan`,
-    [true]
-  );
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("services")
+    .select("*")
+    .eq("aktif", true)
+    .order("urutan");
+  if (error) throw error;
+  return data ?? [];
 }
 
 export async function getAllServices() {
   await requireAdmin();
-  return queryPooler(`SELECT ${SERVICE_COLUMNS} FROM services ORDER BY urutan`);
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.from("services").select("*").order("urutan");
+  if (error) throw error;
+  return data ?? [];
 }
 
 export async function getAdminServicesPage(filters: Record<string, unknown> = {}) {
@@ -80,40 +101,42 @@ export async function getAdminServicesPage(filters: Record<string, unknown> = {}
   if (!parsed.success) {
     throw new Error("Invalid admin service filters: " + parsed.error.issues[0].message);
   }
+  const data = parsed.data;
 
-  const page = parsePositiveInt(parsed.data.page, 1);
+  const page = parsePositiveInt(data.page, 1);
   const sortColumn = ({
     date: "created_at",
     name: "nama",
     order: "urutan",
     status: "aktif",
-  } as const)[parsed.data.sort ?? "order"] ?? "urutan";
-  const sortDir = (parsed.data.order ?? "asc") === "asc" ? "ASC" : "DESC";
+  } as const)[data.sort ?? "order"] ?? "urutan";
+  const sortAscending = (data.order ?? "asc") === "asc";
 
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  const supabase = createAdminClient();
 
-  if (parsed.data.q) {
-    const escaped = parsed.data.q.replace(/[%_]/g, '\\$&');
-    conditions.push(`(nama ILIKE '%' || $${idx} || '%' ESCAPE '\\' OR deskripsi_pendek ILIKE '%' || $${idx} || '%' ESCAPE '\\')`);
-    params.push(escaped);
-    idx++;
+  function applyFilters(q: any) {
+    if (data.q) {
+      q = q.or(`nama.ilike.%${data.q}%,deskripsi_pendek.ilike.%${data.q}%`);
+    }
+    if (data.status === "active") {
+      q = q.eq("aktif", true);
+    }
+    if (data.status === "inactive") {
+      q = q.eq("aktif", false);
+    }
+    return q;
   }
-  if (parsed.data.status === "active") { conditions.push(`aktif = $${idx}`); params.push(true); idx++; }
-  if (parsed.data.status === "inactive") { conditions.push(`aktif = $${idx}`); params.push(false); idx++; }
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  const offset = (page - 1) * ADMIN_SERVICE_PAGE_SIZE;
-
-  const [countResult, data] = await Promise.all([
-    queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM services ${where}`, params),
-    queryPooler(`SELECT * FROM services ${where} ORDER BY ${sortColumn} ${sortDir} LIMIT $${idx} OFFSET $${idx + 1}`, [...params, ADMIN_SERVICE_PAGE_SIZE, offset]),
+  const [countResult, dataResult] = await Promise.all([
+    applyFilters(supabase.from("services").select("*", { count: "exact", head: true })),
+    applyFilters(supabase.from("services").select("*"))
+      .order(sortColumn, { ascending: sortAscending })
+      .range((page - 1) * ADMIN_SERVICE_PAGE_SIZE, page * ADMIN_SERVICE_PAGE_SIZE - 1),
   ]);
 
-  const totalItems = countResult[0]?.count ?? 0;
+  const totalItems = countResult.count ?? 0;
   return {
-    services: data ?? [],
+    services: dataResult.data ?? [],
     filters: parsed.data,
     pagination: {
       page,
@@ -126,26 +149,22 @@ export async function getAdminServicesPage(filters: Record<string, unknown> = {}
 
 export async function getServiceStats() {
   await requireAdmin();
+  const supabase = createAdminClient();
 
-  const [row] = await queryPooler<{
-    total: number;
-    active: number;
-    inactive: number;
-    priced: number;
-  }>(`
-    SELECT
-      COUNT(*)::int AS total,
-      COUNT(*) FILTER (WHERE aktif = true)::int AS active,
-      COUNT(*) FILTER (WHERE aktif = false)::int AS inactive,
-      COUNT(*) FILTER (WHERE harga_mulai IS NOT NULL AND harga_mulai != '')::int AS priced
-    FROM services
-  `);
+  const [totalRes, activeRes, inactiveRes] = await Promise.all([
+    supabase.from("services").select("*", { count: "exact", head: true }),
+    supabase.from("services").select("*", { count: "exact", head: true }).eq("aktif", true),
+    supabase.from("services").select("*", { count: "exact", head: true }).eq("aktif", false),
+  ]);
+
+  const { data: allServices } = await supabase.from("services").select("harga_mulai");
+  const priced = (allServices ?? []).filter((s) => s.harga_mulai !== null && s.harga_mulai !== "").length;
 
   return {
-    total: row.total,
-    active: row.active,
-    inactive: row.inactive,
-    priced: row.priced,
+    total: totalRes.count ?? 0,
+    active: activeRes.count ?? 0,
+    inactive: inactiveRes.count ?? 0,
+    priced,
   };
 }
 
@@ -157,11 +176,9 @@ export async function getService(id: string) {
     throw new Error("Invalid service ID: must be a valid UUID");
   }
 
-  const service = await queryPoolerSingle(
-    `SELECT ${SERVICE_COLUMNS} FROM services WHERE id = $1`,
-    [parsed.data]
-  );
-  if (!service) throw new Error("Service not found");
+  const supabase = createAdminClient();
+  const { data: service, error } = await supabase.from("services").select("*").eq("id", parsed.data).single();
+  if (error || !service) throw new Error("Service not found");
   return service;
 }
 
@@ -173,11 +190,9 @@ export async function getServiceBySlug(slug: string) {
     throw new Error("Invalid service slug");
   }
 
-  const service = await queryPoolerSingle(
-    `SELECT ${SERVICE_COLUMNS} FROM services WHERE slug = $1`,
-    [parsed.data]
-  );
-  if (!service) throw new Error("Service not found");
+  const supabase = createAdminClient();
+  const { data: service, error } = await supabase.from("services").select("*").eq("slug", parsed.data).single();
+  if (error || !service) throw new Error("Service not found");
   return service;
 }
 
@@ -190,31 +205,16 @@ export async function createService(data: Record<string, unknown>) {
   }
 
   const safeData = normalizeServicePayload(parsed.data);
+  const insertObj = buildServiceInsertObj(safeData);
 
-  const columns = [
-    "nama", "slug", "deskripsi_pendek", "deskripsi_panjang",
-    "icon", "harga_mulai", "fitur", "aktif", "urutan",
-  ];
+  const supabase = createAdminClient();
+  const { data: service, error } = await supabase
+    .from("services")
+    .insert(insertObj)
+    .select()
+    .single();
 
-  const values: unknown[] = [
-    safeData.nama ?? null,
-    safeData.slug ?? null,
-    safeData.deskripsiPendek ?? null,
-    safeData.deskripsiPanjang ?? null,
-    safeData.icon ?? null,
-    safeData.hargaMulai ?? null,
-    Array.isArray(safeData.fitur) ? JSON.stringify(safeData.fitur) : null,
-    safeData.aktif ?? true,
-    safeData.urutan ?? 0,
-  ];
-
-  const placeholders = columns.map((_, i) => `$${i + 1}`);
-  const service = await queryPoolerSingle(
-    `INSERT INTO services (${columns.join(", ")}) VALUES (${placeholders.join(", ")}) RETURNING ${SERVICE_COLUMNS}`,
-    values
-  );
-
-  if (!service) throw new Error("Failed to create service");
+  if (error || !service) throw new Error("Failed to create service");
   updatePublicContent([CACHE_TAGS.services]);
   return service;
 }
@@ -234,46 +234,31 @@ export async function updateService(id: string, data: Record<string, unknown>) {
 
   const safeData = normalizeServicePayload(parsed.data);
 
-  const setClauses: string[] = [];
-  const values: unknown[] = [];
-  let paramIndex = 1;
+  const updateObj: Record<string, unknown> = {};
 
-  const fieldMap: [string, unknown][] = [
-    ["nama", safeData.nama],
-    ["slug", safeData.slug],
-    ["deskripsi_pendek", safeData.deskripsiPendek],
-    ["deskripsi_panjang", safeData.deskripsiPanjang],
-    ["icon", safeData.icon],
-    ["harga_mulai", safeData.hargaMulai],
-    ["aktif", safeData.aktif],
-    ["urutan", safeData.urutan],
-  ];
+  if (typeof safeData.nama === "string") updateObj.nama = safeData.nama;
+  if (typeof safeData.slug === "string") updateObj.slug = safeData.slug;
+  if (typeof safeData.deskripsiPendek === "string") updateObj.deskripsi_pendek = safeData.deskripsiPendek;
+  if (typeof safeData.deskripsiPanjang === "string") updateObj.deskripsi_panjang = safeData.deskripsiPanjang;
+  if (typeof safeData.icon === "string") updateObj.icon = safeData.icon;
+  if (typeof safeData.hargaMulai === "string") updateObj.harga_mulai = safeData.hargaMulai;
+  if (typeof safeData.aktif === "boolean") updateObj.aktif = safeData.aktif;
+  if (typeof safeData.urutan === "number") updateObj.urutan = safeData.urutan;
+  if (Array.isArray(safeData.fitur)) updateObj.fitur = safeData.fitur;
 
-  for (const [col, val] of fieldMap) {
-    if (val !== undefined) {
-      setClauses.push(`${col} = $${paramIndex}`);
-      values.push(val === "" ? null : val);
-      paramIndex++;
-    }
-  }
-
-  if (Array.isArray(safeData.fitur)) {
-    setClauses.push(`fitur = $${paramIndex}`);
-    values.push(JSON.stringify(safeData.fitur));
-    paramIndex++;
-  }
-
-  if (setClauses.length === 0) {
+  if (Object.keys(updateObj).length === 0) {
     throw new Error("No updates provided");
   }
 
-  values.push(parsedId.data);
-  const service = await queryPoolerSingle(
-    `UPDATE services SET ${setClauses.join(", ")}, updated_at = now() WHERE id = $${paramIndex} RETURNING ${SERVICE_COLUMNS}`,
-    values
-  );
+  const supabase = createAdminClient();
+  const { data: service, error } = await supabase
+    .from("services")
+    .update(updateObj)
+    .eq("id", parsedId.data)
+    .select()
+    .single();
 
-  if (!service) throw new Error("Service not found");
+  if (error || !service) throw new Error("Service not found");
   updatePublicContent([CACHE_TAGS.services]);
   return service;
 }
@@ -286,7 +271,9 @@ export async function deleteService(id: string) {
     throw new Error("Invalid service ID: must be a valid UUID");
   }
 
-  await queryPooler(`DELETE FROM services WHERE id = $1`, [parsed.data]);
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("services").delete().eq("id", parsed.data);
+  if (error) throw error;
   updatePublicContent([CACHE_TAGS.services]);
   return { success: true };
 }
@@ -308,10 +295,12 @@ export async function bulkUpdateServices(ids: string[], updates: Partial<{ aktif
     throw new Error("No updates provided");
   }
 
-  await queryPooler(
-    `UPDATE services SET aktif = $1, updated_at = now() WHERE id = ANY($2::uuid[])`,
-    [parsedUpdates.data.aktif, parsedIds.data]
-  );
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("services")
+    .update({ aktif: parsedUpdates.data.aktif })
+    .in("id", parsedIds.data);
+  if (error) throw error;
 
   updatePublicContent([CACHE_TAGS.services]);
   return { success: true };
@@ -325,7 +314,9 @@ export async function bulkDeleteServices(ids: string[]) {
     throw new Error("Invalid service IDs: " + parsedIds.error.issues[0].message);
   }
 
-  await queryPooler(`DELETE FROM services WHERE id = ANY($1::uuid[])`, [parsedIds.data]);
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("services").delete().in("id", parsedIds.data);
+  if (error) throw error;
   updatePublicContent([CACHE_TAGS.services]);
   return { success: true };
 }
@@ -336,28 +327,21 @@ export async function duplicateService(id: string) {
   const original = await getService(id);
   const timestamp = Date.now();
 
-  const columns = [
-    "nama", "slug", "deskripsi_pendek", "deskripsi_panjang",
-    "icon", "harga_mulai", "fitur", "urutan", "aktif",
-  ];
+  const insertObj: Record<string, unknown> = {
+    nama: `${original.nama} (Copy)`,
+    slug: `${original.slug}-copy-${timestamp}`,
+    deskripsi_pendek: original.deskripsi_pendek,
+    deskripsi_panjang: original.deskripsi_panjang,
+    icon: original.icon,
+    harga_mulai: original.harga_mulai,
+    fitur: Array.isArray(original.fitur) ? original.fitur : null,
+    urutan: original.urutan + 1,
+    aktif: false,
+  };
 
-  const values: unknown[] = [
-    `${original.nama} (Copy)`,
-    `${original.slug}-copy-${timestamp}`,
-    original.deskripsi_pendek,
-    original.deskripsi_panjang,
-    original.icon,
-    original.harga_mulai,
-    Array.isArray(original.fitur) ? JSON.stringify(original.fitur) : null,
-    original.urutan + 1,
-    false,
-  ];
-
-  const placeholders = columns.map((_, i) => `$${i + 1}`);
-  await queryPooler(
-    `INSERT INTO services (${columns.join(", ")}) VALUES (${placeholders.join(", ")})`,
-    values
-  );
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("services").insert(insertObj);
+  if (error) throw error;
 
   updatePublicContent([CACHE_TAGS.services]);
   return { success: true, slug: `${original.slug}-copy-${timestamp}` };

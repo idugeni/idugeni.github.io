@@ -1,6 +1,6 @@
 "use server";
 
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
@@ -58,50 +58,49 @@ const blogCategorySchema = z.object({
 const blogCategoryUpdateSchema = blogCategorySchema.partial();
 
 export async function getBlogArticles(filters?: { kategori?: string; search?: string; status?: string }) {
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  const supabase = createAdminClient();
 
+  let query = supabase.from("blog_artikel").select("*");
   if (filters?.kategori) {
-    conditions.push(`kategori_id = $${idx++}`);
-    params.push(filters.kategori);
+    query = query.eq("kategori_id", filters.kategori);
   }
   if (filters?.search) {
-    conditions.push(`judul ILIKE $${idx++}`);
-    params.push(`%${filters.search}%`);
+    query = query.ilike("judul", `%${filters.search}%`);
   }
   if (filters?.status) {
-    conditions.push(`status = $${idx++}`);
-    params.push(filters.status);
+    query = query.eq("status", filters.status);
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  return queryPooler(`
-    SELECT 
-      ba.*,
-      COALESCE(comment_counts.count, 0) AS comment_count
-    FROM blog_artikel ba
-    LEFT JOIN (
-      SELECT artikel_id, COUNT(*)::int AS count 
-      FROM blog_komentar 
-      WHERE approved = true 
-      GROUP BY artikel_id
-    ) comment_counts ON ba.id = comment_counts.artikel_id
-    ${whereClause}
-    ORDER BY ba.created_at DESC
-    LIMIT 500
-  `, params);
+  const { data: articles, error } = await query.order("created_at", { ascending: false }).limit(500);
+  if (error) throw error;
+
+  const { data: comments } = await supabase
+    .from("blog_komentar")
+    .select("artikel_id")
+    .eq("approved", true);
+
+  const commentCounts = new Map<string, number>();
+  for (const c of comments ?? []) {
+    commentCounts.set(c.artikel_id, (commentCounts.get(c.artikel_id) ?? 0) + 1);
+  }
+
+  return (articles ?? []).map((a) => ({
+    ...a,
+    comment_count: commentCounts.get(a.id) ?? 0,
+  }));
 }
 
 export async function getAdminBlogArticlesPage(filters: Record<string, unknown> = {}) {
   await requireAdmin();
+  const supabase = createAdminClient();
 
   const parsed = adminBlogFiltersSchema.safeParse(filters);
   if (!parsed.success) {
     throw new Error("Invalid admin blog filters: " + parsed.error.issues[0].message);
   }
+  const d = parsed.data;
 
-  const page = parsePositiveInt(parsed.data.page, 1);
+  const page = parsePositiveInt(d.page, 1);
   const { from } = getPaginationRange(page, ADMIN_BLOG_PAGE_SIZE);
   const ALLOWED_SORT_COLUMNS: Record<string, string> = {
     date: "created_at",
@@ -109,76 +108,37 @@ export async function getAdminBlogArticlesPage(filters: Record<string, unknown> 
     likes: "jumlah_like",
     title: "judul",
   };
-  const sortColumn = ALLOWED_SORT_COLUMNS[parsed.data.sort ?? "date"] ?? "created_at";
-  const sortDirection = (parsed.data.order ?? "desc") === "asc" ? "ASC" : "DESC";
+  const sortColumn = ALLOWED_SORT_COLUMNS[d.sort ?? "date"] ?? "created_at";
+  const sortAscending = (d.order ?? "desc") === "asc";
 
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
-
-  if (parsed.data.q) {
-    conditions.push(`a.judul ILIKE $${idx++}`);
-    params.push(`%${parsed.data.q}%`);
-  }
-  if (parsed.data.status) {
-    conditions.push(`a.status = $${idx++}`);
-    params.push(parsed.data.status);
-  }
-  if (parsed.data.category) {
-    conditions.push(`a.kategori_id = $${idx++}`);
-    params.push(parsed.data.category);
-  }
-  if (parsed.data.featured === "true") {
-    conditions.push(`a.featured = true`);
+  function applyFilters(q: any) {
+    if (d.q) {
+      q = q.ilike("judul", `%${d.q}%`);
+    }
+    if (d.status) {
+      q = q.eq("status", d.status);
+    }
+    if (d.category) {
+      q = q.eq("kategori_id", d.category);
+    }
+    if (d.featured === "true") {
+      q = q.eq("featured", true);
+    }
+    return q;
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const [countResult, dataResult] = await Promise.all([
+    applyFilters(supabase.from("blog_artikel").select("*", { count: "exact", head: true })),
+    applyFilters(
+      supabase.from("blog_artikel").select("id, judul, slug, ringkasan, konten, thumbnail_url, status, featured, jumlah_view, jumlah_like, waktu_baca, published_at, created_at, kategori:kategori_id(id, nama, warna)")
+    ).order(sortColumn, { ascending: sortAscending }).range(from, from + ADMIN_BLOG_PAGE_SIZE - 1),
+  ]);
 
-  const countResult = await queryPooler<{ count: number }>(
-    `SELECT COUNT(*)::int AS count FROM blog_artikel a ${whereClause}`,
-    params,
-  );
-  const totalItems = countResult[0]?.count ?? 0;
-
-  const limitIdx = idx++;
-  const offsetIdx = idx++;
-  const dataParams = [...params, ADMIN_BLOG_PAGE_SIZE, from];
-
-  const articles = await queryPooler<{
-    id: string;
-    judul: string;
-    slug: string;
-    ringkasan: string;
-    konten: string;
-    thumbnail_url: string | null;
-    status: "draft" | "published";
-    featured: boolean;
-    jumlah_view: number;
-    jumlah_like: number;
-    waktu_baca: number;
-    published_at: string | null;
-    created_at: string;
-    kategori: { id: string; nama: string; warna: string | null } | null;
-  }>(
-    `SELECT
-      a.id, a.judul, a.slug, a.ringkasan, a.konten, a.thumbnail_url,
-      a.status, a.featured, a.jumlah_view, a.jumlah_like, a.waktu_baca,
-      a.published_at, a.created_at,
-      CASE WHEN k.id IS NOT NULL
-        THEN json_build_object('id', k.id, 'nama', k.nama, 'warna', k.warna)
-        ELSE NULL
-      END AS kategori
-    FROM blog_artikel a
-    LEFT JOIN kategori k ON a.kategori_id = k.id
-    ${whereClause}
-    ORDER BY a.${sortColumn} ${sortDirection}
-    LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
-    dataParams,
-  );
+  const totalItems = countResult.count ?? 0;
 
   return {
-    articles: articles ?? [],
-    filters: parsed.data,
+    articles: dataResult.data ?? [],
+    filters: d,
     pagination: {
       page,
       pageSize: ADMIN_BLOG_PAGE_SIZE,
@@ -189,22 +149,21 @@ export async function getAdminBlogArticlesPage(filters: Record<string, unknown> 
 }
 
 export async function getBlogArticle(slug: string) {
-  try {
-    const data = await queryPoolerSingle(`SELECT * FROM blog_artikel WHERE slug = $1 LIMIT 1`, [slug]);
-    return data;
-  } catch {
-    return null;
-  }
+  const supabase = createAdminClient();
+  const { data } = await supabase.from("blog_artikel").select("*").eq("slug", slug).limit(1).maybeSingle();
+  return data;
 }
 
 export async function getBlogArticleById(id: string) {
-  const data = await queryPoolerSingle(`SELECT * FROM blog_artikel WHERE id = $1`, [id]);
-  if (!data) throw new Error("Article not found");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.from("blog_artikel").select("*").eq("id", id).single();
+  if (error || !data) throw new Error("Article not found");
   return data;
 }
 
 export async function createBlogArticle(data: Record<string, unknown>) {
   await requireAdmin();
+  const supabase = createAdminClient();
 
   const parsed = createBlogArticleSchema.safeParse(data);
   if (!parsed.success) {
@@ -219,30 +178,31 @@ export async function createBlogArticle(data: Record<string, unknown>) {
   const waktuBaca = articleInput.waktuBaca ?? Math.max(1, Math.ceil(articleInput.konten.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length / 220));
   const publishedAt = articleInput.status === "published" ? new Date().toISOString() : null;
 
-  const [article] = await queryPooler(
-    `INSERT INTO blog_artikel (judul, slug, ringkasan, konten, kategori_id, status, featured, thumbnail_url, waktu_baca, published_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-     RETURNING *`,
-    [
-      articleInput.judul,
-      articleInput.slug,
-      articleInput.ringkasan,
-      sanitizeRichHtml(articleInput.konten),
-      articleInput.kategoriId || null,
-      articleInput.status,
-      articleInput.featured ?? false,
-      articleInput.thumbnailUrl || null,
-      waktuBaca,
-      publishedAt,
-    ],
-  );
-  if (!article) throw new Error("Failed to create article");
+  const { data: article, error } = await supabase
+    .from("blog_artikel")
+    .insert({
+      judul: articleInput.judul,
+      slug: articleInput.slug,
+      ringkasan: articleInput.ringkasan,
+      konten: sanitizeRichHtml(articleInput.konten),
+      kategori_id: articleInput.kategoriId || null,
+      status: articleInput.status,
+      featured: articleInput.featured ?? false,
+      thumbnail_url: articleInput.thumbnailUrl || null,
+      waktu_baca: waktuBaca,
+      published_at: publishedAt,
+    })
+    .select()
+    .single();
+
+  if (error || !article) throw new Error("Failed to create article");
   updatePublicContent([CACHE_TAGS.blog]);
   return article;
 }
 
 export async function updateBlogArticle(slug: string, data: Record<string, unknown>) {
   await requireAdmin();
+  const supabase = createAdminClient();
 
   const parsedSlug = z.string().min(1).max(200).trim().safeParse(slug);
   if (!parsedSlug.success) {
@@ -259,63 +219,52 @@ export async function updateBlogArticle(slug: string, data: Record<string, unkno
   void _metaTitle;
   void _metaDescription;
 
-  const setClauses: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  const updateObj: Record<string, unknown> = {};
 
   if (typeof articleInput.judul === "string") {
-    setClauses.push(`judul = $${idx++}`);
-    params.push(articleInput.judul);
+    updateObj.judul = articleInput.judul;
   }
   if (typeof articleInput.slug === "string") {
-    setClauses.push(`slug = $${idx++}`);
-    params.push(articleInput.slug);
+    updateObj.slug = articleInput.slug;
   }
   if (typeof articleInput.ringkasan === "string") {
-    setClauses.push(`ringkasan = $${idx++}`);
-    params.push(articleInput.ringkasan);
+    updateObj.ringkasan = articleInput.ringkasan;
   }
   if (typeof articleInput.konten === "string") {
-    setClauses.push(`konten = $${idx++}`);
-    params.push(sanitizeRichHtml(articleInput.konten));
+    updateObj.konten = sanitizeRichHtml(articleInput.konten);
   }
   if (typeof articleInput.status === "string") {
-    setClauses.push(`status = $${idx++}`);
-    params.push(articleInput.status);
-    setClauses.push(`published_at = $${idx++}`);
-    params.push(articleInput.status === "published" ? new Date().toISOString() : null);
+    updateObj.status = articleInput.status;
+    updateObj.published_at = articleInput.status === "published" ? new Date().toISOString() : null;
   }
   if (typeof articleInput.featured === "boolean") {
-    setClauses.push(`featured = $${idx++}`);
-    params.push(articleInput.featured);
+    updateObj.featured = articleInput.featured;
   }
   if (typeof articleInput.kategoriId === "string") {
-    setClauses.push(`kategori_id = $${idx++}`);
-    params.push(articleInput.kategoriId || null);
+    updateObj.kategori_id = articleInput.kategoriId || null;
   }
   if (typeof articleInput.thumbnailUrl === "string") {
-    setClauses.push(`thumbnail_url = $${idx++}`);
-    params.push(articleInput.thumbnailUrl || null);
+    updateObj.thumbnail_url = articleInput.thumbnailUrl || null;
   }
   if (typeof articleInput.waktuBaca === "number") {
-    setClauses.push(`waktu_baca = $${idx++}`);
-    params.push(articleInput.waktuBaca);
+    updateObj.waktu_baca = articleInput.waktuBaca;
   }
   if (typeof articleInput.jumlahView === "number") {
-    setClauses.push(`jumlah_view = $${idx++}`);
-    params.push(articleInput.jumlahView);
+    updateObj.jumlah_view = articleInput.jumlahView;
   }
 
-  if (setClauses.length === 0) {
+  if (Object.keys(updateObj).length === 0) {
     throw new Error("No fields to update");
   }
 
-  params.push(parsedSlug.data);
-  const [article] = await queryPooler(
-    `UPDATE blog_artikel SET ${setClauses.join(", ")} WHERE slug = $${idx} RETURNING *`,
-    params,
-  );
-  if (!article) throw new Error("Article not found");
+  const { data: article, error } = await supabase
+    .from("blog_artikel")
+    .update(updateObj)
+    .eq("slug", parsedSlug.data)
+    .select()
+    .single();
+
+  if (error || !article) throw new Error("Article not found");
   updatePublicContent([CACHE_TAGS.blog]);
   return article;
 }
@@ -328,7 +277,9 @@ export async function deleteBlogArticle(id: string) {
     throw new Error("Invalid article ID: must be a valid UUID");
   }
 
-  await queryPooler(`DELETE FROM blog_artikel WHERE id = $1`, [parsed.data]);
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("blog_artikel").delete().eq("id", parsed.data);
+  if (error) throw error;
   updatePublicContent([CACHE_TAGS.blog]);
   return { success: true };
 }
@@ -342,39 +293,43 @@ export async function toggleBlogLike(articleId: string) {
   const ip = await getClientIp();
   await rateLimit(ip, "blog-like", { max: 30, window: 60 * 60 * 1000 });
 
-  const existing = await queryPoolerSingle<{ id: string }>(
-    `SELECT id FROM blog_like WHERE artikel_id = $1 AND ip_address = $2`,
-    [parsedId.data, ip],
-  );
+  const supabase = createAdminClient();
+
+  const { data: existing } = await supabase
+    .from("blog_like")
+    .select("id")
+    .eq("artikel_id", parsedId.data)
+    .eq("ip_address", ip)
+    .maybeSingle();
 
   if (existing) {
-    await queryPooler(`DELETE FROM blog_like WHERE id = $1`, [existing.id]);
-    await queryPooler(`SELECT decrement_like($1)`, [parsedId.data]);
+    await supabase.from("blog_like").delete().eq("id", existing.id);
+    await supabase.rpc("decrement_like", { article_id: parsedId.data });
   } else {
-    await queryPooler(
-      `INSERT INTO blog_like (artikel_id, ip_address) VALUES ($1, $2)`,
-      [parsedId.data, ip],
-    );
-    await queryPooler(`SELECT increment_like($1)`, [parsedId.data]);
+    await supabase.from("blog_like").insert({ artikel_id: parsedId.data, ip_address: ip });
+    await supabase.rpc("increment_like", { article_id: parsedId.data });
   }
   return { success: true };
 }
 
 export async function getBlogCategories() {
-  return queryPooler(`SELECT * FROM kategori ORDER BY nama`);
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.from("kategori").select("*").order("nama");
+  if (error) throw error;
+  return data ?? [];
 }
 
 export async function getAdminBlogCategoriesPage() {
   await requireAdmin();
+  const supabase = createAdminClient();
 
-  const [categories, articles] = await Promise.all([
-    queryPooler<{ id: string; nama: string; slug: string; deskripsi: string | null; warna: string | null; created_at: string }>(
-      `SELECT id, nama, slug, deskripsi, warna, created_at FROM kategori ORDER BY nama ASC`,
-    ),
-    queryPooler<{ kategori_id: string | null }>(
-      `SELECT kategori_id FROM blog_artikel WHERE kategori_id IS NOT NULL`,
-    ),
+  const [categoriesResult, articlesResult] = await Promise.all([
+    supabase.from("kategori").select("id, nama, slug, deskripsi, warna, created_at").order("nama", { ascending: true }),
+    supabase.from("blog_artikel").select("kategori_id").not("kategori_id", "is", null),
   ]);
+
+  const categories = categoriesResult.data ?? [];
+  const articles = articlesResult.data ?? [];
 
   const articleCounts = new Map<string, number>();
   for (const article of articles) {
@@ -405,10 +360,15 @@ export async function getBlogCategoryBySlug(slug: string) {
     throw new Error("Invalid category slug");
   }
 
-  return queryPoolerSingle(
-    `SELECT id, nama, slug, deskripsi, warna, created_at FROM kategori WHERE slug = $1`,
-    [parsed.data],
-  );
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("kategori")
+    .select("id, nama, slug, deskripsi, warna, created_at")
+    .eq("slug", parsed.data)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
 }
 
 export async function createBlogCategory(input: Record<string, unknown>) {
@@ -422,13 +382,19 @@ export async function createBlogCategory(input: Record<string, unknown>) {
   const slug = parsed.data.slug || createSlug(parsed.data.nama);
   if (!slug) throw new Error("Category slug could not be generated");
 
-  const [data] = await queryPooler(
-    `INSERT INTO kategori (nama, slug, deskripsi, warna)
-     VALUES ($1, $2, $3, $4)
-     RETURNING *`,
-    [parsed.data.nama, slug, parsed.data.deskripsi || null, parsed.data.warna || null],
-  );
-  if (!data) throw new Error("Failed to create category");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("kategori")
+    .insert({
+      nama: parsed.data.nama,
+      slug,
+      deskripsi: parsed.data.deskripsi || null,
+      warna: parsed.data.warna || null,
+    })
+    .select()
+    .single();
+
+  if (error || !data) throw new Error("Failed to create category");
   updatePublicContent([CACHE_TAGS.blog]);
   return data;
 }
@@ -446,37 +412,34 @@ export async function updateBlogCategory(id: string, input: Record<string, unkno
     throw new Error("Invalid category data: " + parsed.error.issues[0].message);
   }
 
-  const setClauses: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  const updateObj: Record<string, unknown> = {};
 
   if (typeof parsed.data.nama === "string") {
-    setClauses.push(`nama = $${idx++}`);
-    params.push(parsed.data.nama);
+    updateObj.nama = parsed.data.nama;
   }
   if (typeof parsed.data.slug === "string") {
-    setClauses.push(`slug = $${idx++}`);
-    params.push(parsed.data.slug || createSlug(parsed.data.nama ?? ""));
+    updateObj.slug = parsed.data.slug || createSlug(parsed.data.nama ?? "");
   }
   if (typeof parsed.data.deskripsi === "string") {
-    setClauses.push(`deskripsi = $${idx++}`);
-    params.push(parsed.data.deskripsi || null);
+    updateObj.deskripsi = parsed.data.deskripsi || null;
   }
   if (typeof parsed.data.warna === "string") {
-    setClauses.push(`warna = $${idx++}`);
-    params.push(parsed.data.warna || null);
+    updateObj.warna = parsed.data.warna || null;
   }
 
-  if (setClauses.length === 0) {
+  if (Object.keys(updateObj).length === 0) {
     throw new Error("No category fields to update");
   }
 
-  params.push(parsedId.data);
-  const [data] = await queryPooler(
-    `UPDATE kategori SET ${setClauses.join(", ")} WHERE id = $${idx} RETURNING *`,
-    params,
-  );
-  if (!data) throw new Error("Category not found");
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("kategori")
+    .update(updateObj)
+    .eq("id", parsedId.data)
+    .select()
+    .single();
+
+  if (error || !data) throw new Error("Category not found");
   updatePublicContent([CACHE_TAGS.blog]);
   return data;
 }
@@ -489,24 +452,33 @@ export async function deleteBlogCategory(id: string) {
     throw new Error("Invalid category ID: must be a valid UUID");
   }
 
-  const [countResult] = await queryPooler<{ count: number }>(
-    `SELECT COUNT(*)::int AS count FROM blog_artikel WHERE kategori_id = $1`,
-    [parsed.data],
-  );
-  if ((countResult?.count ?? 0) > 0) {
-    throw new Error(`Category is used by ${countResult.count} article(s). Reassign articles before deleting.`);
+  const supabase = createAdminClient();
+
+  const { count } = await supabase
+    .from("blog_artikel")
+    .select("*", { count: "exact", head: true })
+    .eq("kategori_id", parsed.data);
+
+  if ((count ?? 0) > 0) {
+    throw new Error(`Category is used by ${count} article(s). Reassign articles before deleting.`);
   }
 
-  await queryPooler(`DELETE FROM kategori WHERE id = $1`, [parsed.data]);
+  const { error } = await supabase.from("kategori").delete().eq("id", parsed.data);
+  if (error) throw error;
   updatePublicContent([CACHE_TAGS.blog]);
   return { success: true };
 }
 
 export async function getBlogComments(articleId: string) {
-  return queryPooler(
-    `SELECT * FROM blog_komentar WHERE artikel_id = $1 AND approved = true ORDER BY created_at`,
-    [articleId],
-  );
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("blog_komentar")
+    .select("*")
+    .eq("artikel_id", articleId)
+    .eq("approved", true)
+    .order("created_at");
+  if (error) throw error;
+  return data ?? [];
 }
 
 export async function createBlogComment(data: Record<string, unknown>) {
@@ -526,36 +498,38 @@ export async function createBlogComment(data: Record<string, unknown>) {
 
   const sanitizedContent = sanitizeRichHtml(parsed.data.isi_komentar);
 
-  const [comment] = await queryPooler(
-    `INSERT INTO blog_komentar (artikel_id, nama_komentator, email_komentator, isi_komentar)
-     VALUES ($1, $2, $3, $4)
-     RETURNING *`,
-    [parsed.data.artikel_id, parsed.data.nama_komentator, parsed.data.email_komentator, sanitizedContent],
-  );
-  if (!comment) throw new Error("Failed to create comment");
+  const supabase = createAdminClient();
+  const { data: comment, error } = await supabase
+    .from("blog_komentar")
+    .insert({
+      artikel_id: parsed.data.artikel_id,
+      nama_komentator: parsed.data.nama_komentator,
+      email_komentator: parsed.data.email_komentator,
+      isi_komentar: sanitizedContent,
+    })
+    .select()
+    .single();
+
+  if (error || !comment) throw new Error("Failed to create comment");
   return comment;
 }
 
 export async function getBlogStats() {
   await requireAdmin();
-  const [row] = await queryPooler<{
-    total: number;
-    published: number;
-    draft: number;
-    featured: number;
-  }>(
-    `SELECT
-      COUNT(*)::int AS total,
-      COUNT(*) FILTER (WHERE status = 'published')::int AS published,
-      COUNT(*) FILTER (WHERE status = 'draft')::int AS draft,
-      COUNT(*) FILTER (WHERE featured = true)::int AS featured
-    FROM blog_artikel`,
-  );
+  const supabase = createAdminClient();
+
+  const [totalRes, publishedRes, draftRes, featuredRes] = await Promise.all([
+    supabase.from("blog_artikel").select("*", { count: "exact", head: true }),
+    supabase.from("blog_artikel").select("*", { count: "exact", head: true }).eq("status", "published"),
+    supabase.from("blog_artikel").select("*", { count: "exact", head: true }).eq("status", "draft"),
+    supabase.from("blog_artikel").select("*", { count: "exact", head: true }).eq("featured", true),
+  ]);
+
   return {
-    total: row?.total ?? 0,
-    published: row?.published ?? 0,
-    draft: row?.draft ?? 0,
-    featured: row?.featured ?? 0,
+    total: totalRes.count ?? 0,
+    published: publishedRes.count ?? 0,
+    draft: draftRes.count ?? 0,
+    featured: featuredRes.count ?? 0,
   };
 }
 
@@ -568,7 +542,9 @@ export async function trackArticleView(articleId: string) {
   const ip = await getClientIp();
   await rateLimit(`${ip}:${parsedId.data}`, "blog-view", { max: 10, window: 60 * 60 * 1000 });
 
-  await queryPooler(`SELECT increment_view($1)`, [parsedId.data]);
+  const supabase = createAdminClient();
+  const { error } = await supabase.rpc("increment_view", { article_id: parsedId.data });
+  if (error) throw error;
 
   return { success: true };
 }
@@ -584,24 +560,17 @@ export async function bulkUpdateArticles(ids: string[], updates: Partial<{ statu
     throw new Error("Invalid article updates: " + parsedUpdates.error.issues[0].message);
   }
 
-  const setClauses: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
-
+  const updateObj: Record<string, unknown> = {};
   if (parsedUpdates.data.status !== undefined) {
-    setClauses.push(`status = $${idx++}`);
-    params.push(parsedUpdates.data.status);
+    updateObj.status = parsedUpdates.data.status;
   }
   if (parsedUpdates.data.featured !== undefined) {
-    setClauses.push(`featured = $${idx++}`);
-    params.push(parsedUpdates.data.featured);
+    updateObj.featured = parsedUpdates.data.featured;
   }
 
-  params.push(parsedIds.data);
-  await queryPooler(
-    `UPDATE blog_artikel SET ${setClauses.join(", ")} WHERE id = ANY($${idx})`,
-    params,
-  );
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("blog_artikel").update(updateObj).in("id", parsedIds.data);
+  if (error) throw error;
   updatePublicContent([CACHE_TAGS.blog]);
   return { success: true };
 }
@@ -613,38 +582,39 @@ export async function bulkDeleteArticles(ids: string[]) {
     throw new Error("Invalid article IDs: " + parsedIds.error.issues[0].message);
   }
 
-  await queryPooler(`DELETE FROM blog_artikel WHERE id = ANY($1)`, [parsedIds.data]);
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("blog_artikel").delete().in("id", parsedIds.data);
+  if (error) throw error;
   updatePublicContent([CACHE_TAGS.blog]);
   return { success: true };
 }
 
 export async function duplicateArticle(slug: string) {
   await requireAdmin();
+  const supabase = createAdminClient();
 
-  const original = await queryPoolerSingle(`SELECT * FROM blog_artikel WHERE slug = $1`, [slug]);
-  if (!original) throw new Error("Article not found");
+  const { data: original, error: fetchError } = await supabase.from("blog_artikel").select("*").eq("slug", slug).single();
+  if (fetchError || !original) throw new Error("Article not found");
 
   const timestamp = Date.now();
   const newSlug = `${original.slug}-copy-${timestamp}`;
 
-  await queryPooler(
-    `INSERT INTO blog_artikel (judul, slug, ringkasan, konten, thumbnail_url, kategori_id, status, featured, jumlah_like, jumlah_view, waktu_baca, published_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-    [
-      `${original.judul} (Copy)`,
-      newSlug,
-      original.ringkasan,
-      original.konten,
-      original.thumbnail_url,
-      original.kategori_id,
-      "draft",
-      false,
-      0,
-      0,
-      original.waktu_baca,
-      null,
-    ],
-  );
+  const { error: insertError } = await supabase.from("blog_artikel").insert({
+    judul: `${original.judul} (Copy)`,
+    slug: newSlug,
+    ringkasan: original.ringkasan,
+    konten: original.konten,
+    thumbnail_url: original.thumbnail_url,
+    kategori_id: original.kategori_id,
+    status: "draft",
+    featured: false,
+    jumlah_like: 0,
+    jumlah_view: 0,
+    waktu_baca: original.waktu_baca,
+    published_at: null,
+  });
+
+  if (insertError) throw insertError;
 
   updatePublicContent([CACHE_TAGS.blog]);
   return { success: true, slug: newSlug };

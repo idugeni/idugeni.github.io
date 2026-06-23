@@ -1,9 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { sql } from "kysely";
-import { queryPooler } from "@/lib/db/pooler";
-import { db } from "@/lib/db/kysely";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { rateLimit } from "@/lib/rate-limit";
@@ -89,7 +87,6 @@ export async function submitContactMessage(data: { nama: string; email: string; 
   const ip = await getClientIp();
   await rateLimit(ip, "contact", { max: 5, window: 15 * 60 * 1000 });
 
-  // Validate CSRF token
   const csrfToken = data.csrf_token;
   if (!csrfToken || !validateCSRFToken(csrfToken)) {
     throw new Error("Invalid security token. Please refresh the page and try again.");
@@ -99,6 +96,8 @@ export async function submitContactMessage(data: { nama: string; email: string; 
   if (!parsed.success) {
     throw new Error("Invalid input");
   }
+
+  const supabase = createAdminClient();
 
   const messagePayload = {
     nama: parsed.data.nama,
@@ -110,21 +109,25 @@ export async function submitContactMessage(data: { nama: string; email: string; 
     attachments: parsed.data.attachments || [],
   };
 
-  const [insertedMessage] = await db
-    .insertInto("contact_messages")
-    .values({
+  const { data: insertedMessage, error: insertError } = await supabase
+    .from("contact_messages")
+    .insert({
       nama: messagePayload.nama,
       email: messagePayload.email,
       subjek: messagePayload.subjek,
       pesan: messagePayload.pesan,
       no_wa: messagePayload.noWa || null,
       layanan: messagePayload.layanan || null,
-      attachments: sql<string[]>`${JSON.stringify(messagePayload.attachments)}::jsonb`,
+      attachments: messagePayload.attachments,
       resend_admin_status: "pending",
       resend_auto_reply_status: process.env.CONTACT_AUTO_REPLY_ENABLED === "true" ? "pending" : "skipped",
     })
-    .returning("id")
-    .execute();
+    .select("id")
+    .single();
+
+  if (insertError || !insertedMessage) {
+    throw new Error(insertError?.message || "Failed to insert contact message");
+  }
 
   const [adminNotification, autoReply] = await Promise.all([
     sendContactNotification(messagePayload),
@@ -134,9 +137,9 @@ export async function submitContactMessage(data: { nama: string; email: string; 
   const deliveryUpdate = toResendUpdate(adminNotification, autoReply);
 
   try {
-    await db
-      .updateTable("contact_messages")
-      .set({
+    await supabase
+      .from("contact_messages")
+      .update({
         resend_admin_status: deliveryUpdate.resend_admin_status,
         resend_admin_email_id: deliveryUpdate.resend_admin_email_id,
         resend_admin_error: deliveryUpdate.resend_admin_error,
@@ -145,8 +148,7 @@ export async function submitContactMessage(data: { nama: string; email: string; 
         resend_auto_reply_error: deliveryUpdate.resend_auto_reply_error,
         resend_sent_at: deliveryUpdate.resend_sent_at,
       })
-      .where("id", "=", insertedMessage.id)
-      .execute();
+      .eq("id", insertedMessage.id);
   } catch (deliveryError) {
     console.error("Failed to persist contact Resend delivery status", deliveryError);
   }
@@ -163,22 +165,23 @@ export async function submitContactMessage(data: { nama: string; email: string; 
 
 export async function getContactMessages(filters?: { dibaca?: boolean }) {
   await requireAdmin();
+  const supabase = createAdminClient();
 
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  let query = supabase
+    .from("contact_messages")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
   if (filters?.dibaca === false) {
-    conditions.push(`dibaca = $${idx}`);
-    params.push(false);
-    idx++;
+    query = query.eq("dibaca", false);
   }
   if (filters?.dibaca === true) {
-    conditions.push(`dibaca = $${idx}`);
-    params.push(true);
-    idx++;
+    query = query.eq("dibaca", true);
   }
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  return await queryPooler(`SELECT * FROM contact_messages ${where} ORDER BY created_at DESC LIMIT 100`, params);
+
+  const { data } = await query;
+  return (data ?? []) as ContactMessageRow[];
 }
 
 export async function getAdminContactMessagesPage(rawFilters: unknown) {
@@ -187,65 +190,47 @@ export async function getAdminContactMessagesPage(rawFilters: unknown) {
   const filtersParsed = adminMessagesFilterSchema.safeParse(rawFilters ?? {});
   if (!filtersParsed.success) throw new Error("Invalid input");
   const filters = filtersParsed.data;
+
+  const supabase = createAdminClient();
   const from = (filters.page - 1) * filters.pageSize;
 
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  let query = supabase
+    .from("contact_messages")
+    .select("*", { count: "exact" });
 
   if (filters.q) {
     const escaped = filters.q.replace(/[%_]/g, "\\$&");
-    const ilikePattern = `%${escaped}%`;
-    conditions.push(`(
-      cm.nama ILIKE $${idx} ESCAPE '\\\\'
-      OR cm.email ILIKE $${idx + 1} ESCAPE '\\\\'
-      OR cm.subjek ILIKE $${idx + 2} ESCAPE '\\\\'
-      OR cm.pesan ILIKE $${idx + 3} ESCAPE '\\\\'
-    )`);
-    params.push(ilikePattern, ilikePattern, ilikePattern, ilikePattern);
-    idx += 4;
+    const pattern = `%${escaped}%`;
+    query = query.or(
+      `nama.ilike.${pattern},email.ilike.${pattern},subjek.ilike.${pattern},pesan.ilike.${pattern}`
+    );
   }
   if (filters.read === "read") {
-    conditions.push("cm.dibaca = true");
+    query = query.eq("dibaca", true);
   }
   if (filters.read === "unread") {
-    conditions.push("cm.dibaca = false");
+    query = query.eq("dibaca", false);
   }
   if (filters.replied === "replied") {
-    conditions.push("cm.dibalas = true");
+    query = query.eq("dibalas", true);
   }
   if (filters.replied === "unreplied") {
-    conditions.push("cm.dibalas = false");
+    query = query.eq("dibalas", false);
   }
   if (filters.resend) {
-    conditions.push(`cm.resend_admin_status = $${idx}`);
-    params.push(filters.resend);
-    idx++;
+    query = query.eq("resend_admin_status", filters.resend);
   }
   if (filters.service) {
-    conditions.push(`cm.layanan = $${idx}`);
-    params.push(filters.service);
-    idx++;
+    query = query.eq("layanan", filters.service);
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const sortColumn = getSortColumn(filters.sort);
-  const sortDirection = filters.order === "asc" ? "ASC" : "DESC";
 
-  const countResult = await queryPooler<{ count: number }>(
-    `SELECT COUNT(*)::int AS count FROM contact_messages cm ${whereClause}`,
-    params,
-  );
-  const totalItems = countResult[0]?.count ?? 0;
+  const { data, count } = await query
+    .order(sortColumn, { ascending: filters.order === "asc" })
+    .range(from, from + filters.pageSize - 1);
 
-  const limitIdx = idx++;
-  const offsetIdx = idx++;
-  const dataParams = [...params, filters.pageSize, from];
-
-  const data = await queryPooler<ContactMessageRow>(
-    `SELECT * FROM contact_messages cm ${whereClause} ORDER BY cm.${sortColumn} ${sortDirection} LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
-    dataParams,
-  );
+  const totalItems = count ?? 0;
 
   return {
     messages: (data ?? []) as ContactMessageRow[],
@@ -261,49 +246,63 @@ export async function getAdminContactMessagesPage(rawFilters: unknown) {
 
 export async function getContactMessageStats() {
   await requireAdmin();
+  const supabase = createAdminClient();
 
-  const [row] = await queryPooler<{
-    total: number;
-    unread: number;
-    unreplied: number;
-    replied: number;
-    resend_sent: number;
-    resend_failed: number;
-    resend_skipped: number;
-  }>(
-    `SELECT
-      COUNT(*)::int AS total,
-      COUNT(*) FILTER (WHERE NOT dibaca)::int AS unread,
-      COUNT(*) FILTER (WHERE NOT dibalas)::int AS unreplied,
-      COUNT(*) FILTER (WHERE dibalas)::int AS replied,
-      COUNT(*) FILTER (WHERE resend_admin_status = 'sent')::int AS resend_sent,
-      COUNT(*) FILTER (WHERE resend_admin_status = 'failed')::int AS resend_failed,
-      COUNT(*) FILTER (WHERE resend_admin_status = 'skipped')::int AS resend_skipped
-    FROM contact_messages`,
-  );
+  async function countWithFilter(filters?: { [key: string]: any }) {
+    let query = supabase
+      .from("contact_messages")
+      .select("*", { count: "exact", head: true });
+
+    if (filters) {
+      for (const [key, value] of Object.entries(filters)) {
+        if (value === null) {
+          query = query.is(key, null);
+        } else {
+          query = query.eq(key, value);
+        }
+      }
+    }
+
+    const { count } = await query;
+    return count ?? 0;
+  }
+
+  const [total, unread, unreplied, replied, resendSent, resendFailed, resendSkipped] = await Promise.all([
+    countWithFilter(),
+    countWithFilter({ dibaca: false }),
+    countWithFilter({ dibalas: false }),
+    countWithFilter({ dibalas: true }),
+    countWithFilter({ resend_admin_status: "sent" }),
+    countWithFilter({ resend_admin_status: "failed" }),
+    countWithFilter({ resend_admin_status: "skipped" }),
+  ]);
 
   return {
-    total: row?.total ?? 0,
-    unread: row?.unread ?? 0,
-    unreplied: row?.unreplied ?? 0,
-    replied: row?.replied ?? 0,
-    resendSent: row?.resend_sent ?? 0,
-    resendFailed: row?.resend_failed ?? 0,
-    resendSkipped: row?.resend_skipped ?? 0,
+    total,
+    unread,
+    unreplied,
+    replied,
+    resendSent,
+    resendFailed,
+    resendSkipped,
   };
 }
 
 export async function getContactMessageServices() {
   await requireAdmin();
+  const supabase = createAdminClient();
 
-  const rows = await db
-    .selectFrom("contact_messages")
+  const { data } = await supabase
+    .from("contact_messages")
     .select("layanan")
-    .where("layanan", "is not", null)
-    .distinct()
-    .orderBy("layanan", "asc")
-    .execute();
-  return rows.map((row) => row.layanan as string);
+    .not("layanan", "is", null)
+    .order("layanan", { ascending: true });
+
+  const uniqueServices = [...new Set(
+    (data ?? []).map((row) => row.layanan).filter(Boolean)
+  )] as string[];
+
+  return uniqueServices;
 }
 
 export async function markMessageRead(id: string) {
@@ -314,11 +313,12 @@ export async function markMessageRead(id: string) {
     throw new Error("Invalid message ID: must be a valid UUID");
   }
 
-  await db
-    .updateTable("contact_messages")
-    .set({ dibaca: true })
-    .where("id", "=", parsed.data)
-    .execute();
+  const supabase = createAdminClient();
+  await supabase
+    .from("contact_messages")
+    .update({ dibaca: true })
+    .eq("id", parsed.data);
+
   revalidatePath("/admin/messages");
   return { success: true };
 }
@@ -331,11 +331,12 @@ export async function markMessageReplied(id: string) {
     throw new Error("Invalid message ID: must be a valid UUID");
   }
 
-  await db
-    .updateTable("contact_messages")
-    .set({ dibaca: true, dibalas: true, replied_at: new Date().toISOString() })
-    .where("id", "=", parsed.data)
-    .execute();
+  const supabase = createAdminClient();
+  await supabase
+    .from("contact_messages")
+    .update({ dibaca: true, dibalas: true, replied_at: new Date().toISOString() })
+    .eq("id", parsed.data);
+
   revalidatePath("/admin/messages");
   return { success: true };
 }
@@ -359,14 +360,12 @@ export async function bulkUpdateContactMessages(ids: string[], patch: { dibaca?:
     updatePatch.replied_at = null;
   }
 
-  const columns = Object.keys(updatePatch);
-  const values = Object.values(updatePatch);
-  const setClauses = columns.map((col, i) => `${col} = $${i + 1}`).join(", ");
-  const placeholders = parsedIds.map((_, i) => `$${i + columns.length + 1}`).join(", ");
-  await queryPooler(
-    `UPDATE contact_messages SET ${setClauses} WHERE id IN (${placeholders})`,
-    [...values, ...parsedIds],
-  );
+  const supabase = createAdminClient();
+  await supabase
+    .from("contact_messages")
+    .update(updatePatch)
+    .in("id", parsedIds);
+
   revalidatePath("/admin/messages");
   return { success: true };
 }
@@ -377,17 +376,16 @@ export async function bulkDeleteContactMessages(ids: string[]) {
   const parsedIdsResult = uuidArraySchema.safeParse(ids);
   if (!parsedIdsResult.success) throw new Error("Invalid input");
   const parsedIds = parsedIdsResult.data;
-  const placeholders = parsedIds.map((_, i) => `$${i + 1}`).join(", ");
 
-  // Fetch attachments for the messages to be deleted
-  const messages = await queryPooler<{ id: string; attachments: Array<{ url: string }> }>(
-    `SELECT id, attachments FROM contact_messages WHERE id IN (${placeholders})`,
-    parsedIds
-  );
+  const supabase = createAdminClient();
 
-  // Extract storage paths and delete from Supabase Storage
+  const { data: messages } = await supabase
+    .from("contact_messages")
+    .select("id, attachments")
+    .in("id", parsedIds);
+
   const storagePaths: string[] = [];
-  for (const msg of messages) {
+  for (const msg of messages ?? []) {
     if (msg.attachments && Array.isArray(msg.attachments)) {
       for (const att of msg.attachments) {
         const path = extractStoragePath(att.url);
@@ -400,8 +398,11 @@ export async function bulkDeleteContactMessages(ids: string[]) {
     await deleteAttachments(storagePaths);
   }
 
-  // Delete from database
-  await queryPooler(`DELETE FROM contact_messages WHERE id IN (${placeholders})`, parsedIds);
+  await supabase
+    .from("contact_messages")
+    .delete()
+    .in("id", parsedIds);
+
   revalidatePath("/admin/messages");
   return { success: true };
 }
@@ -414,11 +415,14 @@ export async function retryContactMessageNotification(id: string) {
     throw new Error("Invalid message ID: must be a valid UUID");
   }
 
-  const message = await db
-    .selectFrom("contact_messages")
-    .selectAll()
-    .where("id", "=", parsed.data)
-    .executeTakeFirst();
+  const supabase = createAdminClient();
+
+  const { data: message } = await supabase
+    .from("contact_messages")
+    .select("*")
+    .eq("id", parsed.data)
+    .maybeSingle();
+
   if (!message) throw new Error("Contact message not found");
 
   const adminNotification = await sendContactNotification({
@@ -430,16 +434,16 @@ export async function retryContactMessageNotification(id: string) {
     layanan: message.layanan ?? undefined,
   });
 
-  await db
-    .updateTable("contact_messages")
-    .set({
+  await supabase
+    .from("contact_messages")
+    .update({
       resend_admin_status: adminNotification.status,
       resend_admin_email_id: adminNotification.id ?? null,
       resend_admin_error: truncateReason(adminNotification.reason),
       resend_sent_at: adminNotification.status === "sent" ? new Date().toISOString() : (message.resend_sent_at ?? null),
     })
-    .where("id", "=", parsed.data)
-    .execute();
+    .eq("id", parsed.data);
+
   revalidatePath("/admin/messages");
   return { success: true, email: adminNotification };
 }

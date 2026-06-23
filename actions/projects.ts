@@ -1,6 +1,6 @@
 "use server";
 
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { updatePublicContent, CACHE_TAGS } from "@/lib/cache/tags";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
@@ -48,29 +48,22 @@ const adminProjectFiltersSchema = z.object({
 const ADMIN_PROJECT_PAGE_SIZE = 20;
 
 export async function getProjects(filters?: { kategori?: string; featured?: boolean; search?: string }) {
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  const supabase = createAdminClient();
 
+  let query = supabase.from("projects").select("*");
   if (filters?.kategori) {
-    conditions.push(`kategori = $${idx}`);
-    params.push(filters.kategori);
-    idx++;
+    query = query.eq("kategori", filters.kategori);
   }
   if (filters?.featured) {
-    conditions.push(`featured = $${idx}`);
-    params.push(true);
-    idx++;
+    query = query.eq("featured", true);
   }
   if (filters?.search) {
-    const escaped = filters.search.replace(/[%_]/g, '\\$&');
-    conditions.push(`nama ILIKE '%' || $${idx} || '%' ESCAPE '\\'`);
-    params.push(escaped);
-    idx++;
+    query = query.ilike("nama", `%${filters.search}%`);
   }
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  return queryPooler(`SELECT * FROM projects ${where} ORDER BY urutan LIMIT 200`, params);
+  const { data, error } = await query.order("urutan").limit(200);
+  if (error) throw error;
+  return data ?? [];
 }
 
 export async function getAdminProjectsPage(filters: Record<string, unknown> = {}) {
@@ -80,40 +73,44 @@ export async function getAdminProjectsPage(filters: Record<string, unknown> = {}
   if (!parsed.success) {
     throw new Error("Invalid admin project filters: " + parsed.error.issues[0].message);
   }
+  const data = parsed.data;
 
-  const page = parsePositiveInt(parsed.data.page, 1);
+  const page = parsePositiveInt(data.page, 1);
   const sortColumn = ({
     date: "created_at",
     name: "nama",
     status: "status",
-  } as const)[parsed.data.sort ?? "date"] ?? "created_at";
-  const sortDir = (parsed.data.order ?? "desc") === "asc" ? "ASC" : "DESC";
+  } as const)[data.sort ?? "date"] ?? "created_at";
+  const sortAscending = (data.order ?? "desc") === "asc";
 
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  const supabase = createAdminClient();
 
-  if (parsed.data.q) {
-    const escaped = parsed.data.q.replace(/[%_]/g, '\\$&');
-    conditions.push(`nama ILIKE '%' || $${idx} || '%' ESCAPE '\\'`);
-    params.push(escaped);
-    idx++;
+  function applyFilters(q: any) {
+    if (data.q) {
+      q = q.ilike("nama", `%${data.q}%`);
+    }
+    if (data.status) {
+      q = q.eq("status", data.status);
+    }
+    if (data.category) {
+      q = q.eq("kategori", data.category);
+    }
+    if (data.featured === "true") {
+      q = q.eq("featured", true);
+    }
+    return q;
   }
-  if (parsed.data.status) { conditions.push(`status = $${idx}`); params.push(parsed.data.status); idx++; }
-  if (parsed.data.category) { conditions.push(`kategori = $${idx}`); params.push(parsed.data.category); idx++; }
-  if (parsed.data.featured === "true") { conditions.push(`featured = $${idx}`); params.push(true); idx++; }
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  const offset = (page - 1) * ADMIN_PROJECT_PAGE_SIZE;
-
-  const [countResult, data] = await Promise.all([
-    queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM projects ${where}`, params),
-    queryPooler(`SELECT * FROM projects ${where} ORDER BY ${sortColumn} ${sortDir} LIMIT $${idx} OFFSET $${idx + 1}`, [...params, ADMIN_PROJECT_PAGE_SIZE, offset]),
+  const [countResult, dataResult] = await Promise.all([
+    applyFilters(supabase.from("projects").select("*", { count: "exact", head: true })),
+    applyFilters(supabase.from("projects").select("*"))
+      .order(sortColumn, { ascending: sortAscending })
+      .range((page - 1) * ADMIN_PROJECT_PAGE_SIZE, page * ADMIN_PROJECT_PAGE_SIZE - 1),
   ]);
 
-  const totalItems = countResult[0]?.count ?? 0;
+  const totalItems = countResult.count ?? 0;
   return {
-    projects: data ?? [],
+    projects: dataResult.data ?? [],
     filters: parsed.data,
     pagination: {
       page,
@@ -125,8 +122,9 @@ export async function getAdminProjectsPage(filters: Record<string, unknown> = {}
 }
 
 export async function getProject(id: string) {
-  const project = await queryPoolerSingle(`SELECT * FROM projects WHERE id = $1`, [id]);
-  if (!project) throw new Error("Project not found");
+  const supabase = createAdminClient();
+  const { data: project, error } = await supabase.from("projects").select("*").eq("id", id).single();
+  if (error || !project) throw new Error("Project not found");
   return project;
 }
 
@@ -138,32 +136,28 @@ export async function getProjectBySlug(slug: string) {
     throw new Error("Invalid project slug");
   }
 
-  const project = await queryPoolerSingle(`SELECT * FROM projects WHERE slug = $1`, [parsed.data]);
-  if (!project) throw new Error("Project not found");
+  const supabase = createAdminClient();
+  const { data: project, error } = await supabase.from("projects").select("*").eq("slug", parsed.data).single();
+  if (error || !project) throw new Error("Project not found");
   return project;
 }
 
 export async function getProjectStats() {
   await requireAdmin();
-  const [row] = await queryPooler<{
-    total: number;
-    completed: number;
-    ongoing: number;
-    featured: number;
-  }>(`
-    SELECT
-      COUNT(*)::int AS total,
-      COUNT(*) FILTER (WHERE status = 'completed')::int AS completed,
-      COUNT(*) FILTER (WHERE status = 'ongoing')::int AS ongoing,
-      COUNT(*) FILTER (WHERE featured = true)::int AS featured
-    FROM projects
-  `);
+  const supabase = createAdminClient();
+
+  const [totalRes, completedRes, ongoingRes, featuredRes] = await Promise.all([
+    supabase.from("projects").select("*", { count: "exact", head: true }),
+    supabase.from("projects").select("*", { count: "exact", head: true }).eq("status", "completed"),
+    supabase.from("projects").select("*", { count: "exact", head: true }).eq("status", "ongoing"),
+    supabase.from("projects").select("*", { count: "exact", head: true }).eq("featured", true),
+  ]);
 
   return {
-    total: row.total,
-    completed: row.completed,
-    ongoing: row.ongoing,
-    featured: row.featured,
+    total: totalRes.count ?? 0,
+    completed: completedRes.count ?? 0,
+    ongoing: ongoingRes.count ?? 0,
+    featured: featuredRes.count ?? 0,
   };
 }
 
@@ -177,37 +171,32 @@ export async function createProject(data: Record<string, unknown>) {
 
   const { teknologi, techStack, imageUrl, thumbnailUrl, projectUrl, liveUrl } = parsed.data;
 
-  const columns = [
-    "nama", "deskripsi", "kategori", "status", "tech_stack", "thumbnail_url",
-    "live_url", "github_url", "tanggal_mulai", "tanggal_selesai",
-    "klien", "tim_size", "peran", "featured", "urutan",
-  ];
+  const insertObj: Record<string, unknown> = {
+    nama: parsed.data.nama,
+    deskripsi: sanitizeRichHtml(parsed.data.deskripsi),
+    kategori: parsed.data.kategori,
+    status: parsed.data.status,
+    tech_stack: techStack ?? teknologi ?? [],
+    thumbnail_url: thumbnailUrl || imageUrl || null,
+    live_url: liveUrl || projectUrl || null,
+    github_url: parsed.data.githubUrl || null,
+    tanggal_mulai: parsed.data.tanggalMulai || null,
+    tanggal_selesai: parsed.data.tanggalSelesai || null,
+    klien: parsed.data.klien || null,
+    tim_size: parsed.data.timSize || null,
+    peran: parsed.data.peran || null,
+    featured: parsed.data.featured ?? false,
+    urutan: parsed.data.urutan ?? 0,
+  };
 
-  const values: unknown[] = [
-    parsed.data.nama,
-    sanitizeRichHtml(parsed.data.deskripsi),
-    parsed.data.kategori,
-    parsed.data.status,
-    JSON.stringify(techStack ?? teknologi ?? []),
-    thumbnailUrl || imageUrl || null,
-    liveUrl || projectUrl || null,
-    parsed.data.githubUrl || null,
-    parsed.data.tanggalMulai || null,
-    parsed.data.tanggalSelesai || null,
-    parsed.data.klien || null,
-    parsed.data.timSize || null,
-    parsed.data.peran || null,
-    parsed.data.featured ?? false,
-    parsed.data.urutan ?? 0,
-  ];
+  const supabase = createAdminClient();
+  const { data: project, error } = await supabase
+    .from("projects")
+    .insert(insertObj)
+    .select()
+    .single();
 
-  const placeholders = columns.map((_, i) => `$${i + 1}`);
-  const project = await queryPoolerSingle(
-    `INSERT INTO projects (${columns.join(", ")}) VALUES (${placeholders.join(", ")}) RETURNING *`,
-    values
-  );
-
-  if (!project) throw new Error("Failed to create project");
+  if (error || !project) throw new Error("Failed to create project");
   updatePublicContent([CACHE_TAGS.projects]);
   return project;
 }
@@ -227,76 +216,37 @@ export async function updateProject(id: string, data: Record<string, unknown>) {
 
   const { teknologi, techStack, imageUrl, thumbnailUrl, projectUrl, liveUrl } = parsed.data;
 
-  const setClauses: string[] = [];
-  const values: unknown[] = [];
-  let paramIndex = 1;
+  const updateObj: Record<string, unknown> = {};
 
-  const simpleUpdates: [string, unknown][] = [
-    ["nama", parsed.data.nama],
-    ["kategori", parsed.data.kategori],
-    ["status", parsed.data.status],
-    ["featured", parsed.data.featured],
-    ["urutan", parsed.data.urutan],
-    ["klien", parsed.data.klien],
-    ["tim_size", parsed.data.timSize],
-    ["peran", parsed.data.peran],
-  ];
+  if (typeof parsed.data.nama === "string") updateObj.nama = parsed.data.nama;
+  if (typeof parsed.data.kategori === "string") updateObj.kategori = parsed.data.kategori;
+  if (typeof parsed.data.status === "string") updateObj.status = parsed.data.status;
+  if (typeof parsed.data.featured === "boolean") updateObj.featured = parsed.data.featured;
+  if (typeof parsed.data.urutan === "number") updateObj.urutan = parsed.data.urutan;
+  if (typeof parsed.data.klien === "string") updateObj.klien = parsed.data.klien;
+  if (typeof parsed.data.timSize === "string") updateObj.tim_size = parsed.data.timSize;
+  if (typeof parsed.data.peran === "string") updateObj.peran = parsed.data.peran;
+  if (typeof parsed.data.deskripsi === "string") updateObj.deskripsi = sanitizeRichHtml(parsed.data.deskripsi);
+  if (techStack || teknologi) updateObj.tech_stack = techStack ?? teknologi;
+  if (typeof thumbnailUrl === "string" || typeof imageUrl === "string") updateObj.thumbnail_url = thumbnailUrl || imageUrl || null;
+  if (typeof liveUrl === "string" || typeof projectUrl === "string") updateObj.live_url = liveUrl || projectUrl || null;
+  if (typeof parsed.data.githubUrl === "string") updateObj.github_url = parsed.data.githubUrl || null;
+  if (typeof parsed.data.tanggalMulai === "string") updateObj.tanggal_mulai = parsed.data.tanggalMulai || null;
+  if (typeof parsed.data.tanggalSelesai === "string") updateObj.tanggal_selesai = parsed.data.tanggalSelesai || null;
 
-  for (const [col, val] of simpleUpdates) {
-    if (val !== undefined) {
-      setClauses.push(`${col} = $${paramIndex}`);
-      values.push(val);
-      paramIndex++;
-    }
-  }
-
-  if (typeof parsed.data.deskripsi === "string") {
-    setClauses.push(`deskripsi = $${paramIndex}`);
-    values.push(sanitizeRichHtml(parsed.data.deskripsi));
-    paramIndex++;
-  }
-  if (techStack || teknologi) {
-    setClauses.push(`tech_stack = $${paramIndex}`);
-    values.push(JSON.stringify(techStack ?? teknologi));
-    paramIndex++;
-  }
-  if (typeof thumbnailUrl === "string" || typeof imageUrl === "string") {
-    setClauses.push(`thumbnail_url = $${paramIndex}`);
-    values.push(thumbnailUrl || imageUrl || null);
-    paramIndex++;
-  }
-  if (typeof liveUrl === "string" || typeof projectUrl === "string") {
-    setClauses.push(`live_url = $${paramIndex}`);
-    values.push(liveUrl || projectUrl || null);
-    paramIndex++;
-  }
-  if (typeof parsed.data.githubUrl === "string") {
-    setClauses.push(`github_url = $${paramIndex}`);
-    values.push(parsed.data.githubUrl || null);
-    paramIndex++;
-  }
-  if (typeof parsed.data.tanggalMulai === "string") {
-    setClauses.push(`tanggal_mulai = $${paramIndex}`);
-    values.push(parsed.data.tanggalMulai || null);
-    paramIndex++;
-  }
-  if (typeof parsed.data.tanggalSelesai === "string") {
-    setClauses.push(`tanggal_selesai = $${paramIndex}`);
-    values.push(parsed.data.tanggalSelesai || null);
-    paramIndex++;
-  }
-
-  if (setClauses.length === 0) {
+  if (Object.keys(updateObj).length === 0) {
     throw new Error("No updates provided");
   }
 
-  values.push(parsedId.data);
-  const project = await queryPoolerSingle(
-    `UPDATE projects SET ${setClauses.join(", ")}, updated_at = now() WHERE id = $${paramIndex} RETURNING *`,
-    values
-  );
+  const supabase = createAdminClient();
+  const { data: project, error } = await supabase
+    .from("projects")
+    .update(updateObj)
+    .eq("id", parsedId.data)
+    .select()
+    .single();
 
-  if (!project) throw new Error("Project not found");
+  if (error || !project) throw new Error("Project not found");
   updatePublicContent([CACHE_TAGS.projects]);
   return project;
 }
@@ -309,7 +259,9 @@ export async function deleteProject(id: string) {
     throw new Error("Invalid project ID: must be a valid UUID");
   }
 
-  await queryPooler(`DELETE FROM projects WHERE id = $1`, [parsed.data]);
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("projects").delete().eq("id", parsed.data);
+  if (error) throw error;
   updatePublicContent([CACHE_TAGS.projects]);
   return { success: true };
 }
@@ -327,30 +279,24 @@ export async function bulkUpdateProjects(ids: string[], updates: Partial<{ statu
     throw new Error("Invalid project updates: " + parsedUpdates.error.issues[0].message);
   }
 
-  const setClauses: string[] = [];
-  const values: unknown[] = [];
-  let paramIndex = 1;
-
+  const updateObj: Record<string, unknown> = {};
   if (parsedUpdates.data.status !== undefined) {
-    setClauses.push(`status = $${paramIndex}`);
-    values.push(parsedUpdates.data.status);
-    paramIndex++;
+    updateObj.status = parsedUpdates.data.status;
   }
   if (parsedUpdates.data.featured !== undefined) {
-    setClauses.push(`featured = $${paramIndex}`);
-    values.push(parsedUpdates.data.featured);
-    paramIndex++;
+    updateObj.featured = parsedUpdates.data.featured;
   }
 
-  if (setClauses.length === 0) {
+  if (Object.keys(updateObj).length === 0) {
     throw new Error("No updates provided");
   }
 
-  values.push(parsedIds.data);
-  await queryPooler(
-    `UPDATE projects SET ${setClauses.join(", ")}, updated_at = now() WHERE id = ANY($${paramIndex}::uuid[])`,
-    values
-  );
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("projects")
+    .update(updateObj)
+    .in("id", parsedIds.data);
+  if (error) throw error;
 
   updatePublicContent([CACHE_TAGS.projects]);
   return { success: true };
@@ -364,7 +310,9 @@ export async function bulkDeleteProjects(ids: string[]) {
     throw new Error("Invalid project IDs: " + parsedIds.error.issues[0].message);
   }
 
-  await queryPooler(`DELETE FROM projects WHERE id = ANY($1::uuid[])`, [parsedIds.data]);
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("projects").delete().in("id", parsedIds.data);
+  if (error) throw error;
   updatePublicContent([CACHE_TAGS.projects]);
   return { success: true };
 }
@@ -377,38 +325,32 @@ export async function duplicateProject(id: string) {
     throw new Error("Invalid project ID: must be a valid UUID");
   }
 
-  const original = await queryPoolerSingle(`SELECT * FROM projects WHERE id = $1`, [parsed.data]);
-  if (!original) throw new Error("Project not found");
+  const supabase = createAdminClient();
+
+  const { data: original, error: fetchError } = await supabase.from("projects").select("*").eq("id", parsed.data).single();
+  if (fetchError || !original) throw new Error("Project not found");
 
   const timestamp = Date.now();
-  const columns = [
-    "nama", "slug", "deskripsi", "kategori", "status", "tech_stack",
-    "thumbnail_url", "klien", "tanggal_mulai", "tanggal_selesai",
-    "github_url", "live_url", "featured", "urutan",
-  ];
 
-  const values: unknown[] = [
-    `${original.nama} (Copy)`,
-    `${original.slug}-copy-${timestamp}`,
-    original.deskripsi,
-    original.kategori,
-    "ongoing",
-    Array.isArray(original.tech_stack) ? JSON.stringify(original.tech_stack) : null,
-    original.thumbnail_url,
-    original.klien,
-    original.tanggal_mulai,
-    original.tanggal_selesai,
-    original.github_url,
-    original.live_url,
-    false,
-    original.urutan,
-  ];
+  const insertObj: Record<string, unknown> = {
+    nama: `${original.nama} (Copy)`,
+    slug: `${original.slug}-copy-${timestamp}`,
+    deskripsi: original.deskripsi,
+    kategori: original.kategori,
+    status: "ongoing",
+    tech_stack: Array.isArray(original.tech_stack) ? original.tech_stack : null,
+    thumbnail_url: original.thumbnail_url,
+    klien: original.klien,
+    tanggal_mulai: original.tanggal_mulai,
+    tanggal_selesai: original.tanggal_selesai,
+    github_url: original.github_url,
+    live_url: original.live_url,
+    featured: false,
+    urutan: original.urutan,
+  };
 
-  const placeholders = columns.map((_, i) => `$${i + 1}`);
-  await queryPooler(
-    `INSERT INTO projects (${columns.join(", ")}) VALUES (${placeholders.join(", ")})`,
-    values
-  );
+  const { error: insertError } = await supabase.from("projects").insert(insertObj);
+  if (insertError) throw insertError;
 
   updatePublicContent([CACHE_TAGS.projects]);
   return { success: true, slug: `${original.slug}-copy-${timestamp}` };

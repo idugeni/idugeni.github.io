@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { queryPoolerSingle } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("health-api");
@@ -14,9 +14,13 @@ export async function GET() {
 
   try {
     const dbStart = Date.now();
-    const result = await queryPoolerSingle<{ now: string }>("SELECT NOW() as now");
+    const supabase = createAdminClient();
+    const { error } = await supabase
+      .from("page_views")
+      .select("id", { count: "exact", head: true });
+    if (error) throw error;
     dbLatency = `${Date.now() - dbStart}ms`;
-    serverTime = result?.now || null;
+    serverTime = new Date().toISOString();
     dbStatus = "connected";
   } catch (error) {
     log.error("DB check failed", { error: error as Error });

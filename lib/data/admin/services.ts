@@ -1,8 +1,8 @@
-﻿import "server-only";
+import "server-only";
 
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { slugSchema } from "@/lib/security/server-action";
 import { getTotalPages, parsePositiveInt } from "@/lib/utils/pagination";
 
@@ -15,7 +15,6 @@ const adminServiceFiltersSchema = z.object({
 });
 
 const ADMIN_SERVICE_PAGE_SIZE = 20;
-const SERVICE_COLUMNS = "id,nama,slug,deskripsi_pendek,deskripsi_panjang,icon,harga_mulai,fitur,urutan,aktif,created_at,updated_at";
 
 type AdminServiceRow = {
   id: string;
@@ -57,44 +56,34 @@ export async function getAdminServicesReadModel(filters: Record<string, unknown>
     order: "urutan",
     status: "aktif",
   } as const)[parsed.data.sort ?? "order"] ?? "urutan";
-  const sortDir = (parsed.data.order ?? "asc") === "asc" ? "ASC" : "DESC";
+  const ascending = (parsed.data.order ?? "asc") === "asc";
 
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
-
-  if (parsed.data.q) {
-    const escaped = parsed.data.q.replace(/[%_]/g, "\\$&");
-    conditions.push(`(nama ILIKE '%' || $${idx} || '%' ESCAPE '\\' OR deskripsi_pendek ILIKE '%' || $${idx} || '%' ESCAPE '\\')`);
-    params.push(escaped);
-    idx++;
-  }
-  if (parsed.data.status === "active") {
-    conditions.push(`aktif = $${idx}`);
-    params.push(true);
-    idx++;
-  }
-  if (parsed.data.status === "inactive") {
-    conditions.push(`aktif = $${idx}`);
-    params.push(false);
-    idx++;
-  }
-
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const offset = (page - 1) * ADMIN_SERVICE_PAGE_SIZE;
 
-  const [countResult, services] = await Promise.all([
-    queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM services ${where}`, params),
-    queryPooler<AdminServiceRow>(`SELECT ${SERVICE_COLUMNS} FROM services ${where} ORDER BY ${sortColumn} ${sortDir} LIMIT $${idx} OFFSET $${idx + 1}`, [
-      ...params,
-      ADMIN_SERVICE_PAGE_SIZE,
-      offset,
-    ]),
-  ]);
+  const supabase = createAdminClient();
 
-  const totalItems = countResult[0]?.count ?? 0;
+  let baseQuery = supabase
+    .from("services")
+    .select("id,nama,slug,deskripsi_pendek,deskripsi_panjang,icon,harga_mulai,fitur,urutan,aktif,created_at,updated_at", { count: "exact" });
+
+  if (parsed.data.q) {
+    const pattern = `%${parsed.data.q.replace(/[%_]/g, "\\$&")}%`;
+    baseQuery = baseQuery.or(`nama.ilike.${pattern},deskripsi_pendek.ilike.${pattern}`);
+  }
+  if (parsed.data.status === "active") {
+    baseQuery = baseQuery.eq("aktif", true);
+  }
+  if (parsed.data.status === "inactive") {
+    baseQuery = baseQuery.eq("aktif", false);
+  }
+
+  const { data, count } = await baseQuery
+    .order(sortColumn, { ascending })
+    .range(offset, offset + ADMIN_SERVICE_PAGE_SIZE - 1);
+
+  const totalItems = count ?? 0;
   return {
-    services: services.map(serializeService),
+    services: (data ?? []).map(serializeService as (row: Record<string, unknown>) => ReturnType<typeof serializeService>),
     filters: parsed.data,
     pagination: {
       page,
@@ -108,26 +97,21 @@ export async function getAdminServicesReadModel(filters: Record<string, unknown>
 export async function getServiceStatsReadModel() {
   await requireAdmin();
 
-  const [row] = await queryPooler<{
-    total: number;
-    active: number;
-    inactive: number;
-    priced: number;
-  }>(`
-    SELECT
-      COUNT(*)::int AS total,
-      COUNT(*) FILTER (WHERE aktif = true)::int AS active,
-      COUNT(*) FILTER (WHERE aktif = false)::int AS inactive,
-      COUNT(*) FILTER (WHERE harga_mulai IS NOT NULL AND harga_mulai != '')::int AS priced
-    FROM services
-  `);
+  const supabase = createAdminClient();
 
-  return {
-    total: row?.total ?? 0,
-    active: row?.active ?? 0,
-    inactive: row?.inactive ?? 0,
-    priced: row?.priced ?? 0,
-  };
+  const [totalResult, activeResult, inactiveResult, pricedResult] = await Promise.all([
+    supabase.from("services").select("*", { count: "exact", head: true }),
+    supabase.from("services").select("*", { count: "exact", head: true }).eq("aktif", true),
+    supabase.from("services").select("*", { count: "exact", head: true }).eq("aktif", false),
+    supabase.from("services").select("*", { count: "exact", head: true }).not("harga_mulai", "is", null).neq("harga_mulai", ""),
+  ]);
+
+  const total = totalResult.count ?? 0;
+  const active = activeResult.count ?? 0;
+  const inactive = inactiveResult.count ?? 0;
+  const priced = pricedResult.count ?? 0;
+
+  return { total, active, inactive, priced };
 }
 
 export async function getServiceBySlugReadModel(slug: string) {
@@ -138,10 +122,13 @@ export async function getServiceBySlugReadModel(slug: string) {
     throw new Error("Invalid service slug");
   }
 
-  const service = await queryPoolerSingle<AdminServiceRow>(
-    `SELECT ${SERVICE_COLUMNS} FROM services WHERE slug = $1`,
-    [parsed.data],
-  );
-  if (!service) throw new Error("Service not found");
-  return serializeService(service);
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("services")
+    .select("id,nama,slug,deskripsi_pendek,deskripsi_panjang,icon,harga_mulai,fitur,urutan,aktif,created_at,updated_at")
+    .eq("slug", parsed.data)
+    .maybeSingle();
+
+  if (error || !data) throw new Error("Service not found");
+  return serializeService(data);
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/rbac";
-import { queryPoolerSingle } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * Performance Metrics Endpoint
@@ -25,20 +25,17 @@ export async function GET() {
   let dbMetrics = {
     status: "disconnected",
     latency: null as string | null,
-    activeConnections: null as number | null,
   };
 
   try {
     const dbStart = Date.now();
-    await queryPoolerSingle<{ now: string }>("SELECT NOW() as now");
+    const supabase = createAdminClient();
+    const { error } = await supabase
+      .from("page_views")
+      .select("id", { count: "exact", head: true });
+    if (error) throw error;
     dbMetrics.status = "connected";
     dbMetrics.latency = `${Date.now() - dbStart}ms`;
-
-    // Get active connections count
-    const connResult = await queryPoolerSingle<{ count: string }>(
-      "SELECT COUNT(*) as count FROM pg_stat_activity WHERE state = 'active'"
-    );
-    dbMetrics.activeConnections = connResult ? parseInt(connResult.count, 10) : 0;
   } catch (error) {
     console.error("[metrics] DB metrics failed:", error instanceof Error ? error.message : error);
   }

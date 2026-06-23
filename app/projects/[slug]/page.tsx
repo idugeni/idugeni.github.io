@@ -4,7 +4,7 @@ import { cache } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
+import { createPublicClient } from "@/lib/supabase/public";
 import { toCamelCase } from "@/lib/utils/case";
 import { toPlainText, safeImageSource } from "@/lib/utils/html";
 import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
@@ -26,22 +26,27 @@ export const getProjectDetailData = cache(async function getProjectDetailData(sl
   cacheLife("hours");
   cacheTag(`project-${slug}`, CACHE_TAGS.projects);
 
-  const rawProject = await queryPoolerSingle<Record<string, unknown>>(
-    `SELECT * FROM projects WHERE slug=$1`,
-    [slug]
-  );
+  const supabase = createPublicClient();
 
-  if (!rawProject) return null;
+  const { data: rawProject, error } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+
+  if (error || !rawProject) return null;
 
   const project = toCamelCase<Project>(rawProject);
-  const rawRelatedProjects = await queryPooler<Record<string, unknown>>(
-    `SELECT * FROM projects WHERE kategori=$1 AND id != $2 LIMIT 3`,
-    [project.kategori as string, project.id as string]
-  );
+  const { data: rawRelatedProjects } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("kategori", project.kategori as string)
+    .neq("id", project.id as string)
+    .limit(3);
 
   return {
     project,
-    relatedProjects: toCamelCase<Project[]>(rawRelatedProjects),
+    relatedProjects: toCamelCase<Project[]>(rawRelatedProjects ?? []),
   };
 });
 

@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { isPrivateOrBlockedUrl } from "@/lib/security/url-validation";
@@ -107,7 +106,6 @@ export interface UpdateShortlinkInput {
 function parseUserAgent(ua: string | null): { device_type: string; browser: string } {
   if (!ua) return { device_type: "unknown", browser: "unknown" };
 
-  // Device detection
   let device_type = "desktop";
   if (/(tablet|ipad|playbook|silk)|(android(?!.*mobile))/i.test(ua)) {
     device_type = "tablet";
@@ -115,7 +113,6 @@ function parseUserAgent(ua: string | null): { device_type: string; browser: stri
     device_type = "mobile";
   }
 
-  // Browser detection
   const lower = ua.toLowerCase();
   let browser = "other";
   if (lower.includes("edg/")) browser = "Edge";
@@ -138,23 +135,27 @@ async function logAudit(
   userId: string,
   changedFields?: Record<string, any>
 ) {
-  await queryPooler(
-    `INSERT INTO shortlink_audit (shortlink_id, action, changed_fields, performed_by)
-     VALUES ($1, $2, $3, $4)`,
-    [shortlinkId, action, changedFields ? JSON.stringify(changedFields) : null, userId]
-  );
+  const supabase = createAdminClient();
+  await supabase.from("shortlink_audit").insert({
+    shortlink_id: shortlinkId,
+    action,
+    changed_fields: changedFields ? JSON.stringify(changedFields) : null,
+    performed_by: userId,
+  });
 }
 
 // ─── Code Generation ─────────────────────────────────────────────────────────
 
 async function generateUniqueCode(): Promise<string> {
+  const supabase = createAdminClient();
   const MAX_ATTEMPTS = 5;
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const code = nanoid(6);
-    const existing = await queryPoolerSingle<{ code: string }>(
-      "SELECT code FROM shortlinks WHERE code = $1",
-      [code]
-    );
+    const { data: existing } = await supabase
+      .from("shortlinks")
+      .select("code")
+      .eq("code", code)
+      .maybeSingle();
     if (!existing) return code;
   }
   return nanoid(10);
@@ -206,47 +207,45 @@ export type ShortlinkAccessResult =
  * - Also checks previous_codes for slug history redirect
  */
 export async function getShortlinkByCode(code: string): Promise<ShortlinkAccessResult> {
-  // First try exact code match (including all statuses for proper error messages)
-  let shortlink = await queryPoolerSingle<Shortlink>(
-    `SELECT * FROM shortlinks
-     WHERE code = $1 AND deleted_at IS NULL`,
-    [code]
-  );
+  const supabase = createAdminClient();
 
-  // If not found, check previous_codes for slug history
+  let { data: shortlink } = await supabase
+    .from("shortlinks")
+    .select("*")
+    .eq("code", code)
+    .is("deleted_at", null)
+    .maybeSingle();
+
   if (!shortlink) {
-    shortlink = await queryPoolerSingle<Shortlink>(
-      `SELECT * FROM shortlinks
-       WHERE $1 = ANY(previous_codes) AND deleted_at IS NULL`,
-      [code]
-    );
+    const { data: prev } = await supabase
+      .from("shortlinks")
+      .select("*")
+      .contains("previous_codes", [code])
+      .is("deleted_at", null)
+      .maybeSingle();
+    shortlink = prev as Shortlink | null;
   }
 
   if (!shortlink) {
     return { status: "not_found" };
   }
 
-  // Check is_active
   if (!shortlink.is_active) {
     return { status: "not_found" };
   }
 
-  // Check expiration
   if (shortlink.expires_at && new Date(shortlink.expires_at) < new Date()) {
     return { status: "not_found" };
   }
 
-  // Check activation time
   if (shortlink.activates_at && new Date(shortlink.activates_at) > new Date()) {
     return { status: "not_yet_active", activates_at: shortlink.activates_at };
   }
 
-  // Check click limit
   if (shortlink.click_limit !== null && shortlink.click_count >= shortlink.click_limit) {
     return { status: "click_limit_reached" };
   }
 
-  // Check password protection
   if (shortlink.password_hash) {
     return {
       status: "password_required",
@@ -258,30 +257,51 @@ export async function getShortlinkByCode(code: string): Promise<ShortlinkAccessR
 }
 
 /**
- * Verify password for a protected shortlink
+ * Verify password for a protected shortlink.
+ *
+ * TODO: Create the required Supabase RPC function:
+ * CREATE OR REPLACE FUNCTION verify_shortlink_password(p_id uuid, p_password text)
+ * RETURNS boolean AS $$
+ *   SELECT (password_hash = crypt(p_password, password_hash))
+ *   FROM shortlinks
+ *   WHERE id = p_id AND deleted_at IS NULL AND is_active = true;
+ * $$ LANGUAGE sql SECURITY DEFINER;
  */
 export async function verifyShortlinkPassword(
   shortlinkId: string,
   password: string
 ): Promise<Shortlink | null> {
-  const result = await queryPoolerSingle<Shortlink & { pw_match: boolean }>(
-    `SELECT *, (password_hash = crypt($2, password_hash)) AS pw_match
-     FROM shortlinks
-     WHERE id = $1
-       AND deleted_at IS NULL
-       AND is_active = true`,
-    [shortlinkId, password]
-  );
+  const supabase = createAdminClient();
 
-  if (!result || !result.pw_match) {
+  const { data: pwMatch } = await supabase.rpc("verify_shortlink_password", {
+    p_id: shortlinkId,
+    p_password: password,
+  });
+
+  if (!pwMatch) {
     return null;
   }
 
-  return result;
+  const { data: shortlink } = await supabase
+    .from("shortlinks")
+    .select("*")
+    .eq("id", shortlinkId)
+    .is("deleted_at", null)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  return (shortlink as Shortlink) ?? null;
 }
 
 /**
- * Increment click count with enriched analytics
+ * Increment click count with enriched analytics.
+ *
+ * TODO: Create the required Supabase RPC function:
+ * CREATE OR REPLACE FUNCTION increment_shortlink_click(p_shortlink_id uuid) RETURNS void AS $$
+ *   UPDATE shortlinks
+ *   SET click_count = click_count + 1, last_clicked_at = now()
+ *   WHERE id = p_shortlink_id;
+ * $$ LANGUAGE sql;
  */
 export async function incrementShortlinkClick(
   shortlinkId: string,
@@ -292,39 +312,38 @@ export async function incrementShortlinkClick(
     country?: string;
   }
 ) {
-  await queryPooler(
-    `UPDATE shortlinks
-     SET click_count = click_count + 1, last_clicked_at = now()
-     WHERE id = $1`,
-    [shortlinkId]
-  );
+  const supabase = createAdminClient();
+
+  await supabase.rpc("increment_shortlink_click", { p_shortlink_id: shortlinkId });
 
   if (metadata) {
     const { device_type, browser } = parseUserAgent(metadata.userAgent || null);
 
-    await queryPooler(
-      `INSERT INTO shortlink_clicks (shortlink_id, ip_address, user_agent, referrer, country, device_type, browser)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [
-        shortlinkId,
-        metadata.ip || null,
-        metadata.userAgent || null,
-        metadata.referrer || null,
-        metadata.country || null,
-        device_type,
-        browser,
-      ]
-    );
+    await supabase.from("shortlink_clicks").insert({
+      shortlink_id: shortlinkId,
+      ip_address: metadata.ip || null,
+      user_agent: metadata.userAgent || null,
+      referrer: metadata.referrer || null,
+      country: metadata.country || null,
+      device_type,
+      browser,
+    });
   }
 }
 
 // ─── Admin Actions ───────────────────────────────────────────────────────────
 
 /**
- * Create shortlink with audit trail
+ * Create shortlink with audit trail.
+ *
+ * TODO: Create the required Supabase RPC function for password hashing:
+ * CREATE OR REPLACE FUNCTION hash_password(p_password text) RETURNS text AS $$
+ *   SELECT crypt(p_password, gen_salt('bf'));
+ * $$ LANGUAGE sql;
  */
 export async function createShortlink(input: CreateShortlinkInput) {
   const { user } = await requireAuth();
+  const supabase = createAdminClient();
 
   if (!input.destination_url.match(/^https?:\/\//)) {
     throw new Error("Destination URL must start with http:// or https://");
@@ -336,10 +355,11 @@ export async function createShortlink(input: CreateShortlinkInput) {
 
   let code = input.code;
   if (code) {
-    const existing = await queryPoolerSingle<{ code: string }>(
-      "SELECT code FROM shortlinks WHERE code = $1",
-      [code]
-    );
+    const { data: existing } = await supabase
+      .from("shortlinks")
+      .select("code")
+      .eq("code", code)
+      .maybeSingle();
     if (existing) {
       throw new Error(`Code "${code}" is already taken`);
     }
@@ -351,43 +371,37 @@ export async function createShortlink(input: CreateShortlinkInput) {
   const shortUrl = `${siteUrl}/s/${code}`;
   const qrCodeUrl = await generateQRCode(shortUrl, input.qr_fg_color || "#000000", input.qr_bg_color || "#ffffff");
 
-  // Hash password if provided
   let passwordHash = null;
   if (input.password) {
-    const hashResult = await queryPoolerSingle<{ hash: string }>(
-      `SELECT crypt($1, gen_salt('bf')) AS hash`,
-      [input.password]
-    );
-    passwordHash = hashResult?.hash || null;
+    const { data: hash } = await supabase.rpc("hash_password", { p_password: input.password });
+    passwordHash = hash || null;
   }
 
-  const result = await queryPoolerSingle<Shortlink>(
-    `INSERT INTO shortlinks (code, destination_url, title, description, display_mode, mode_config, qr_code_url, expires_at, activates_at, click_limit, password_hash, created_by, qr_fg_color, qr_bg_color, qr_logo_text, splash_title, splash_timer, splash_social_links)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
-     RETURNING *`,
-    [
+  const { data: result } = await supabase
+    .from("shortlinks")
+    .insert({
       code,
-      input.destination_url,
-      input.title || null,
-      input.description || null,
-      input.display_mode,
-      JSON.stringify(input.mode_config || {}),
-      qrCodeUrl,
-      input.expires_at || null,
-      input.activates_at || null,
-      input.click_limit || null,
-      passwordHash,
-      user.id,
-      input.qr_fg_color || "#000000",
-      input.qr_bg_color || "#ffffff",
-      input.qr_logo_text || null,
-      input.splash_title || null,
-      input.splash_timer !== undefined ? input.splash_timer : 5,
-      JSON.stringify(input.splash_social_links || {}),
-    ]
-  );
+      destination_url: input.destination_url,
+      title: input.title || null,
+      description: input.description || null,
+      display_mode: input.display_mode,
+      mode_config: input.mode_config || {},
+      qr_code_url: qrCodeUrl,
+      expires_at: input.expires_at || null,
+      activates_at: input.activates_at || null,
+      click_limit: input.click_limit || null,
+      password_hash: passwordHash,
+      created_by: user.id,
+      qr_fg_color: input.qr_fg_color || "#000000",
+      qr_bg_color: input.qr_bg_color || "#ffffff",
+      qr_logo_text: input.qr_logo_text || null,
+      splash_title: input.splash_title || null,
+      splash_timer: input.splash_timer !== undefined ? input.splash_timer : 5,
+      splash_social_links: input.splash_social_links || {},
+    })
+    .select()
+    .single();
 
-  // Audit trail
   if (result) {
     await logAudit(result.id, "created", user.id, {
       code,
@@ -403,7 +417,7 @@ export async function createShortlink(input: CreateShortlinkInput) {
   }
 
   revalidatePath("/admin/shortlinks");
-  return { shortlink: result, shortUrl, qrCodeUrl };
+  return { shortlink: result as Shortlink, shortUrl, qrCodeUrl };
 }
 
 /**
@@ -416,41 +430,35 @@ export async function getAdminShortlinks(params?: {
   displayMode?: DisplayMode;
 }) {
   await requireAuth();
+  const supabase = createAdminClient();
 
   const page = params?.page || 1;
   const pageSize = params?.pageSize || 20;
-  const offset = (page - 1) * pageSize;
+  const from = (page - 1) * pageSize;
 
-  let whereClause = "WHERE deleted_at IS NULL";
-  const queryParams: any[] = [];
-  let paramIndex = 1;
+  let query = supabase
+    .from("shortlinks")
+    .select("*", { count: "exact" })
+    .is("deleted_at", null);
 
   if (params?.search) {
-    whereClause += ` AND (code ILIKE $${paramIndex} OR destination_url ILIKE $${paramIndex} OR title ILIKE $${paramIndex})`;
-    queryParams.push(`%${params.search}%`);
-    paramIndex++;
+    const escaped = params.search.replace(/[%_]/g, "\\$&");
+    const pattern = `%${escaped}%`;
+    query = query.or(`code.ilike.${pattern},destination_url.ilike.${pattern},title.ilike.${pattern}`);
   }
 
   if (params?.displayMode) {
-    whereClause += ` AND display_mode = $${paramIndex}`;
-    queryParams.push(params.displayMode);
-    paramIndex++;
+    query = query.eq("display_mode", params.displayMode);
   }
 
-  const countResult = await queryPoolerSingle<{ count: string }>(
-    `SELECT COUNT(*) as count FROM shortlinks ${whereClause}`,
-    queryParams
-  );
-  const total = parseInt(countResult?.count || "0");
+  const { data: shortlinks, count } = await query
+    .order("created_at", { ascending: false })
+    .range(from, from + pageSize - 1);
 
-  queryParams.push(pageSize, offset);
-  const shortlinks = await queryPooler<Shortlink>(
-    `SELECT * FROM shortlinks ${whereClause} ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-    queryParams
-  );
+  const total = count ?? 0;
 
   return {
-    shortlinks,
+    shortlinks: (shortlinks ?? []) as Shortlink[],
     pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
   };
 }
@@ -460,10 +468,15 @@ export async function getAdminShortlinks(params?: {
  */
 export async function getShortlinkById(id: string): Promise<Shortlink | null> {
   await requireAuth();
-  return await queryPoolerSingle<Shortlink>(
-    `SELECT * FROM shortlinks WHERE id = $1`,
-    [id]
-  );
+  const supabase = createAdminClient();
+
+  const { data } = await supabase
+    .from("shortlinks")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  return (data as Shortlink) ?? null;
 }
 
 /**
@@ -471,36 +484,28 @@ export async function getShortlinkById(id: string): Promise<Shortlink | null> {
  */
 export async function updateShortlink(id: string, updates: UpdateShortlinkInput) {
   const { user } = await requireAuth();
+  const supabase = createAdminClient();
 
-  const current = await queryPoolerSingle<Shortlink>(
-    `SELECT * FROM shortlinks WHERE id = $1`,
-    [id]
-  );
+  const { data: current } = await supabase
+    .from("shortlinks")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
   if (!current) throw new Error("Shortlink not found");
 
-  const setClauses: string[] = [];
-  const values: any[] = [];
-  let paramIndex = 1;
+  const updateData: Record<string, any> = {};
   const changedFields: Record<string, { from: any; to: any }> = {};
 
-  // Handle password changes
   if (updates.remove_password) {
-    setClauses.push(`password_hash = $${paramIndex}`);
-    values.push(null);
-    paramIndex++;
+    updateData.password_hash = null;
     changedFields.password = { from: "set", to: "removed" };
   } else if (updates.password) {
-    const hashResult = await queryPoolerSingle<{ hash: string }>(
-      `SELECT crypt($1, gen_salt('bf')) AS hash`,
-      [updates.password]
-    );
-    setClauses.push(`password_hash = $${paramIndex}`);
-    values.push(hashResult?.hash || null);
-    paramIndex++;
+    const { data: hash } = await supabase.rpc("hash_password", { p_password: updates.password });
+    updateData.password_hash = hash || null;
     changedFields.password = { from: current.password_hash ? "set" : "none", to: "set" };
   }
 
-  // Handle other fields
   const simpleFields: (keyof UpdateShortlinkInput)[] = [
     "destination_url", "title", "description", "display_mode",
     "is_active", "expires_at", "activates_at", "click_limit",
@@ -519,28 +524,21 @@ export async function updateShortlink(id: string, updates: UpdateShortlinkInput)
   for (const key of simpleFields) {
     const value = updates[key];
     if (value !== undefined) {
-      setClauses.push(`${key} = $${paramIndex}`);
-      values.push(value);
-      paramIndex++;
+      updateData[key] = value;
       changedFields[key] = { from: current[key as keyof Shortlink], to: value };
     }
   }
 
   if (updates.mode_config !== undefined) {
-    setClauses.push(`mode_config = $${paramIndex}`);
-    values.push(JSON.stringify(updates.mode_config));
-    paramIndex++;
+    updateData.mode_config = updates.mode_config;
     changedFields.mode_config = { from: current.mode_config, to: updates.mode_config };
   }
 
   if (updates.splash_social_links !== undefined) {
-    setClauses.push(`splash_social_links = $${paramIndex}`);
-    values.push(JSON.stringify(updates.splash_social_links));
-    paramIndex++;
+    updateData.splash_social_links = updates.splash_social_links;
     changedFields.splash_social_links = { from: current.splash_social_links, to: updates.splash_social_links };
   }
 
-  // Regenerate QR Code if colors are updated
   if (updates.qr_fg_color !== undefined || updates.qr_bg_color !== undefined) {
     const fg = updates.qr_fg_color !== undefined ? updates.qr_fg_color : current.qr_fg_color;
     const bg = updates.qr_bg_color !== undefined ? updates.qr_bg_color : current.qr_bg_color;
@@ -548,23 +546,18 @@ export async function updateShortlink(id: string, updates: UpdateShortlinkInput)
     const shortUrl = `${siteUrl}/s/${current.code}`;
     const qrCodeUrl = await generateQRCode(shortUrl, fg, bg);
 
-    setClauses.push(`qr_code_url = $${paramIndex}`);
-    values.push(qrCodeUrl);
-    paramIndex++;
+    updateData.qr_code_url = qrCodeUrl;
     changedFields.qr_code_url = { from: current.qr_code_url, to: qrCodeUrl };
   }
 
-  if (setClauses.length === 0) {
+  if (Object.keys(updateData).length === 0) {
     throw new Error("No updates provided");
   }
 
-  values.push(id);
-  await queryPooler(
-    `UPDATE shortlinks SET ${setClauses.join(", ")}, updated_at = now() WHERE id = $${paramIndex}`,
-    values
-  );
+  updateData.updated_at = new Date().toISOString();
 
-  // Audit trail
+  await supabase.from("shortlinks").update(updateData).eq("id", id);
+
   await logAudit(id, "updated", user.id, changedFields);
 
   revalidatePath("/admin/shortlinks");
@@ -576,11 +569,12 @@ export async function updateShortlink(id: string, updates: UpdateShortlinkInput)
  */
 export async function deleteShortlink(id: string) {
   const { user } = await requireAuth();
+  const supabase = createAdminClient();
 
-  await queryPooler(
-    `UPDATE shortlinks SET deleted_at = now(), updated_at = now() WHERE id = $1`,
-    [id]
-  );
+  await supabase
+    .from("shortlinks")
+    .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("id", id);
 
   await logAudit(id, "deleted", user.id);
   revalidatePath("/admin/shortlinks");
@@ -591,11 +585,12 @@ export async function deleteShortlink(id: string) {
  */
 export async function restoreShortlink(id: string) {
   const { user } = await requireAuth();
+  const supabase = createAdminClient();
 
-  await queryPooler(
-    `UPDATE shortlinks SET deleted_at = NULL, updated_at = now() WHERE id = $1`,
-    [id]
-  );
+  await supabase
+    .from("shortlinks")
+    .update({ deleted_at: null, updated_at: new Date().toISOString() })
+    .eq("id", id);
 
   await logAudit(id, "restored", user.id);
   revalidatePath("/admin/shortlinks");
@@ -607,21 +602,22 @@ export async function restoreShortlink(id: string) {
  */
 export async function permanentDeleteShortlink(id: string) {
   await requireAuth();
+  const supabase = createAdminClient();
 
-  const shortlink = await queryPoolerSingle<Shortlink>(
-    `SELECT * FROM shortlinks WHERE id = $1`,
-    [id]
-  );
+  const { data: shortlink } = await supabase
+    .from("shortlinks")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
 
   if (shortlink?.qr_code_url) {
     const fileName = shortlink.qr_code_url.split("/").pop();
     if (fileName) {
-      const supabase = createAdminClient();
       await supabase.storage.from("shortlinks").remove([fileName]);
     }
   }
 
-  await queryPooler(`DELETE FROM shortlinks WHERE id = $1`, [id]);
+  await supabase.from("shortlinks").delete().eq("id", id);
   revalidatePath("/admin/shortlinks/trash");
 }
 
@@ -630,10 +626,16 @@ export async function permanentDeleteShortlink(id: string) {
  */
 export async function getTrashShortlinks() {
   await requireAuth();
+  const supabase = createAdminClient();
 
-  return await queryPooler<Shortlink>(
-    `SELECT * FROM shortlinks WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC LIMIT 100`
-  );
+  const { data } = await supabase
+    .from("shortlinks")
+    .select("*")
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false })
+    .limit(100);
+
+  return (data ?? []) as Shortlink[];
 }
 
 /**
@@ -641,29 +643,26 @@ export async function getTrashShortlinks() {
  */
 export async function getShortlinkStats() {
   await requireAuth();
+  const supabase = createAdminClient();
 
-  const stats = await queryPoolerSingle<{
-    total: string;
-    active: string;
-    total_clicks: string;
-    password_protected: string;
-    trashed: string;
-  }>(
-    `SELECT 
-      COUNT(*) FILTER (WHERE deleted_at IS NULL) as total,
-      COUNT(*) FILTER (WHERE is_active = true AND deleted_at IS NULL) as active,
-      COALESCE(SUM(click_count) FILTER (WHERE deleted_at IS NULL), 0) as total_clicks,
-      COUNT(*) FILTER (WHERE password_hash IS NOT NULL AND deleted_at IS NULL) as password_protected,
-      COUNT(*) FILTER (WHERE deleted_at IS NOT NULL) as trashed
-     FROM shortlinks`
+  const [totalResult, activeResult, protectedResult, trashedResult, clicksResult] = await Promise.all([
+    supabase.from("shortlinks").select("*", { count: "exact", head: true }).is("deleted_at", null),
+    supabase.from("shortlinks").select("*", { count: "exact", head: true }).eq("is_active", true).is("deleted_at", null),
+    supabase.from("shortlinks").select("*", { count: "exact", head: true }).not("password_hash", "is", null).is("deleted_at", null),
+    supabase.from("shortlinks").select("*", { count: "exact", head: true }).not("deleted_at", "is", null),
+    supabase.from("shortlinks").select("click_count").is("deleted_at", null),
+  ]);
+
+  const totalClicks = (clicksResult.data ?? []).reduce(
+    (sum, row) => sum + (row.click_count || 0), 0
   );
 
   return {
-    total: parseInt(stats?.total || "0"),
-    active: parseInt(stats?.active || "0"),
-    totalClicks: parseInt(stats?.total_clicks || "0"),
-    passwordProtected: parseInt(stats?.password_protected || "0"),
-    trashed: parseInt(stats?.trashed || "0"),
+    total: totalResult.count ?? 0,
+    active: activeResult.count ?? 0,
+    totalClicks,
+    passwordProtected: protectedResult.count ?? 0,
+    trashed: trashedResult.count ?? 0,
   };
 }
 
@@ -672,11 +671,16 @@ export async function getShortlinkStats() {
  */
 export async function getShortlinkClicks(shortlinkId: string, limit = 100) {
   await requireAuth();
+  const supabase = createAdminClient();
 
-  return await queryPooler<ShortlinkClick>(
-    `SELECT * FROM shortlink_clicks WHERE shortlink_id = $1 ORDER BY clicked_at DESC LIMIT $2`,
-    [shortlinkId, limit]
-  );
+  const { data } = await supabase
+    .from("shortlink_clicks")
+    .select("*")
+    .eq("shortlink_id", shortlinkId)
+    .order("clicked_at", { ascending: false })
+    .limit(limit);
+
+  return (data ?? []) as ShortlinkClick[];
 }
 
 /**
@@ -684,45 +688,60 @@ export async function getShortlinkClicks(shortlinkId: string, limit = 100) {
  */
 export async function getShortlinkAuditTrail(shortlinkId: string) {
   await requireAuth();
+  const supabase = createAdminClient();
 
-  return await queryPooler<ShortlinkAudit>(
-    `SELECT * FROM shortlink_audit WHERE shortlink_id = $1 ORDER BY performed_at DESC`,
-    [shortlinkId]
-  );
+  const { data } = await supabase
+    .from("shortlink_audit")
+    .select("*")
+    .eq("shortlink_id", shortlinkId)
+    .order("performed_at", { ascending: false });
+
+  return (data ?? []) as ShortlinkAudit[];
 }
 
 /**
- * Admin: Get click analytics summary for a shortlink
+ * Admin: Get click analytics summary for a shortlink.
+ *
+ * Aggregates are computed in JS since Supabase JS client lacks GROUP BY.
+ * For high-traffic shortlinks (>10k clicks), consider creating an RPC function
+ * with proper GROUP BY aggregation.
  */
 export async function getShortlinkAnalyticsSummary(shortlinkId: string) {
   await requireAuth();
+  const supabase = createAdminClient();
 
-  const [deviceBreakdown, browserBreakdown, countryBreakdown, recentClicks] = await Promise.all([
-    queryPooler<{ device_type: string; count: string }>(
-      `SELECT COALESCE(device_type, 'unknown') AS device_type, COUNT(*)::text AS count
-       FROM shortlink_clicks WHERE shortlink_id = $1
-       GROUP BY device_type ORDER BY count DESC`,
-      [shortlinkId]
-    ),
-    queryPooler<{ browser: string; count: string }>(
-      `SELECT COALESCE(browser, 'unknown') AS browser, COUNT(*)::text AS count
-       FROM shortlink_clicks WHERE shortlink_id = $1
-       GROUP BY browser ORDER BY count DESC`,
-      [shortlinkId]
-    ),
-    queryPooler<{ country: string; count: string }>(
-      `SELECT COALESCE(country, 'unknown') AS country, COUNT(*)::text AS count
-       FROM shortlink_clicks WHERE shortlink_id = $1
-       GROUP BY country ORDER BY count DESC LIMIT 20`,
-      [shortlinkId]
-    ),
-    queryPooler<{ date: string; count: string }>(
-      `SELECT DATE(clicked_at)::text AS date, COUNT(*)::text AS count
-       FROM shortlink_clicks WHERE shortlink_id = $1
-       GROUP BY DATE(clicked_at) ORDER BY date DESC LIMIT 30`,
-      [shortlinkId]
-    ),
-  ]);
+  const { data: clicks } = await supabase
+    .from("shortlink_clicks")
+    .select("device_type, browser, country, clicked_at")
+    .eq("shortlink_id", shortlinkId)
+    .limit(10000);
+
+  function aggregateByField(items: Record<string, any>[], field: string) {
+    const counts: Record<string, number> = {};
+    for (const item of items ?? []) {
+      const key = item[field] || "unknown";
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    return Object.entries(counts)
+      .map(([key, count]) => ({ [field]: key, count: String(count) }))
+      .sort((a, b) => Number(b.count) - Number(a.count));
+  }
+
+  function aggregateByDate(items: Record<string, any>[]) {
+    const counts: Record<string, number> = {};
+    for (const item of items ?? []) {
+      const date = item.clicked_at?.split("T")[0] || "unknown";
+      counts[date] = (counts[date] || 0) + 1;
+    }
+    return Object.entries(counts)
+      .map(([date, count]) => ({ date, count: String(count) }))
+      .sort((a, b) => b.date.localeCompare(a.date));
+  }
+
+  const deviceBreakdown = aggregateByField(clicks ?? [], "device_type");
+  const browserBreakdown = aggregateByField(clicks ?? [], "browser");
+  const countryBreakdown = aggregateByField(clicks ?? [], "country").slice(0, 20);
+  const recentClicks = aggregateByDate(clicks ?? []).slice(0, 30);
 
   return { deviceBreakdown, browserBreakdown, countryBreakdown, recentClicks };
 }

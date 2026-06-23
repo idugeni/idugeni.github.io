@@ -1,4 +1,4 @@
-import { queryPooler } from "@/lib/db/pooler";
+import { createPublicClient } from "@/lib/supabase/public";
 import { siteConfig } from "@/lib/config/site";
 import { markdownToHtml, truncateHtml } from "./utils/markdown";
 import { buildArticleHtml } from "./utils/template";
@@ -29,8 +29,8 @@ interface BlogArticle {
   jumlah_view: number;
   waktu_baca: number;
   kategori_id: string | null;
-  kategori_nama: string | null;
-  kategori_slug: string | null;
+  kategori_nama?: string | null;
+  kategori_slug?: string | null;
 }
 
 interface RelatedPost {
@@ -39,46 +39,50 @@ interface RelatedPost {
 }
 
 export async function GET() {
-  // Enhanced query with kategori JOIN
-  const articles = await queryPooler<BlogArticle>(
-    `SELECT 
-       a.id,
-       a.judul, 
-       a.slug, 
-       a.ringkasan, 
-       a.konten,
-       a.published_at, 
-       a.updated_at,
-       a.featured,
-       a.jumlah_like,
-       a.jumlah_view,
-       a.waktu_baca,
-       a.kategori_id,
-       k.nama AS kategori_nama,
-       k.slug AS kategori_slug
-     FROM blog_artikel a
-     LEFT JOIN kategori k ON a.kategori_id = k.id
-     WHERE a.status = 'published' 
-     ORDER BY a.published_at DESC 
-     LIMIT 20`
-  );
+  const supabase = createPublicClient();
 
-  // Fetch related posts for each article (batch optimization)
+  const { data: rawArticles } = await supabase
+    .from("blog_artikel")
+    .select("id, judul, slug, ringkasan, konten, published_at, updated_at, featured, jumlah_like, jumlah_view, waktu_baca, kategori_id")
+    .eq("status", "published")
+    .order("published_at", { ascending: false })
+    .limit(20);
+
+  const articles: BlogArticle[] = rawArticles ?? [];
+
+  if (articles.length > 0) {
+    const kategoriIds = [...new Set(articles.map((a) => a.kategori_id).filter(Boolean))] as string[];
+
+    if (kategoriIds.length > 0) {
+      const { data: kategoriRows } = await supabase
+        .from("kategori")
+        .select("id, nama, slug")
+        .in("id", kategoriIds);
+
+      const kategoriMap = new Map((kategoriRows ?? []).map((k) => [k.id, k]));
+
+      for (const article of articles) {
+        const kat = article.kategori_id ? kategoriMap.get(article.kategori_id) : null;
+        article.kategori_nama = kat?.nama ?? null;
+        article.kategori_slug = kat?.slug ?? null;
+      }
+    }
+  }
+
   const articlesWithRelated = await Promise.all(
     articles.map(async (article) => {
-      const relatedPosts = article.kategori_id
-        ? await queryPooler<RelatedPost>(
-            `SELECT judul, slug 
-             FROM blog_artikel 
-             WHERE kategori_id = $1 
-               AND id != $2 
-               AND status = 'published'
-             ORDER BY published_at DESC 
-             LIMIT 3`,
-            [article.kategori_id, article.id]
-          )
-        : [];
-      
+      let relatedPosts: RelatedPost[] = [];
+      if (article.kategori_id) {
+        const { data } = await supabase
+          .from("blog_artikel")
+          .select("judul, slug")
+          .eq("kategori_id", article.kategori_id)
+          .neq("id", article.id)
+          .eq("status", "published")
+          .order("published_at", { ascending: false })
+          .limit(3);
+        relatedPosts = data ?? [];
+      }
       return { ...article, relatedPosts };
     })
   );
@@ -105,8 +109,8 @@ export async function GET() {
           jumlah_like: article.jumlah_like,
           jumlah_view: article.jumlah_view,
           waktu_baca: article.waktu_baca,
-          kategori_nama: article.kategori_nama,
-          kategori_slug: article.kategori_slug,
+          kategori_nama: article.kategori_nama ?? null,
+          kategori_slug: article.kategori_slug ?? null,
         },
         truncatedHtml,
         article.relatedPosts

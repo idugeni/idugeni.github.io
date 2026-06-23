@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { queryPooler } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createLogger } from "@/lib/logger";
 
 const log = createLogger("report-error-api");
@@ -26,25 +26,25 @@ export async function POST(request: Request) {
     const validLevels = ["info", "warn", "error", "fatal"];
     const logLevel = validLevels.includes(level) ? level : "error";
 
-    // Capture request metadata
     const userAgent = request.headers.get("user-agent") || null;
     const url = request.headers.get("referer") || request.headers.get("origin") || null;
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
 
-    await queryPooler(
-      `INSERT INTO error_logs (level, module, message, stack, url, user_agent, ip_address, metadata)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [
-        logLevel,
-        module || "client",
-        message.slice(0, 2000), // Cap message length
-        (stack || error || null)?.toString().slice(0, 5000) || null,
-        url?.slice(0, 500) || null,
-        userAgent?.slice(0, 500) || null,
-        ip,
-        metadata ? JSON.stringify(metadata) : "{}",
-      ],
-    );
+    const supabase = createAdminClient();
+    const { error: insertError } = await supabase.from("error_logs").insert({
+      level: logLevel,
+      module: module || "client",
+      message: message.slice(0, 2000),
+      stack: (stack || error || null)?.toString().slice(0, 5000) || null,
+      url: url?.slice(0, 500) || null,
+      user_agent: userAgent?.slice(0, 500) || null,
+      ip_address: ip,
+      metadata: metadata ? JSON.stringify(metadata) : "{}",
+    });
+
+    if (insertError) {
+      throw insertError;
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

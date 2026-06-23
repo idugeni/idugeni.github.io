@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/rbac";
-import { queryPooler } from "@/lib/db/pooler";
+import { createPublicClient } from "@/lib/supabase/public";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
 import { Edit, Eye, Loader2Icon, Plus, Star, Tag } from "@/lib/icons";
@@ -103,78 +103,63 @@ async function getAdminBlogReadModel(rawParams: Record<string, string | string[]
   const category = firstParam(rawParams.category);
   const featured = firstParam(rawParams.featured);
   const sortParam = firstParam(rawParams.sort) ?? "date";
-  const orderParam = firstParam(rawParams.order) === "asc" ? "ASC" : "DESC";
+  const orderParam = firstParam(rawParams.order) === "asc";
   const sortColumn = SORT_COLUMNS[sortParam] ?? SORT_COLUMNS.date;
 
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
+  const supabase = createPublicClient();
 
-  if (q) {
-    conditions.push(`a.judul ILIKE $${idx++}`);
-    params.push(`%${q}%`);
-  }
+  // Count total matching articles
+  let countQuery = supabase
+    .from("blog_artikel")
+    .select("id", { count: "exact", head: true });
+  if (q) countQuery = countQuery.ilike("judul", `%${q}%`);
+  if (statusParam === "published" || statusParam === "draft") countQuery = countQuery.eq("status", statusParam);
+  if (category && /^[0-9a-fA-F-]{36}$/.test(category)) countQuery = countQuery.eq("kategori_id", category);
+  if (featured === "true") countQuery = countQuery.eq("featured", true);
 
-  if (statusParam === "published" || statusParam === "draft") {
-    conditions.push(`a.status = $${idx++}`);
-    params.push(statusParam);
-  }
-
-  if (category && /^[0-9a-fA-F-]{36}$/.test(category)) {
-    conditions.push(`a.kategori_id = $${idx++}`);
-    params.push(category);
-  }
-
-  if (featured === "true") {
-    conditions.push("a.featured = true");
-  }
-
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-
-  const countRows = await queryPooler<{ count: number }>(
-    `SELECT COUNT(*)::int AS count FROM blog_artikel a ${whereClause}`,
-    params,
-  );
-  const totalItems = toClientNumber(countRows[0]?.count);
+  const { count: totalItemsRaw } = await countQuery;
+  const totalItems = toClientNumber(totalItemsRaw);
   const totalPages = getTotalPages(totalItems, ADMIN_BLOG_PAGE_SIZE);
   const safePage = Math.min(page, totalPages);
   const offset = (safePage - 1) * ADMIN_BLOG_PAGE_SIZE;
 
-  const limitIdx = idx++;
-  const offsetIdx = idx++;
-  const articles = await queryPooler<AdminBlogArticle>(
-    `SELECT
-      a.id, a.judul, a.slug, a.ringkasan, a.konten, a.thumbnail_url,
-      a.status, a.featured, a.jumlah_view, a.jumlah_like, a.waktu_baca,
-      a.published_at, a.created_at,
-      CASE WHEN k.id IS NOT NULL
-        THEN json_build_object('id', k.id, 'nama', k.nama, 'warna', k.warna)
-        ELSE NULL
-      END AS kategori
-    FROM blog_artikel a
-    LEFT JOIN kategori k ON a.kategori_id = k.id
-    ${whereClause}
-    ORDER BY a.${sortColumn} ${orderParam}
-    LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
-    [...params, ADMIN_BLOG_PAGE_SIZE, offset],
-  );
+  // Fetch articles with embedded kategori
+  let articleQuery = supabase
+    .from("blog_artikel")
+    .select("*, kategori:nategori(id, nama, warna)")
+    .range(offset, offset + ADMIN_BLOG_PAGE_SIZE - 1);
+  if (q) articleQuery = articleQuery.ilike("judul", `%${q}%`);
+  if (statusParam === "published" || statusParam === "draft") articleQuery = articleQuery.eq("status", statusParam);
+  if (category && /^[0-9a-fA-F-]{36}$/.test(category)) articleQuery = articleQuery.eq("kategori_id", category);
+  if (featured === "true") articleQuery = articleQuery.eq("featured", true);
+  articleQuery = articleQuery.order(sortColumn, { ascending: orderParam });
 
-  const [statsRows, categories] = await Promise.all([
-    queryPooler<BlogStats>(
-      `SELECT
-        COUNT(*)::int AS total,
-        COUNT(*) FILTER (WHERE status = 'published')::int AS published,
-        COUNT(*) FILTER (WHERE status = 'draft')::int AS draft,
-        COUNT(*) FILTER (WHERE featured = true)::int AS featured
-      FROM blog_artikel`,
-    ),
-    queryPooler<Category>(`SELECT id, nama, warna FROM kategori ORDER BY nama ASC`),
+  const { data: articles } = await articleQuery;
+
+  // Stats: separate counts since Supabase doesn't support FILTER
+  const [totalRes, publishedRes, draftRes, featuredRes, categoriesRes] = await Promise.all([
+    supabase.from("blog_artikel").select("id", { count: "exact", head: true }),
+    supabase.from("blog_artikel").select("id", { count: "exact", head: true }).eq("status", "published"),
+    supabase.from("blog_artikel").select("id", { count: "exact", head: true }).eq("status", "draft"),
+    supabase.from("blog_artikel").select("id", { count: "exact", head: true }).eq("featured", true),
+    supabase.from("kategori").select("id, nama, warna").order("nama"),
   ]);
 
-  const stats = statsRows[0] ?? { total: 0, published: 0, draft: 0, featured: 0 };
+  const stats: BlogStats = {
+    total: toClientNumber(totalRes.count),
+    published: toClientNumber(publishedRes.count),
+    draft: toClientNumber(draftRes.count),
+    featured: toClientNumber(featuredRes.count),
+  };
+
+  const categories: Category[] = (categoriesRes.data ?? []).map((c) => ({
+    id: String(c.id),
+    nama: String(c.nama),
+    warna: c.warna ? String(c.warna) : null,
+  }));
 
   return {
-    articles: articles.map((article) => ({
+    articles: (articles ?? []).map((article) => ({
       ...article,
       featured: toClientBoolean(article.featured),
       jumlah_view: toClientNumber(article.jumlah_view),
@@ -190,17 +175,8 @@ async function getAdminBlogReadModel(rawParams: Record<string, string | string[]
           }
         : null,
     })),
-    stats: {
-      total: toClientNumber(stats.total),
-      published: toClientNumber(stats.published),
-      draft: toClientNumber(stats.draft),
-      featured: toClientNumber(stats.featured),
-    },
-    categories: categories.map((categoryItem) => ({
-      id: String(categoryItem.id),
-      nama: String(categoryItem.nama),
-      warna: categoryItem.warna ? String(categoryItem.warna) : null,
-    })),
+    stats,
+    categories,
     pagination: {
       page: safePage,
       pageSize: ADMIN_BLOG_PAGE_SIZE,

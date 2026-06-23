@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createLogger } from "@/lib/logger";
-import { queryPooler } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/rbac";
 import { z } from "zod";
 
@@ -28,9 +28,20 @@ const paginationSchema = z.object({
   module: z.string().optional(),
 });
 
-/**
- * Fetch paginated error logs for admin monitoring dashboard.
- */
+function applyFilters(
+  query: any,
+  level: string,
+  module: string | undefined,
+) {
+  if (level !== "all") {
+    query = query.eq("level", level);
+  }
+  if (module) {
+    query = query.eq("module", module);
+  }
+  return query;
+}
+
 export async function getErrorLogs(
   params: z.input<typeof paginationSchema>,
 ): Promise<{ data: ErrorLogEntry[]; total: number }> {
@@ -39,50 +50,31 @@ export async function getErrorLogs(
   if (!parsedResult.success) throw new Error("Invalid input");
   const parsed = parsedResult.data;
   const offset = (parsed.page - 1) * parsed.limit;
+  const supabase = createAdminClient();
 
-  let whereClauses: string[] = [];
-  let queryParams: unknown[] = [];
-  let paramIndex = 1;
-
-  if (parsed.level !== "all") {
-    whereClauses.push(`level = $${paramIndex}`);
-    queryParams.push(parsed.level);
-    paramIndex++;
-  }
-
-  if (parsed.module) {
-    whereClauses.push(`module = $${paramIndex}`);
-    queryParams.push(parsed.module);
-    paramIndex++;
-  }
-
-  const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
-
-  // Get total count
-  const [countResult] = await queryPooler<{ count: string }>(
-    `SELECT COUNT(*) as count FROM error_logs ${whereSQL}`,
-    queryParams,
+  const countQuery = applyFilters(
+    supabase.from("error_logs").select("*", { count: "exact", head: true }),
+    parsed.level,
+    parsed.module,
   );
+  const { count } = await countQuery;
 
-  // Get paginated data
-  const data = await queryPooler<ErrorLogEntry>(
-    `SELECT id, level, module, message, stack, url, user_agent, ip_address, metadata, created_at
-     FROM error_logs
-     ${whereSQL}
-     ORDER BY created_at DESC
-     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-    [...queryParams, parsed.limit, offset],
+  let dataQuery = applyFilters(
+    supabase.from("error_logs").select("id, level, module, message, stack, url, user_agent, ip_address, metadata, created_at"),
+    parsed.level,
+    parsed.module,
   );
+  const { data, error } = await dataQuery
+    .order("created_at", { ascending: false })
+    .range(offset, offset + parsed.limit - 1);
+  if (error) throw error;
 
   return {
-    data,
-    total: parseInt(countResult?.count || "0", 10),
+    data: (data || []) as ErrorLogEntry[],
+    total: count || 0,
   };
 }
 
-/**
- * Get error log statistics for the monitoring dashboard.
- */
 export async function getErrorLogStats(): Promise<{
   total: number;
   today: number;
@@ -91,56 +83,67 @@ export async function getErrorLogStats(): Promise<{
   topModules: Array<{ module: string; count: number }>;
 }> {
   await requireAdmin();
+  const supabase = createAdminClient();
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const c = (r: { count: number | null }) => r.count || 0;
+
   const [totalResult, todayResult, weekResult] = await Promise.all([
-    queryPooler<{ count: string }>(`SELECT COUNT(*) as count FROM error_logs`),
-    queryPooler<{ count: string }>(
-      `SELECT COUNT(*) as count FROM error_logs WHERE created_at >= now() - INTERVAL '1 day'`,
-    ),
-    queryPooler<{ count: string }>(
-      `SELECT COUNT(*) as count FROM error_logs WHERE created_at >= now() - INTERVAL '7 days'`,
-    ),
+    supabase.from("error_logs").select("*", { count: "exact", head: true }),
+    supabase.from("error_logs").select("*", { count: "exact", head: true }).gte("created_at", todayStart),
+    supabase.from("error_logs").select("*", { count: "exact", head: true }).gte("created_at", weekStart),
   ]);
 
-  const byLevelRows = await queryPooler<{ level: string; count: string }>(
-    `SELECT level, COUNT(*) as count FROM error_logs GROUP BY level`,
-  );
-
-  const topModules = await queryPooler<{ module: string; count: string }>(
-    `SELECT module, COUNT(*) as count FROM error_logs
-     WHERE created_at >= now() - INTERVAL '7 days'
-     GROUP BY module ORDER BY count DESC LIMIT 5`,
-  );
+  const { data: weekLogs } = await supabase
+    .from("error_logs")
+    .select("level, module")
+    .gte("created_at", weekStart);
 
   const byLevel: Record<string, number> = {};
-  for (const row of byLevelRows) {
-    byLevel[row.level] = parseInt(row.count, 10);
+  const moduleCounts = new Map<string, number>();
+  for (const row of weekLogs || []) {
+    byLevel[row.level] = (byLevel[row.level] || 0) + 1;
+    moduleCounts.set(row.module, (moduleCounts.get(row.module) || 0) + 1);
   }
 
+  const totalLevelResult = await supabase.from("error_logs").select("level");
+
+  const fullByLevel: Record<string, number> = {};
+  for (const row of totalLevelResult.data || []) {
+    fullByLevel[row.level] = (fullByLevel[row.level] || 0) + 1;
+  }
+
+  const topModules = [...moduleCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([module, count]) => ({ module, count }));
+
   return {
-    total: parseInt(totalResult[0]?.count || "0", 10),
-    today: parseInt(todayResult[0]?.count || "0", 10),
-    thisWeek: parseInt(weekResult[0]?.count || "0", 10),
-    byLevel,
-    topModules: topModules.map((r) => ({ module: r.module, count: parseInt(r.count, 10) })),
+    total: c(totalResult),
+    today: c(todayResult),
+    thisWeek: c(weekResult),
+    byLevel: fullByLevel,
+    topModules,
   };
 }
 
-/**
- * Clean up old error logs (older than 30 days).
- * Can be called from a cron job or manually from admin.
- */
 export async function cleanupErrorLogs(): Promise<{ deleted: number }> {
   await requireAdmin();
+  const supabase = createAdminClient();
   try {
-    const [before] = await queryPooler<{ count: string }>(
-      `SELECT COUNT(*) as count FROM error_logs WHERE created_at < now() - INTERVAL '30 days'`,
-    );
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    await queryPooler(
-      `DELETE FROM error_logs WHERE created_at < now() - INTERVAL '30 days'`,
-    );
+    const { count } = await supabase
+      .from("error_logs")
+      .select("*", { count: "exact", head: true })
+      .lt("created_at", cutoff);
 
-    const deleted = parseInt(before?.count || "0", 10);
+    await supabase.from("error_logs").delete().lt("created_at", cutoff);
+
+    const deleted = count || 0;
     log.info("Error logs cleanup completed", { deleted });
 
     revalidatePath("/admin/monitoring");

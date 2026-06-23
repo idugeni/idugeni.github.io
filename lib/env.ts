@@ -20,7 +20,6 @@ const serverSchema = z.object({
   NEXT_PUBLIC_YANDEX_VERIFICATION: z.string().optional(),
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
-  DATABASE_URL: z.string().url().optional(),
 });
 
 function validateEnv() {

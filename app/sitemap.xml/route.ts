@@ -1,4 +1,4 @@
-import { db } from "@/lib/db/kysely";
+import { createPublicClient } from "@/lib/supabase/public";
 
 function escapeXml(str: string | null | undefined): string {
   if (!str) return "";
@@ -28,25 +28,28 @@ export async function GET() {
     { url: `${baseUrl}/terms`, changefreq: "yearly", priority: "0.3" },
   ];
 
-  const [articles, projects, services] = await Promise.all([
-    db
-      .selectFrom("blog_artikel")
-      .select(["slug", "judul", "thumbnail_url", "updated_at", "created_at"])
-      .where("status", "=", "published")
-      .orderBy("created_at", "desc")
-      .execute(),
-    db
-      .selectFrom("projects")
-      .select(["slug", "nama", "thumbnail_url", "updated_at", "created_at"])
-      .orderBy("created_at", "desc")
-      .execute(),
-    db
-      .selectFrom("services")
-      .select(["slug", "updated_at", "created_at"])
-      .where("aktif", "=", true)
-      .orderBy("urutan", "asc")
-      .execute(),
+  const supabase = createPublicClient();
+
+  const [articlesResult, projectsResult, servicesResult] = await Promise.all([
+    supabase
+      .from("blog_artikel")
+      .select("slug, judul, thumbnail_url, updated_at, created_at")
+      .eq("status", "published")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("projects")
+      .select("slug, nama, thumbnail_url, updated_at, created_at")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("services")
+      .select("slug, updated_at, created_at")
+      .eq("aktif", true)
+      .order("urutan", { ascending: true }),
   ]);
+
+  const articles = articlesResult.data ?? [];
+  const projects = projectsResult.data ?? [];
+  const services = servicesResult.data ?? [];
 
   const now = new Date().toISOString();
 

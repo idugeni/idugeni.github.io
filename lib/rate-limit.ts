@@ -1,4 +1,4 @@
-import { queryPoolerSingle } from "@/lib/db/pooler"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { Ratelimit } from "@upstash/ratelimit"
 import { getRedis } from "./redis"
 
@@ -28,27 +28,24 @@ export async function rateLimit(
 ): Promise<void> {
   const windowSeconds = Math.ceil(config.window / 1000)
 
-  const result = await queryPoolerSingle<{ check_rate_limit: boolean }>(
-    "SELECT private.check_rate_limit($1, $2, $3, $4)",
-    [identifier, endpoint, config.max, windowSeconds]
-  )
+  const supabase = createAdminClient()
 
-  const allowed = result?.check_rate_limit ?? true
+  const { data, error } = await supabase.rpc("check_rate_limit", {
+    p_identifier: identifier,
+    p_endpoint: endpoint,
+    p_max: config.max,
+    p_window: windowSeconds,
+  })
+
+  if (error) {
+    console.error("[rate-limit] RPC error:", error.message)
+  }
+
+  const allowed = data ?? true
 
   if (!allowed) {
-    const timeResult = await queryPoolerSingle<{ remaining_seconds: number }>(
-      `SELECT COALESCE(
-        EXTRACT(EPOCH FROM (MIN(created_at) + ($3 || ' seconds')::interval - now()))::int,
-        $4
-      ) AS remaining_seconds
-      FROM private.rate_limits 
-      WHERE ip_address = $1 AND action = $2`,
-      [identifier, endpoint, windowSeconds, windowSeconds]
-    )
-
-    const remainingTime = Math.max(1, timeResult?.remaining_seconds ?? windowSeconds)
     throw new Error(
-      `Rate limit exceeded. Please try again in ${remainingTime} seconds.`
+      `Rate limit exceeded. Please try again in ${windowSeconds} seconds.`
     )
   }
 }

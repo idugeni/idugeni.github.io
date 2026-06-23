@@ -4,7 +4,7 @@ import { cache } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
+import { createPublicClient } from "@/lib/supabase/public";
 import { toCamelCase } from "@/lib/utils/case";
 import { toPlainText, safeImageSource } from "@/lib/utils/html";
 import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
@@ -28,28 +28,37 @@ export const getBlogDetailData = cache(async function getBlogDetailData(slug: st
   cacheLife("hours");
   cacheTag(`blog-${slug}`, CACHE_TAGS.blog);
 
-  const rawArticle = await queryPoolerSingle<Record<string, unknown>>(
-    `SELECT * FROM blog_artikel WHERE slug=$1 AND status='published'`,
-    [slug]
-  );
+  const supabase = createPublicClient();
 
-  if (!rawArticle) return null;
+  const { data: rawArticle, error } = await supabase
+    .from("blog_artikel")
+    .select("*")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .single();
 
-  const [rawComments, rawRelated] = await Promise.all([
-    queryPooler<Record<string, unknown>>(
-      `SELECT * FROM blog_komentar WHERE artikel_id=$1 AND approved=true ORDER BY created_at DESC`,
-      [rawArticle.id as string]
-    ),
-    queryPooler<Record<string, unknown>>(
-      `SELECT * FROM blog_artikel WHERE status='published' AND id != $1 ORDER BY created_at DESC LIMIT 3`,
-      [rawArticle.id as string]
-    ),
+  if (error || !rawArticle) return null;
+
+  const [commentsResult, relatedResult] = await Promise.all([
+    supabase
+      .from("blog_komentar")
+      .select("*")
+      .eq("artikel_id", rawArticle.id as string)
+      .eq("approved", true)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("blog_artikel")
+      .select("*")
+      .eq("status", "published")
+      .neq("id", rawArticle.id as string)
+      .order("created_at", { ascending: false })
+      .limit(3),
   ]);
 
   return {
     article: toCamelCase<BlogArticle>(rawArticle),
-    comments: toCamelCase<BlogComment[]>(rawComments),
-    relatedArticles: toCamelCase<BlogArticle[]>(rawRelated),
+    comments: toCamelCase<BlogComment[]>(commentsResult.data ?? []),
+    relatedArticles: toCamelCase<BlogArticle[]>(relatedResult.data ?? []),
   };
 });
 

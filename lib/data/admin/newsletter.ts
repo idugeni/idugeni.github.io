@@ -2,7 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
-import { queryPooler } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const adminNewsletterFilterSchema = z.object({
   q: z.string().trim().max(100).optional(),
@@ -46,44 +46,35 @@ export async function getAdminNewsletterSubscribersReadModel(rawFilters: unknown
   await requireAdmin();
 
   const filters = adminNewsletterFilterSchema.parse(rawFilters ?? {});
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-  let idx = 1;
 
-  if (filters.q) {
-    const escaped = filters.q.replace(/[%_]/g, "\\$&");
-    conditions.push(`(email ILIKE '%' || $${idx} || '%' ESCAPE '\\' OR nama ILIKE '%' || $${idx} || '%' ESCAPE '\\')`);
-    params.push(escaped);
-    idx++;
-  }
-  if (filters.status === "active") {
-    conditions.push(`aktif = $${idx}`);
-    params.push(true);
-    idx++;
-  }
-  if (filters.status === "inactive") {
-    conditions.push(`aktif = $${idx}`);
-    params.push(false);
-    idx++;
-  }
-
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  const sortCol = getNewsletterSortColumn(filters.sort);
-  const sortDir = filters.order === "asc" ? "ASC" : "DESC";
+  const sortColumn = getNewsletterSortColumn(filters.sort);
+  const ascending = filters.order === "asc";
   const offset = (filters.page - 1) * filters.pageSize;
 
-  const [countResult, rows] = await Promise.all([
-    queryPooler<{ count: number }>(`SELECT COUNT(*)::int AS count FROM newsletter_subscribers ${where}`, params),
-    queryPooler<NewsletterRow>(`SELECT * FROM newsletter_subscribers ${where} ORDER BY ${sortCol} ${sortDir} LIMIT $${idx} OFFSET $${idx + 1}`, [
-      ...params,
-      filters.pageSize,
-      offset,
-    ]),
-  ]);
+  const supabase = createAdminClient();
 
-  const totalItems = countResult[0]?.count ?? 0;
+  let baseQuery = supabase
+    .from("newsletter_subscribers")
+    .select("*", { count: "exact" });
+
+  if (filters.q) {
+    const pattern = `%${filters.q.replace(/[%_]/g, "\\$&")}%`;
+    baseQuery = baseQuery.or(`email.ilike.${pattern},nama.ilike.${pattern}`);
+  }
+  if (filters.status === "active") {
+    baseQuery = baseQuery.eq("aktif", true);
+  }
+  if (filters.status === "inactive") {
+    baseQuery = baseQuery.eq("aktif", false);
+  }
+
+  const { data, count } = await baseQuery
+    .order(sortColumn, { ascending })
+    .range(offset, offset + filters.pageSize - 1);
+
+  const totalItems = count ?? 0;
   return {
-    subscribers: rows.map(serializeSubscriber),
+    subscribers: (data ?? []).map(serializeSubscriber as (row: Record<string, unknown>) => ReturnType<typeof serializeSubscriber>),
     filters,
     pagination: {
       page: filters.page,
@@ -97,36 +88,33 @@ export async function getAdminNewsletterSubscribersReadModel(rawFilters: unknown
 export async function getNewsletterStatsReadModel() {
   await requireAdmin();
 
-  const [row] = await queryPooler<{
-    total: number;
-    active: number;
-    inactive: number;
-    recent: number;
-    confirmed: number;
-    unconfirmed: number;
-    confirmation_rate: number;
-  }>(`
-    SELECT
-      COUNT(*)::int AS total,
-      COUNT(*) FILTER (WHERE aktif = true)::int AS active,
-      COUNT(*) FILTER (WHERE aktif = false)::int AS inactive,
-      COUNT(*) FILTER (WHERE subscribed_at >= NOW() - INTERVAL '7 days')::int AS recent,
-      COUNT(*) FILTER (WHERE confirmed = true)::int AS confirmed,
-      COUNT(*) FILTER (WHERE confirmed = false)::int AS unconfirmed,
-      CASE
-        WHEN COUNT(*) = 0 THEN 0
-        ELSE ROUND((COUNT(*) FILTER (WHERE confirmed = true)::numeric / COUNT(*)::numeric) * 100, 2)
-      END AS confirmation_rate
-    FROM newsletter_subscribers
-  `);
+  const supabase = createAdminClient();
+
+  const [totalResult, activeResult, inactiveResult, confirmedResult, unconfirmedResult] = await Promise.all([
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }),
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("aktif", true),
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("aktif", false),
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("confirmed", true),
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).eq("confirmed", false),
+  ]);
+
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { count: recentCount } = await supabase
+    .from("newsletter_subscribers")
+    .select("*", { count: "exact", head: true })
+    .gte("subscribed_at", sevenDaysAgo);
+
+  const total = totalResult.count ?? 0;
+  const confirmed = confirmedResult.count ?? 0;
+  const confirmationRate = total > 0 ? Math.round((confirmed / total) * 10000) / 100 : 0;
 
   return {
-    total: row?.total ?? 0,
-    active: row?.active ?? 0,
-    inactive: row?.inactive ?? 0,
-    recent: row?.recent ?? 0,
-    confirmed: row?.confirmed ?? 0,
-    unconfirmed: row?.unconfirmed ?? 0,
-    confirmationRate: Number(row?.confirmation_rate) || 0,
+    total,
+    active: activeResult.count ?? 0,
+    inactive: inactiveResult.count ?? 0,
+    recent: recentCount ?? 0,
+    confirmed,
+    unconfirmed: unconfirmedResult.count ?? 0,
+    confirmationRate,
   };
 }

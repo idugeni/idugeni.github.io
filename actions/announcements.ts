@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/rbac";
-import { queryPooler, queryPoolerSingle } from "@/lib/db/pooler";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // ─── Types & Schemas ──────────────────────────────────────────────────────────
 
@@ -58,29 +58,27 @@ export async function createAnnouncement(data: unknown): Promise<Announcement> {
   const startsAt = parsed.starts_at ? new Date(parsed.starts_at).toISOString() : new Date().toISOString();
   const endsAt = parsed.ends_at ? new Date(parsed.ends_at).toISOString() : null;
 
-  const result = await queryPoolerSingle<Announcement>(
-    `INSERT INTO announcements (
-      title, content, type, placement, is_active, starts_at, ends_at,
-      target_page, dismissible, cta_label, cta_url, created_by
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-    RETURNING *`,
-    [
-      parsed.title,
-      parsed.content,
-      parsed.type,
-      parsed.placement,
-      parsed.is_active,
-      startsAt,
-      endsAt,
-      parsed.target_page,
-      parsed.dismissible,
-      parsed.cta_label || null,
-      parsed.cta_url || null,
-      admin.id,
-    ]
-  );
+  const supabase = createAdminClient();
+  const { data: result, error } = await supabase
+    .from("announcements")
+    .insert({
+      title: parsed.title,
+      content: parsed.content,
+      type: parsed.type,
+      placement: parsed.placement,
+      is_active: parsed.is_active,
+      starts_at: startsAt,
+      ends_at: endsAt,
+      target_page: parsed.target_page,
+      dismissible: parsed.dismissible,
+      cta_label: parsed.cta_label || null,
+      cta_url: parsed.cta_url || null,
+      created_by: admin.id,
+    })
+    .select()
+    .single();
 
-  if (!result) throw new Error("Failed to create announcement.");
+  if (error || !result) throw new Error("Failed to create announcement.");
 
   revalidatePath("/");
   revalidatePath("/admin/announcements");
@@ -96,15 +94,16 @@ export async function updateAnnouncement(id: string, data: unknown): Promise<Ann
   if (!parsedResult.success) throw new Error("Invalid input");
   const parsed = parsedResult.data;
 
-  const current = await queryPoolerSingle<Announcement>(
-    "SELECT * FROM announcements WHERE id = $1",
-    [parsedId]
-  );
-  if (!current) throw new Error("Announcement not found.");
+  const supabase = createAdminClient();
 
-  const setClauses: string[] = [];
-  const values: any[] = [];
-  let paramIndex = 1;
+  const { data: current, error: lookupError } = await supabase
+    .from("announcements")
+    .select("*")
+    .eq("id", parsedId)
+    .single();
+  if (lookupError || !current) throw new Error("Announcement not found.");
+
+  const updateData: Record<string, unknown> = {};
 
   const simpleFields: (keyof z.infer<typeof createAnnouncementSchema>)[] = [
     "title", "content", "type", "placement", "is_active",
@@ -114,38 +113,30 @@ export async function updateAnnouncement(id: string, data: unknown): Promise<Ann
   for (const key of simpleFields) {
     const val = parsed[key];
     if (val !== undefined) {
-      setClauses.push(`${key} = $${paramIndex}`);
-      values.push(val === "" ? null : val);
-      paramIndex++;
+      updateData[key] = val === "" ? null : val;
     }
   }
 
   if (parsed.starts_at !== undefined) {
-    setClauses.push(`starts_at = $${paramIndex}`);
-    values.push(parsed.starts_at ? new Date(parsed.starts_at).toISOString() : null);
-    paramIndex++;
+    updateData.starts_at = parsed.starts_at ? new Date(parsed.starts_at).toISOString() : null;
   }
 
   if (parsed.ends_at !== undefined) {
-    setClauses.push(`ends_at = $${paramIndex}`);
-    values.push(parsed.ends_at ? new Date(parsed.ends_at).toISOString() : null);
-    paramIndex++;
+    updateData.ends_at = parsed.ends_at ? new Date(parsed.ends_at).toISOString() : null;
   }
 
-  if (setClauses.length === 0) {
+  if (Object.keys(updateData).length === 0) {
     throw new Error("No updates provided.");
   }
 
-  values.push(parsedId);
-  const result = await queryPoolerSingle<Announcement>(
-    `UPDATE announcements
-     SET ${setClauses.join(", ")}, updated_at = now()
-     WHERE id = $${paramIndex}
-     RETURNING *`,
-    values
-  );
+  const { data: result, error } = await supabase
+    .from("announcements")
+    .update({ ...updateData, updated_at: new Date().toISOString() })
+    .eq("id", parsedId)
+    .select()
+    .single();
 
-  if (!result) throw new Error("Failed to update announcement.");
+  if (error || !result) throw new Error("Failed to update announcement.");
 
   revalidatePath("/");
   revalidatePath("/admin/announcements");
@@ -159,7 +150,12 @@ export async function deleteAnnouncement(id: string): Promise<{ success: boolean
   if (!parsedIdResult.success) throw new Error("Invalid input");
   const parsedId = parsedIdResult.data;
 
-  await queryPooler("DELETE FROM announcements WHERE id = $1", [parsedId]);
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("announcements")
+    .delete()
+    .eq("id", parsedId);
+  if (error) throw new Error(error.message);
 
   revalidatePath("/");
   revalidatePath("/admin/announcements");
@@ -168,9 +164,13 @@ export async function deleteAnnouncement(id: string): Promise<{ success: boolean
 
 export async function getAdminAnnouncements(): Promise<Announcement[]> {
   await requireAdmin();
-  return await queryPooler<Announcement>(
-    "SELECT * FROM announcements ORDER BY created_at DESC"
-  );
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("announcements")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data || [];
 }
 
 export async function getAnnouncementById(id: string): Promise<Announcement | null> {
@@ -178,21 +178,31 @@ export async function getAnnouncementById(id: string): Promise<Announcement | nu
   const parsedIdResult = z.string().uuid().safeParse(id);
   if (!parsedIdResult.success) throw new Error("Invalid input");
   const parsedId = parsedIdResult.data;
-  return await queryPoolerSingle<Announcement>(
-    "SELECT * FROM announcements WHERE id = $1",
-    [parsedId]
-  );
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("announcements")
+    .select("*")
+    .eq("id", parsedId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 // ─── Public Actions ──────────────────────────────────────────────────────────
 
 export async function getPublicAnnouncements(): Promise<Announcement[]> {
-  // Public select allows fetching active & currently scheduled announcements
-  return await queryPooler<Announcement>(
-    `SELECT * FROM announcements
-     WHERE is_active = true
-       AND (starts_at IS NULL OR starts_at <= now())
-       AND (ends_at IS NULL OR ends_at > now())
-     ORDER BY starts_at DESC`
-  );
+  const supabase = createAdminClient();
+  const now = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("announcements")
+    .select("*")
+    .eq("is_active", true)
+    .or(`starts_at.is.null,starts_at.lte.${now}`)
+    .or(`ends_at.is.null,ends_at.gt.${now}`)
+    .order("starts_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data || [];
 }
