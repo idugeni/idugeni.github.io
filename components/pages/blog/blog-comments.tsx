@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NeonBorder } from "@/components/ui/neon-border";
 import { useCSRFToken } from "@/components/providers/csrf-provider";
-import { Send, User } from "@/lib/icons";
+import { Send, User, MessageSquare } from "@/lib/icons";
 import { toast } from "sonner";
 import { createBlogComment } from "@/actions/blog";
 import { format } from "date-fns";
@@ -15,12 +15,11 @@ import type { BlogComment } from "@/types/pages";
 export function CommentSection({
   articleId,
   initialComments,
-  isOpen,
 }: {
   articleId: string;
   initialComments: BlogComment[];
-  isOpen: boolean;
 }) {
+  const [formOpen, setFormOpen] = useState(false);
   const csrfToken = useCSRFToken();
   const [comments, setComments] = useState(initialComments);
   const [form, setForm] = useState({ nama: "", email: "", komentar: "" });
@@ -48,8 +47,28 @@ export function CommentSection({
 
   return (
     <div className="mt-10">
-      {isOpen && (
-        <NeonBorder className="mb-8">
+      <button
+        type="button"
+        onClick={() => setFormOpen(!formOpen)}
+        className="group mb-8 flex w-full items-center justify-between border border-primary/20 bg-card/50 p-4 transition-all duration-300 hover:border-primary/40 hover:bg-primary/5"
+      >
+        <span className="flex items-center gap-3">
+          <MessageSquare className="h-5 w-5 text-primary" />
+          <span className="font-orbitron font-bold text-foreground group-hover:text-primary transition-colors">
+            {formOpen ? "TUTUP FORM" : "TULIS KOMENTAR"}
+          </span>
+        </span>
+        <span className="font-mono text-xs text-muted-foreground">
+          {formOpen ? "▲" : "▼"}
+        </span>
+      </button>
+
+      <div
+        className={`overflow-hidden transition-all duration-500 ease-in-out ${
+          formOpen ? "max-h-[800px] opacity-100 mb-8" : "max-h-0 opacity-0"
+        }`}
+      >
+        <NeonBorder>
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             <h3 className="font-orbitron font-bold text-lg mb-4">LEAVE_COMMENT</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -91,7 +110,7 @@ export function CommentSection({
             </Button>
           </form>
         </NeonBorder>
-      )}
+      </div>
 
       {comments.length > 0 && (
         <div className="space-y-4">

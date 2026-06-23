@@ -1,18 +1,18 @@
 import Link from "next/link";
 import Image from "next/image";
-import { cache } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createPublicClient } from "@/lib/supabase/public";
 import { toCamelCase } from "@/lib/utils/case";
-import { toPlainText, safeImageSource } from "@/lib/utils/html";
+import { safeImageSource } from "@/lib/utils/html";
 import { sanitizeRichHtml } from "@/lib/security/sanitize-html";
 import { siteConfig } from "@/lib/config/site";
 import { CACHE_TAGS } from "@/lib/cache/tags";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { ShareButtons } from "@/components/pages/blog/share-buttons";
+import { CommentSection } from "@/components/pages/blog/blog-comments";
 import type { BlogArticle, BlogComment } from "@/types/pages";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -23,7 +23,7 @@ type BlogDetail = {
   relatedArticles: BlogArticle[];
 };
 
-export const getBlogDetailData = cache(async function getBlogDetailData(slug: string): Promise<BlogDetail | null> {
+export async function getBlogDetailData(slug: string): Promise<BlogDetail | null> {
   "use cache";
   cacheLife("hours");
   cacheTag(`blog-${slug}`, CACHE_TAGS.blog);
@@ -60,7 +60,7 @@ export const getBlogDetailData = cache(async function getBlogDetailData(slug: st
     comments: toCamelCase<BlogComment[]>(commentsResult.data ?? []),
     relatedArticles: toCamelCase<BlogArticle[]>(relatedResult.data ?? []),
   };
-});
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
@@ -101,7 +101,15 @@ export default async function BlogDetailPage({ params }: Props) {
   if (!detail) notFound();
 
   const { article, comments, relatedArticles } = detail;
-  const sanitizedContent = sanitizeRichHtml(article.konten || article.ringkasan);
+
+  // Safe content sanitization with fallback
+  let sanitizedContent: string;
+  try {
+    sanitizedContent = sanitizeRichHtml(article.konten || article.ringkasan);
+  } catch {
+    sanitizedContent = "<p>Konten tidak dapat ditampilkan.</p>";
+  }
+
   const thumbnail = safeImageSource(article.thumbnailUrl);
 
   const publishedDate = article.publishedAt
@@ -121,7 +129,7 @@ export default async function BlogDetailPage({ params }: Props) {
           { name: article.judul, url: `/blog/${article.slug}` },
         ]}
       />
-      <article className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+      <article className="mx-auto max-w-4xl px-4 pt-20 pb-12 sm:pt-24 sm:px-6 lg:pt-28 lg:px-8">
         <Link href="/blog" className="mb-8 inline-flex text-sm font-mono text-primary hover:underline">
           BACK_TO_FEED
         </Link>
@@ -164,10 +172,12 @@ export default async function BlogDetailPage({ params }: Props) {
             />
           </div>
         )}
-        <div
-          className="irnk-prose"
-          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-        />
+        <div className="article-premium-wrap">
+          <div
+            className="irnk-prose"
+            dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+          />
+        </div>
         <div className="mt-14 border border-primary/20 bg-card/50 p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center gap-5">
             <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
@@ -188,22 +198,12 @@ export default async function BlogDetailPage({ params }: Props) {
         </div>
         <section className="mt-14 border-t border-border pt-8">
           <h2 className="mb-4 text-2xl font-bold">Komentar</h2>
-          {comments.length === 0 ? (
-            <p className="font-mono text-sm text-muted-foreground/60 py-4">
-              Belum ada komentar. Jadilah yang pertama berkomentar.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {comments.slice(0, 10).map((comment) => (
-                <div key={String(comment.id)} className="rounded-xl border border-border bg-secondary/30 p-4">
-                  <p className="font-mono text-sm text-primary">{comment.namaKomentator}</p>
-                  <p className="mt-2 text-sm text-muted-foreground">{toPlainText(comment.isiKomentar)}</p>
-                </div>
-              ))}
-            </div>
-          )}
+          <CommentSection
+            articleId={article.id}
+            initialComments={comments}
+          />
         </section>
-        <section className="mt-14 border-t border-border pt-8">
+        <section className="mt-14 border-t border-primary/10 pt-8">
           <h2 className="mb-4 text-2xl font-bold">Artikel Terkait</h2>
           {relatedArticles.length === 0 ? (
             <p className="font-mono text-sm text-muted-foreground/60 py-4">
@@ -212,8 +212,12 @@ export default async function BlogDetailPage({ params }: Props) {
           ) : (
             <div className="grid gap-4 sm:grid-cols-3">
               {relatedArticles.map((related) => (
-                <Link key={String(related.id)} href={`/blog/${related.slug}`} className="rounded-xl border border-border bg-secondary/30 p-4 hover:border-primary/60">
-                  <h3 className="font-semibold text-foreground">{related.judul}</h3>
+                <Link
+                  key={String(related.id)}
+                  href={`/blog/${related.slug}`}
+                  className="group rounded-xl border border-primary/10 bg-secondary/30 p-4 transition-all duration-300 hover:border-primary/40 hover:bg-primary/5 hover:shadow-[0_0_15px_rgba(6,182,212,0.08)]"
+                >
+                  <h3 className="font-semibold text-foreground transition-colors duration-300 group-hover:text-primary">{related.judul}</h3>
                   {related.ringkasan && <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{related.ringkasan}</p>}
                 </Link>
               ))}

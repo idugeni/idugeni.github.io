@@ -86,7 +86,7 @@ export function BlogDetailClient({
                 />
               </div>
 
-              <CommentSection articleId={article.id} initialComments={initialComments} isOpen={showComments} />
+              <CommentSection articleId={article.id} initialComments={initialComments} />
 
               {relatedArticles.length > 0 && (
                 <div className="mt-12 pt-8 border-t border-primary/20">

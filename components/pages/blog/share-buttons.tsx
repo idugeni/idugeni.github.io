@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { FiTwitter, FiFacebook, FiLinkedin, FiShare2, FiMessageCircle } from "react-icons/fi";
 
 interface ShareButtonsProps {
@@ -35,6 +36,12 @@ const shareLinks = [
 ];
 
 export function ShareButtons({ url, title }: ShareButtonsProps) {
+  const [supportsNativeShare, setSupportsNativeShare] = useState(false);
+
+  useEffect(() => {
+    setSupportsNativeShare(typeof navigator !== "undefined" && "share" in navigator);
+  }, []);
+
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
@@ -59,7 +66,7 @@ export function ShareButtons({ url, title }: ShareButtonsProps) {
           <link.icon className="w-4 h-4" />
         </a>
       ))}
-      {typeof navigator !== "undefined" && "share" in navigator && (
+      {supportsNativeShare && (
         <button
           onClick={handleNativeShare}
           className="w-9 h-9 flex items-center justify-center border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"

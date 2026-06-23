@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Suspense } from "react";
 import { Inter, Space_Mono, Orbitron } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
@@ -123,13 +124,13 @@ export default function RootLayout({
   return (
     <html lang="id" className="dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} font-sans antialiased overflow-x-hidden min-h-screen flex flex-col`}
-      >
-        <head>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <script dangerouslySetInnerHTML={{ __html: "if(history.scrollRestoration)history.scrollRestoration='manual';window.scrollTo(0,0);" }} />
-        </head>
+          className={`${inter.variable} font-sans antialiased overflow-x-hidden min-h-screen flex flex-col`}
+        >
+          <Script
+            id="scroll-restore"
+            strategy="beforeInteractive"
+            dangerouslySetInnerHTML={{ __html: "if(history.scrollRestoration)history.scrollRestoration='manual';window.scrollTo(0,0);" }}
+          />
         <Suspense>
           <CSRFBoundary>
             <AnnouncementBanner />
