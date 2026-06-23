@@ -16,9 +16,6 @@ interface RelatedProjectsProps {
 }
 
 export function RelatedProjects({ projects }: RelatedProjectsProps) {
-  // Don't render if no related projects
-  if (!projects || projects.length === 0) return null;
-
   return (
     <div className="mt-16 border-t border-border/30 pt-16">
       <ScrollReveal>
@@ -36,8 +33,15 @@ export function RelatedProjects({ projects }: RelatedProjectsProps) {
         </div>
       </ScrollReveal>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {projects.map((project, i) => (
+      {!projects || projects.length === 0 ? (
+        <div className="py-8 text-center border border-dashed border-border/30 rounded-lg bg-card/30">
+          <p className="font-mono text-xs text-muted-foreground/60">
+            No other projects in this category yet.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {projects.map((project, i) => (
           <ScrollReveal key={project.id} delay={i * 100}>
             <Link href={`/projects/${project.slug}`} prefetch={false}>
               <div className="glass-card group hover:border-primary/50 transition-all duration-300 overflow-hidden">
@@ -106,7 +110,8 @@ export function RelatedProjects({ projects }: RelatedProjectsProps) {
             </Link>
           </ScrollReveal>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

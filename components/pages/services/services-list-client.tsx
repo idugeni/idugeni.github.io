@@ -22,8 +22,23 @@ export function ServicesListClient({ services }: ServicesListClientProps) {
         />
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24">
-          {services.map((service, i) => (
+        {!services || services.length === 0 ? (
+          <ScrollReveal>
+            <div className="py-20 text-center border border-dashed border-primary/20 rounded-xl bg-card/50">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/5 border border-primary/20 mb-4">
+                <HiCommandLine className="w-7 h-7 text-primary/40" />
+              </div>
+              <p className="font-orbitron text-lg text-muted-foreground mb-2">
+                NO_SERVICES_AVAILABLE
+              </p>
+              <p className="font-mono text-xs text-muted-foreground/60">
+                Layanan akan muncul di sini setelah dikonfigurasi di panel admin.
+              </p>
+            </div>
+          </ScrollReveal>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24">
+            {services.map((service, i) => (
             <ScrollReveal key={service.id} delay={i * 120}>
               <Link href={`/services/${service.slug}`} prefetch={false}>
                 <NeonBorder className="h-full hover:shadow-[0_0_30px_rgba(6,182,212,0.15)] transition-shadow duration-500 cursor-pointer">
@@ -91,6 +106,7 @@ export function ServicesListClient({ services }: ServicesListClientProps) {
             </ScrollReveal>
           ))}
         </div>
+        )}
 
         {/* CTA Section */}
         <ScrollReveal>

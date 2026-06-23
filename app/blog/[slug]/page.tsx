@@ -186,9 +186,13 @@ export default async function BlogDetailPage({ params }: Props) {
             </Link>
           </div>
         </div>
-        {comments.length > 0 && (
-          <section className="mt-14 border-t border-border pt-8">
-            <h2 className="mb-4 text-2xl font-bold">Komentar</h2>
+        <section className="mt-14 border-t border-border pt-8">
+          <h2 className="mb-4 text-2xl font-bold">Komentar</h2>
+          {comments.length === 0 ? (
+            <p className="font-mono text-sm text-muted-foreground/60 py-4">
+              Belum ada komentar. Jadilah yang pertama berkomentar.
+            </p>
+          ) : (
             <div className="space-y-4">
               {comments.slice(0, 10).map((comment) => (
                 <div key={String(comment.id)} className="rounded-xl border border-border bg-secondary/30 p-4">
@@ -197,11 +201,15 @@ export default async function BlogDetailPage({ params }: Props) {
                 </div>
               ))}
             </div>
-          </section>
-        )}
-        {relatedArticles.length > 0 && (
-          <section className="mt-14 border-t border-border pt-8">
-            <h2 className="mb-4 text-2xl font-bold">Artikel Terkait</h2>
+          )}
+        </section>
+        <section className="mt-14 border-t border-border pt-8">
+          <h2 className="mb-4 text-2xl font-bold">Artikel Terkait</h2>
+          {relatedArticles.length === 0 ? (
+            <p className="font-mono text-sm text-muted-foreground/60 py-4">
+              Belum ada artikel terkait.
+            </p>
+          ) : (
             <div className="grid gap-4 sm:grid-cols-3">
               {relatedArticles.map((related) => (
                 <Link key={String(related.id)} href={`/blog/${related.slug}`} className="rounded-xl border border-border bg-secondary/30 p-4 hover:border-primary/60">
@@ -210,8 +218,8 @@ export default async function BlogDetailPage({ params }: Props) {
                 </Link>
               ))}
             </div>
-          </section>
-        )}
+          )}
+        </section>
       </article>
     </PublicLayout>
   );

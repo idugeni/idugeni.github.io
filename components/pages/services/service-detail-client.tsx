@@ -220,15 +220,21 @@ export function ServiceDetailClient({
         </div>
 
         {/* Related Services */}
-        {relatedServices.length > 0 && (
-          <ScrollReveal delay={400}>
-            <div className="mb-16">
-              <div className="flex items-center gap-3 mb-8">
-                <HiCommandLine className="w-6 h-6 text-primary" />
-                <h2 className="text-2xl font-orbitron font-bold text-foreground">
-                  RELATED_SERVICES
-                </h2>
+        <ScrollReveal delay={400}>
+          <div className="mb-16">
+            <div className="flex items-center gap-3 mb-8">
+              <HiCommandLine className="w-6 h-6 text-primary" />
+              <h2 className="text-2xl font-orbitron font-bold text-foreground">
+                RELATED_SERVICES
+              </h2>
+            </div>
+            {!relatedServices || relatedServices.length === 0 ? (
+              <div className="py-8 text-center border border-dashed border-border/30 rounded-lg bg-card/30">
+                <p className="font-mono text-xs text-muted-foreground/60">
+                  Belum ada layanan terkait lainnya.
+                </p>
               </div>
+            ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {relatedServices.map((relatedService, index) => (
                   <Link
@@ -263,9 +269,9 @@ export function ServiceDetailClient({
                   </Link>
                 ))}
               </div>
-            </div>
-          </ScrollReveal>
-        )}
+            )}
+          </div>
+        </ScrollReveal>
 
         {/* CTA Section */}
         <ScrollReveal delay={500}>

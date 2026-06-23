@@ -165,9 +165,13 @@ export default async function ProjectDetailPage({ params }: Props) {
             </div>
           </aside>
         </div>
-        {relatedProjects.length > 0 && (
-          <section className="mt-14 border-t border-border pt-8">
-            <h2 className="mb-4 text-2xl font-bold">Related Projects</h2>
+        <section className="mt-14 border-t border-border pt-8">
+          <h2 className="mb-4 text-2xl font-bold">Related Projects</h2>
+          {relatedProjects.length === 0 ? (
+            <p className="font-mono text-sm text-muted-foreground/60 py-4">
+              Belum ada proyek terkait dalam kategori ini.
+            </p>
+          ) : (
             <div className="grid gap-4 sm:grid-cols-3">
               {relatedProjects.map((related) => (
                 <Link key={String(related.id)} href={`/projects/${related.slug}`} className="rounded-xl border border-border bg-secondary/30 p-4 hover:border-primary/60">
@@ -176,8 +180,8 @@ export default async function ProjectDetailPage({ params }: Props) {
                 </Link>
               ))}
             </div>
-          </section>
-        )}
+          )}
+        </section>
       </article>
     </PublicLayout>
   );
