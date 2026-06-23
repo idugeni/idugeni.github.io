@@ -11,6 +11,7 @@ import {
   getSafeImageSource,
   shouldBypassImageOptimization,
 } from "@/lib/utils/image-source";
+import { SectionEmptyState } from "./section-empty-state";
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
@@ -124,8 +125,6 @@ function MarqueeRow({ testimonials, direction }: { testimonials: Testimonial[]; 
 }
 
 export function TestimonialsCarousel({ testimonials }: TestimonialsCarouselProps) {
-  if (testimonials.length === 0) return null;
-
   // Split testimonials into two rows
   const mid = Math.ceil(testimonials.length / 2);
   const topRow = testimonials.slice(0, mid);
@@ -146,18 +145,26 @@ export function TestimonialsCarousel({ testimonials }: TestimonialsCarouselProps
           </div>
         </ScrollReveal>
 
-        {/* Marquee container */}
-        <div className="relative space-y-4">
-          {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-card to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-card to-transparent z-10 pointer-events-none" />
+        {testimonials.length === 0 ? (
+          <SectionEmptyState
+            title="NO_TESTIMONIALS_YET"
+            description="Client testimonials will appear here once published."
+            icon="✦"
+          />
+        ) : (
+          /* Marquee container */
+          <div className="relative space-y-4">
+            {/* Fade edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-card to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-card to-transparent z-10 pointer-events-none" />
 
-          {/* Top row - left to right */}
-          <MarqueeRow testimonials={topRow} direction="left" />
+            {/* Top row - left to right */}
+            <MarqueeRow testimonials={topRow} direction="left" />
 
-          {/* Bottom row - right to left */}
-          <MarqueeRow testimonials={bottomRow} direction="right" />
-        </div>
+            {/* Bottom row - right to left */}
+            <MarqueeRow testimonials={bottomRow} direction="right" />
+          </div>
+        )}
       </div>
     </section>
   );

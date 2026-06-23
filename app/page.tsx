@@ -30,12 +30,12 @@ async function HomeContentSections() {
   return (
     <>
       <StatsSection />
-      {projects.length > 0 && <FeaturedProjects projects={projects} />}
-      {services.length > 0 && <ServicesSection services={services} />}
+      <FeaturedProjects projects={projects} />
+      <ServicesSection services={services} />
       <TechStackSection />
-      {testimonials.length > 0 && <TestimonialsCarousel testimonials={testimonials} />}
-      {galleryItems.length > 0 && <GalleryPreview items={galleryItems} />}
-      {articles.length > 0 && <LatestArticles articles={articles} />}
+      <TestimonialsCarousel testimonials={testimonials} />
+      <GalleryPreview items={galleryItems} />
+      <LatestArticles articles={articles} />
       <NewsletterForm />
     </>
   );

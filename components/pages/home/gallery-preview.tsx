@@ -12,12 +12,35 @@ import {
   getSafeImageSource,
   shouldBypassImageOptimization,
 } from "@/lib/utils/image-source";
+import { SectionEmptyState } from "./section-empty-state";
 
 export function GalleryPreview({ items }: { items: GalleryItem[] }) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  if (!items || items.length === 0) return null;
+  if (!items || items.length === 0) {
+    return (
+      <section className="py-24 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <ScrollReveal>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-orbitron font-bold neon-text">GALLERY_PREVIEW</h2>
+              <Link href="/gallery" prefetch={false}>
+                <Button variant="ghost" className="font-mono text-primary hover:text-primary/80">
+                  VIEW_ALL <HiOutlineArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </ScrollReveal>
+          <SectionEmptyState
+            title="NO_MEDIA_UPLOADED_YET"
+            description="Gallery items will appear here once uploaded."
+            icon="▣"
+          />
+        </div>
+      </section>
+    );
+  }
 
   const displayItems = items.slice(0, 8);
 
