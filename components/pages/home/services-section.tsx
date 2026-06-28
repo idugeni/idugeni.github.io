@@ -6,8 +6,8 @@ import { SectionEmptyState } from "./section-empty-state";
 
 export function ServicesSection({ services }: ServicesSectionProps) {
   return (
-    <section className="py-24 bg-card relative section-fade">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 relative section-fade bg-gradient-to-br from-card/60 via-background to-card/40 before:absolute before:left-0 before:top-1/4 before:w-[500px] before:h-[500px] before:bg-primary/[0.02] before:rounded-full before:blur-[120px] before:-translate-x-1/2 after:absolute after:right-0 after:bottom-1/4 after:w-[500px] after:h-[500px] after:bg-accent/[0.02] after:rounded-full after:blur-[120px] after:translate-x-1/2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="sr-reveal">
           <div className="text-center mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-orbitron font-bold neon-text mb-4">SERVICES_CATALOG</h2>

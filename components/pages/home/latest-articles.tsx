@@ -8,8 +8,8 @@ import { SectionEmptyState } from "./section-empty-state";
 
 export function LatestArticles({ articles }: LatestArticlesProps) {
   return (
-    <section className="py-24 bg-card relative section-fade">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 relative section-fade bg-card/60 before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.04),transparent_50%),radial-gradient(circle_at_70%_80%,hsl(var(--accent)/0.03),transparent_50%)]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="sr-reveal">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-12">
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-orbitron font-bold neon-text">LATEST_TRANSMISSIONS</h2>

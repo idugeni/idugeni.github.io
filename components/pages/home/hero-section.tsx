@@ -4,7 +4,16 @@ import { HeroTypewriter } from "./hero-typewriter";
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden pt-16">
+    <section className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden pt-16 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--primary)/0.08),transparent)] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_80%_20%,hsl(189_96%_44%/0.05)_0%,transparent_50%)] after:absolute after:inset-0 after:bg-[radial-gradient(circle_at_20%_80%,hsl(217_91%_60%/0.04)_0%,transparent_40%)]">
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(hsl(var(--primary)/0.02)_1px,transparent_1px),linear-gradient(90deg,hsl(var(--primary)/0.02)_1px,transparent_1px)] bg-[size:72px_72px] [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_75%)]" />
+      
+      {/* Animated gradient mesh */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[100px] animate-[pulse_8s_ease-in-out_infinite]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-[100px] animate-[pulse_10s_ease-in-out_infinite_2s]" />
+      </div>
+
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 text-primary text-xs font-mono mb-6 backdrop-blur-md motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
           <span className="w-2 h-2 rounded-full bg-primary" />

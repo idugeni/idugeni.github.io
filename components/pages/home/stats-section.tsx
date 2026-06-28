@@ -12,8 +12,8 @@ const stats = [
 
 export function StatsSection() {
   return (
-    <section className="py-24 bg-card relative section-fade">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 relative section-fade bg-gradient-to-b from-background via-card/40 to-background before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_60%_100%_at_50%_0%,hsl(var(--primary)/0.03),transparent)]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="sr-reveal">
           <div className="text-center mb-16">
             <span className="font-mono text-xs text-primary/70 tracking-widest">// PERFORMANCE OVERVIEW</span>

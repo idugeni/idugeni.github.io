@@ -131,9 +131,9 @@ export function TestimonialsCarousel({ testimonials }: TestimonialsCarouselProps
   const bottomRow = testimonials.length > 1 ? testimonials.slice(mid) : testimonials;
 
   return (
-    <section className="py-24 bg-card relative overflow-hidden section-fade">
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(6,182,212,0.03)_0%,transparent_50%)]" />
+    <section className="py-24 relative overflow-hidden section-fade bg-gradient-to-b from-card/80 via-card to-card/80 before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.04)_0%,transparent_50%)] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-primary/20 after:to-transparent">
+      {/* Background decoration - keep existing but enhance */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(6,182,212,0.03)_0%,transparent_50%)] z-0" />
 
       <div className="relative z-10">
         <ScrollReveal>

@@ -20,8 +20,8 @@ export function GalleryPreview({ items }: { items: GalleryItem[] }) {
 
   if (!items || items.length === 0) {
     return (
-      <section className="py-24 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-24 relative bg-[linear-gradient(to_bottom,hsl(var(--background)),hsl(var(--secondary)/0.2)_50%,hsl(var(--background)))] before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-[800px] before:h-[400px] before:bg-primary/[0.03] before:rounded-full before:blur-3xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <ScrollReveal>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-12">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-orbitron font-bold neon-text">GALLERY_PREVIEW</h2>
@@ -70,8 +70,8 @@ export function GalleryPreview({ items }: { items: GalleryItem[] }) {
 
   return (
     <>
-      <section className="py-24 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-24 relative bg-[linear-gradient(to_bottom,hsl(var(--background)),hsl(var(--secondary)/0.2)_50%,hsl(var(--background)))] before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:w-[800px] before:h-[400px] before:bg-primary/[0.03] before:rounded-full before:blur-3xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <ScrollReveal>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-12">
               <div>

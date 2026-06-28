@@ -349,6 +349,17 @@ body::after {
   }
 }
 
+@keyframes ambient-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+@keyframes glow-pulse-slow {
+  0%, 100% { opacity: 0.3; filter: blur(100px); }
+  50% { opacity: 0.5; filter: blur(80px); }
+}
+
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }

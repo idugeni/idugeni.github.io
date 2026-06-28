@@ -163,8 +163,8 @@ function CircuitFlow() {
 
 export function TechStackSection() {
   return (
-    <section className="py-24 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 relative overflow-hidden bg-[radial-gradient(ellipse_150%_100%_at_50%_10%,hsl(var(--card)/0.8),hsl(var(--background)))] before:absolute before:inset-0 before:bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,hsl(var(--primary)/0.02)_60deg,transparent_120deg,hsl(var(--accent)/0.02)_180deg,transparent_240deg,hsl(var(--primary)/0.02)_300deg,transparent_360deg)]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="sr-reveal">
           <div className="text-center mb-4">
             <span className="font-mono text-[10px] text-primary/70 tracking-widest">// CORE TECHNOLOGIES</span>

@@ -10,8 +10,12 @@ import { SectionEmptyState } from "./section-empty-state";
 
 export function FeaturedProjects({ projects }: FeaturedProjectsProps) {
   return (
-    <section className="py-24 relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 relative overflow-hidden bg-[radial-gradient(ellipse_100%_50%_at_50%_50%,hsl(var(--secondary)/0.4),transparent)] before:absolute before:inset-0 before:bg-[linear-gradient(135deg,transparent_0%,hsl(var(--primary)/0.02)_50%,transparent_100%)]">
+      {/* Noise texture overlay */}
+      <div className="absolute inset-0 opacity-[0.015] mix-blend-soft-light pointer-events-none" 
+        style={{backgroundImage: "url(data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E)"}} />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="sr-reveal">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-orbitron font-bold neon-text">FEATURED_PROJECTS</h2>
